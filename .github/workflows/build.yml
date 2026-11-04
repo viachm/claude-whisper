@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Shell scripts parse
-        run: sh -n build.sh tools/make-icon.sh Resources/claude-whisper-capture
+        run: sh -n build.sh test.sh tools/make-icon.sh Resources/claude-whisper-capture
 
   build:
     runs-on: macos-14
@@ -36,6 +36,9 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Resources/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" Resources/Info.plist
+
+      - name: Tests
+        run: ./test.sh
 
       - name: Build (Apple silicon + Intel, ad-hoc signed)
         run: ./build.sh --universal

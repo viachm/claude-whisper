@@ -192,6 +192,11 @@ final class Preferences: ObservableObject {
     @Published var language: String { didSet { storeString(language, "language") } }
     @Published var extraArguments: String { didSet { storeString(extraArguments, "extraArguments") } }
 
+    /// When transcripts are cleaned up with Claude before they are pasted.
+    @Published var cleanup: CleanupMode { didSet { defaults.set(cleanup.rawValue, forKey: "cleanup") } }
+    @Published var improveKey: ImproveKey { didSet { store(improveKey, "improveKey") } }
+    @Published var refineModel: RefineModel { didSet { defaults.set(refineModel.rawValue, forKey: "refineModel") } }
+
     /// True while a shortcut field is recording, so the live hotkey does not fire meanwhile.
     @Published var isRecordingShortcut = false
 
@@ -210,6 +215,9 @@ final class Preferences: ObservableObject {
         claudePath = defaults.string(forKey: "claudePath") ?? ""
         language = defaults.string(forKey: "language") ?? ""
         extraArguments = defaults.string(forKey: "extraArguments") ?? ""
+        cleanup = CleanupMode(rawValue: defaults.string(forKey: "cleanup") ?? "") ?? .onShift
+        improveKey = Self.load(ImproveKey.self, "improveKey", from: defaults) ?? .eitherShift
+        refineModel = RefineModel(rawValue: defaults.string(forKey: "refineModel") ?? "") ?? .haiku
         shortcut = Self.load(KeyCombo.self, "shortcut", from: defaults) ?? .controlOptionSpace
         cancelKey = Self.load(KeyCombo.self, "cancelKey", from: defaults) ?? .escape
     }

@@ -9,6 +9,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let prefs = Preferences.shared
     private let history = History()
     private let session = ClaudeSession()
+    private lazy var refiner = Refiner(directory: session.workspace)
     private let hotkey = Hotkey()
     private let overlay = Overlay()
     private var statusItem: NSStatusItem!
@@ -28,6 +29,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Whether the dictation being transcribed was held and let go (rather than locked or
     /// tapped), which decides whether it is auto-sent.
     private var held = false
+    /// Whether the improve key flipped the cleanup default for the current dictation.
+    private var improveToggled = false
+    private var improves: Bool { prefs.cleanup.improves(toggled: improveToggled) }
+    /// When the key went up, for the timings in the log.
+    private var releasedAt = Date()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Log.write("Claude Whisper launched")
@@ -37,12 +43,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotkey.onStart = { [weak self] in self?.pressed() }
         hotkey.onStop = { [weak self] held in self?.released(held: held) }
         hotkey.onLock = { [weak self] in self?.lockedOn() }
+        hotkey.onImprove = { [weak self] in self?.improvePressed() }
         hotkey.onCancel = { [weak self] deliberate in self?.cancelled(deliberate: deliberate) }
         hotkey.isRecording = { [weak self] in self?.phase == .waitingForMic || self?.phase == .listening }
         armHotkey()
         watchPreferences()
         session.onStateChange = { [weak self] state in self?.sessionChanged(state) }
         session.start()
+        prepareRefiner()
         // A first start (or one after an update reset the permissions) opens Settings, whose
         // banner leads to what still has to be allowed.
         if Permission.allCases.contains(where: { !$0.isGranted }) {
@@ -52,6 +60,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         session.stop()
+        refiner.reset()
         Log.write("Claude Whisper quit")
     }
 
@@ -212,7 +221,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // A shortcut field is recording: the old shortcut must not fire meanwhile.
         if prefs.isRecordingShortcut { return hotkey.disarm() }
         let config = Hotkey.Config(trigger: prefs.trigger, shortcut: prefs.shortcut, mode: prefs.mode,
-                                   cancelKey: prefs.cancelKey)
+                                   cancelKey: prefs.cancelKey, improveKey: prefs.improveKey)
         if hotkey.arm(config) { return }
         Log.write("waiting for Input Monitoring permission (needed to see the dictation key)")
         CGRequestListenEventAccess()
@@ -227,10 +236,20 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         watch(prefs.$shortcut) { [weak self] in self?.armHotkey() }
         watch(prefs.$mode) { [weak self] in self?.armHotkey() }
         watch(prefs.$cancelKey) { [weak self] in self?.armHotkey() }
+        watch(prefs.$improveKey) { [weak self] in self?.armHotkey() }
         watch(prefs.$isRecordingShortcut) { [weak self] in self?.armHotkey() }
         // Claude reads its arguments and settings only at start.
-        watch(prefs.$claudePath) { [weak self] in self?.restartSession() }
-        watch(prefs.$language) { [weak self] in self?.restartSession() }
+        watch(prefs.$claudePath) { [weak self] in
+            self?.restartSession()
+            self?.refiner.reset()
+            self?.prepareRefiner()
+        }
+        watch(prefs.$language) { [weak self] in
+            self?.restartSession()
+            self?.prepareRefiner()
+        }
+        watch(prefs.$cleanup) { [weak self] in self?.prepareRefiner() }
+        watch(prefs.$refineModel) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$extraArguments) { [weak self] in self?.restartSession() }
         watch(prefs.$showOverlay) { [weak self] in self?.overlay.hide() }
     }
@@ -255,6 +274,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let id = pressID
         phase = .waitingForMic
         locked = false
+        improveToggled = false
+        overlay.setImprove(prefs.showOverlay && improves)
         show(.waiting)
         session.startRepeats()
         waitForMicrophone(id: id, started: Date())
@@ -299,7 +320,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func released(held: Bool) {
-        self.held = held
         switch phase {
         case .waitingForMic:
             // Let go before Claude was listening: nothing to transcribe.
@@ -307,21 +327,66 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             phase = .idle
             overlay.hide()
         case .listening:
+            // Only here: a release while an earlier dictation is still being transcribed or cleaned
+            // up must not change whether that one gets sent.
+            self.held = held
             Sound.play("stop")
             phase = .transcribing
             setIcon(active: false)
             show(.transcribing)
+            releasedAt = Date()
             session.finish { [weak self] text in self?.transcribed(text) }
         default:
             break
         }
     }
 
+    private func prepareRefiner() {
+        // With cleanup on request, the process starts when the improve key is pressed: the rest of the
+        // dictation is enough time for it to get ready, and nothing waits around meanwhile.
+        if prefs.cleanup == .always { refiner.prepare(model: prefs.refineModel) } else { refiner.reset() }
+    }
+
+    /// The improve key during a dictation switches Claude's cleanup on (or off, when it is always
+    /// on) for this dictation; the capsule shows a sparkle while it is on.
+    private func improvePressed() {
+        guard prefs.cleanup != .off, phase == .waitingForMic || phase == .listening else { return }
+        improveToggled.toggle()
+        Log.write("cleanup \(improves ? "on" : "off") for this dictation")
+        overlay.setImprove(prefs.showOverlay && improves)
+        Sound.play("improve")
+        if improves { refiner.prepare(model: prefs.refineModel) }
+    }
+
+    private func msSinceRelease() -> Int { Int(Date().timeIntervalSince(releasedAt) * 1000) }
+
     private func transcribed(_ text: String) {
+        Log.write("transcript ready \(msSinceRelease()) ms after release")
+        guard !text.isEmpty else {
+            phase = .idle
+            overlay.hide()
+            return
+        }
+        guard improves else { return deliver(text) }
+        // The capsule keeps showing "transcribing" while Claude cleans the text up.
+        let app = NSWorkspace.shared.frontmostApplication?.localizedName
+        let id = pressID
+        refiner.refine(text, app: app, model: prefs.refineModel, keepWarm: prefs.cleanup == .always) { [weak self] refined in
+            guard let self else { return }
+            // The session restarted meanwhile and a new dictation began: don't paste into it.
+            guard id == self.pressID else {
+                self.history.add(refined ?? text)
+                return Log.write("cleanup finished after a new dictation started; kept in History only")
+            }
+            self.deliver(refined ?? text)
+            if refined == nil { self.show(.message("Pasted without cleanup")) }
+        }
+    }
+
+    private func deliver(_ text: String) {
         phase = .idle
         overlay.hide()
-        guard !text.isEmpty else { return }
-        Log.write("\(prefs.output == .copy ? "copying" : "pasting") \(text.count) characters")
+        Log.write("\(prefs.output == .copy ? "copying" : "pasting") \(text.count) characters, \(msSinceRelease()) ms after release")
         history.add(text)
         if prefs.output == .copy { show(.message("Copied to clipboard")) }
         let target = NSWorkspace.shared.frontmostApplication
@@ -361,6 +426,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 }
 
+// Writing to a claude process that has just exited must fail with EPIPE, not kill the app.
+signal(SIGPIPE, SIG_IGN)
 Migration.fromShepit()
 let app = NSApplication.shared
 let delegate = App()

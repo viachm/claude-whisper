@@ -78,6 +78,8 @@ final class SettingsWindowController {
         // A menu bar app is not active on its own; without this the window opens behind others.
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
+        // macOS may refuse the activation (cooperative activation), leaving the window behind others.
+        window?.orderFrontRegardless()
     }
 
     /// Dead centre of the screen the mouse is on, every time it opens. NSWindow.center() puts
@@ -248,6 +250,29 @@ private struct GeneralPane: View {
                 .pickerStyle(.radioGroup)
                 Toggle("Put the previous clipboard back after pasting", isOn: $prefs.restoreClipboard)
                     .disabled(prefs.output == .copy)
+            }
+
+            Section {
+                Picker("Clean up with Claude", selection: $prefs.cleanup) {
+                    ForEach(CleanupMode.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.radioGroup)
+                ImproveKeyField(prefs: prefs)
+                    .disabled(prefs.cleanup == .off)
+                Picker("Model", selection: $prefs.refineModel) {
+                    ForEach(RefineModel.allCases) { Text($0.title).tag($0) }
+                }
+                .disabled(prefs.cleanup == .off)
+            } header: {
+                Text("Cleanup")
+            } footer: {
+                Text("""
+                    Claude removes filler words and self-corrections ("option 2, no, option 1" becomes "option 1") and \
+                    fixes punctuation, keeping your words and language. Press the improve key while dictating to switch \
+                    it on for that dictation: a sparkle shows on the capsule. It uses your Claude subscription and adds \
+                    about a second; if Claude doesn't answer within 10 seconds, the text is pasted as it was transcribed.
+                    """)
+                .foregroundStyle(.secondary)
             }
 
             Section {
@@ -533,6 +558,80 @@ private struct KeyField: View {
         }
         combo = new
         stop()
+    }
+
+    private func stop() {
+        guard let monitor else { return }
+        NSEvent.removeMonitor(monitor)
+        self.monitor = nil
+        prefs.isRecordingShortcut = false
+    }
+}
+
+/// Records the improve key: click, then press the modifier key to use. Keys that can't work are
+/// refused with the reason (see `ImproveKey.record`).
+private struct ImproveKeyField: View {
+    @ObservedObject var prefs: Preferences
+    @State private var monitor: Any?
+    @State private var problem: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            LabeledContent("Improve key") {
+                HStack {
+                    Button {
+                        if monitor == nil { start() } else { stop() }
+                    } label: {
+                        Text(monitor == nil ? prefs.improveKey.display : "Press a modifier key…").frame(width: 170)
+                    }
+                    // Always there (disabled at the default) so the field doesn't jump when it appears.
+                    Button("Reset") {
+                        stop()
+                        problem = nil
+                        prefs.improveKey = .eitherShift
+                    }
+                    .disabled(prefs.improveKey == .eitherShift && monitor == nil)
+                }
+            }
+            if let problem {
+                Text(problem).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+            }
+            if let conflict {
+                Text(conflict).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .onDisappear(perform: stop)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in stop() }
+    }
+
+    /// A key chosen earlier that the dictation key has taken over since.
+    private var conflict: String? {
+        let taken = Hotkey.keysInUse(trigger: prefs.trigger, mode: prefs.mode)
+        guard prefs.improveKey.keyCodes.allSatisfy({ taken[$0] != nil }) else { return nil }
+        return "\(prefs.improveKey.name) also \(taken[prefs.improveKey.keyCodes[0]] ?? "is in use"), so it does nothing here. Choose another key."
+    }
+
+    private func start() {
+        problem = nil
+        // The live hotkey is disarmed meanwhile, so pressing the dictation key here doesn't dictate.
+        prefs.isRecordingShortcut = true
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged, .keyDown]) { event in
+            let flags = event.cgEvent?.flags.rawValue ?? UInt64(event.modifierFlags.rawValue)
+            let result = ImproveKey.record(keyCode: Int64(event.keyCode), flags: flags, isKeyDown: event.type == .keyDown,
+                                           taken: Hotkey.keysInUse(trigger: prefs.trigger, mode: prefs.mode))
+            switch result {
+            case .ignore: break
+            case .cancel: stop()
+            case .recorded(let key):
+                prefs.improveKey = key
+                problem = nil
+                stop()
+            case .rejected(let reason):
+                problem = reason.message
+                NSSound.beep()
+            }
+            return nil
+        }
     }
 
     private func stop() {

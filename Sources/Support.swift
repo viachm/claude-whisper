@@ -22,8 +22,9 @@ enum Log {
     }
 }
 
-/// The start and stop cues come from the chosen sound set (`<set>-start.wav`, `<set>-stop.wav`,
-/// made by tools/make-sounds.py); any other name is a macOS system sound such as "Basso".
+/// The start, stop and improve cues come from the chosen sound set (`<set>-start.wav`,
+/// `<set>-stop.wav`, `<set>-improve.wav`, made by tools/make-sounds.py); any other name is a macOS
+/// system sound such as "Basso".
 enum Sound {
     static func play(_ name: String) {
         guard Preferences.shared.playSounds else { return }
@@ -31,6 +32,7 @@ enum Sound {
         switch name {
         case "press": play(file: "\(set)-start")
         case "stop": play(file: "\(set)-stop")
+        case "improve": play(file: "\(set)-improve")
         default: NSSound(named: name)?.play()
         }
     }
