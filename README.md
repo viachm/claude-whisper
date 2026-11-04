@@ -109,8 +109,8 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 - **After dictating**: paste at the cursor, paste and always press Return, or only copy.
 - **Auto-send into Claude**: on after a hold; optionally also after a locked dictation. Other apps
   can be added to always get Return.
-- **Sounds**: on or off, and one of five sound sets (Chime, Soft, Click, Bubble, Glass) with a
-  play button to try them. They are synthesised by `tools/make-sounds.py`.
+- **Sounds**: on or off, one of five sound sets (Click by default; Chime, Soft, Bubble, Glass) with a
+  play button to try them, and a volume slider. They are synthesised by `tools/make-sounds.py`.
 - The on-screen **capsule**, and **Open at login**.
 - **Claude** tab:
   - **Faster start**: makes Option+K Claude Code's voice key (in `~/.claude/keybindings.json`).

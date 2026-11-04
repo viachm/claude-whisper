@@ -297,6 +297,17 @@ private struct GeneralPane: View {
                     .help("Play the start sound")
                 }
                 .disabled(!prefs.playSounds)
+                LabeledContent("Volume") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "speaker.fill").foregroundStyle(.secondary)
+                        Slider(value: $prefs.soundVolume, in: 0.05...1) { editing in
+                            if !editing { Sound.preview(prefs.soundSet) }
+                        }
+                        Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: 260)
+                }
+                .disabled(!prefs.playSounds)
                 Toggle("Show the dictation capsule on screen", isOn: $prefs.showOverlay)
             }
 

@@ -173,6 +173,8 @@ final class Preferences: ObservableObject {
     @Published var restoreClipboard: Bool { didSet { defaults.set(restoreClipboard, forKey: "restoreClipboard") } }
     @Published var playSounds: Bool { didSet { defaults.set(playSounds, forKey: "playSounds") } }
     @Published var soundSet: SoundSet { didSet { defaults.set(soundSet.rawValue, forKey: "soundSet") } }
+    /// 0…1, applied to every cue.
+    @Published var soundVolume: Double { didSet { defaults.set(soundVolume, forKey: "soundVolume") } }
     @Published var showOverlay: Bool { didSet { defaults.set(showOverlay, forKey: "showOverlay") } }
 
     /// Press Return after pasting a held dictation into Claude: the desktop app, a terminal tab
@@ -199,7 +201,8 @@ final class Preferences: ObservableObject {
         output = OutputAction(rawValue: defaults.string(forKey: "output") ?? "") ?? .paste
         restoreClipboard = defaults.object(forKey: "restoreClipboard") as? Bool ?? true
         playSounds = defaults.object(forKey: "playSounds") as? Bool ?? true
-        soundSet = SoundSet(rawValue: defaults.string(forKey: "soundSet") ?? "") ?? .chime
+        soundSet = SoundSet(rawValue: defaults.string(forKey: "soundSet") ?? "") ?? .click
+        soundVolume = defaults.object(forKey: "soundVolume") as? Double ?? 0.6
         showOverlay = defaults.object(forKey: "showOverlay") as? Bool ?? true
         autoSend = defaults.object(forKey: "autoSend") as? Bool ?? true
         sendAfterLock = defaults.object(forKey: "sendAfterLock") as? Bool ?? false
