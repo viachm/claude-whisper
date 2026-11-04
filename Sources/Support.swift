@@ -49,7 +49,8 @@ enum Sound {
         }
         playing.removeAll { !$0.isPlaying }
         playing.append(sound)
-        sound.volume = Float(Preferences.shared.soundVolume)
+        // Loudness is heard logarithmically, so the slider is curved: its lower half gets very quiet.
+        sound.volume = Float(pow(Preferences.shared.soundVolume, 2.5))
         if !sound.play() { Log.write("could not play \(file)") }
     }
 }

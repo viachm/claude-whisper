@@ -300,7 +300,7 @@ private struct GeneralPane: View {
                 LabeledContent("Volume") {
                     HStack(spacing: 8) {
                         Image(systemName: "speaker.fill").foregroundStyle(.secondary)
-                        Slider(value: $prefs.soundVolume, in: 0.05...1) { editing in
+                        Slider(value: $prefs.soundVolume, in: 0.02...1) { editing in
                             if !editing { Sound.preview(prefs.soundSet) }
                         }
                         Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)

@@ -173,7 +173,7 @@ final class Preferences: ObservableObject {
     @Published var restoreClipboard: Bool { didSet { defaults.set(restoreClipboard, forKey: "restoreClipboard") } }
     @Published var playSounds: Bool { didSet { defaults.set(playSounds, forKey: "playSounds") } }
     @Published var soundSet: SoundSet { didSet { defaults.set(soundSet.rawValue, forKey: "soundSet") } }
-    /// 0…1, applied to every cue.
+    /// The slider position, 0…1; Sound curves it into the playback volume.
     @Published var soundVolume: Double { didSet { defaults.set(soundVolume, forKey: "soundVolume") } }
     @Published var showOverlay: Bool { didSet { defaults.set(showOverlay, forKey: "showOverlay") } }
 
