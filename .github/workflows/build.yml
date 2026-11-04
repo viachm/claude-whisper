@@ -11,6 +11,14 @@ permissions:
   contents: write
 
 jobs:
+  # Quick checks on Linux; also shows whether runners pick up jobs at all.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts parse
+        run: sh -n build.sh tools/make-icon.sh Resources/claude-whisper-capture
+
   build:
     runs-on: macos-latest
     steps:
