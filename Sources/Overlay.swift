@@ -3,7 +3,8 @@ import AVFoundation
 
 /// The small dark capsule near the bottom of the screen that shows what dictation is doing:
 /// bars that follow your voice while listening, a travelling wave while Claude transcribes,
-/// and a short line of text for messages. It never takes focus, so text still goes to the
+/// and a short line of text for messages. A sparkle sits next to the bars when Claude will clean
+/// the dictation up, and pulses while it does. It never takes focus, so text still goes to the
 /// app you were typing in.
 final class Overlay {
     enum Mode { case waiting, listening, locked, transcribing, message(String) }
@@ -50,6 +51,12 @@ final class Overlay {
         }
     }
 
+    /// Shows or hides the sparkle badge; the capsule grows to make room for it.
+    func setImprove(_ on: Bool) {
+        capsule.improve = on
+        if panel.isVisible { position(size: capsule.fittingSize) }
+    }
+
     func hide(after delay: TimeInterval = 0) {
         hideWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
@@ -81,6 +88,7 @@ private final class CapsuleView: NSView {
     private static let barCount = 13
 
     var style: Style = .idle { didSet { if style != oldValue { restyle() } } }
+    var improve = false { didSet { if improve != oldValue { needsDisplay = true } } }
 
     private var levels = [CGFloat](repeating: 0, count: barCount)
     /// Bar heights on screen, eased towards their targets each frame so the motion is smooth.
@@ -112,10 +120,16 @@ private final class CapsuleView: NSView {
     private static let lockWidth: CGFloat = 16
 
     override var fittingSize: NSSize {
-        if style == .locked { return NSSize(width: Self.barsWidth + Self.lockWidth, height: Self.height) }
-        guard case .text = style else { return NSSize(width: Self.barsWidth, height: Self.height) }
-        return NSSize(width: ceil(label.intrinsicContentSize.width) + 36, height: Self.height)
+        if case .text = style {
+            return NSSize(width: ceil(label.intrinsicContentSize.width) + 36, height: Self.height)
+        }
+        let lock = style == .locked ? Self.lockWidth : 0
+        return NSSize(width: Self.barsWidth + lock + (improve ? Self.sparkleWidth : 0), height: Self.height)
     }
+
+    /// Claude's coral, so the sparkle reads as "Claude is involved".
+    private static let sparkleColor = NSColor(srgbRed: 0.85, green: 0.47, blue: 0.34, alpha: 1)
+    private static let sparkleWidth: CGFloat = 22
 
     private var pending: CGFloat = 0
     private var lastShift = Date.distantPast
@@ -163,9 +177,27 @@ private final class CapsuleView: NSView {
         shape.fill()
 
         if case .text = style { return }
-        guard style == .locked else { return drawBars(in: rect) }
-        drawLock(in: NSRect(x: rect.minX + 12, y: rect.minY, width: Self.lockWidth - 2, height: rect.height))
-        drawBars(in: NSRect(x: rect.minX + Self.lockWidth, y: rect.minY, width: rect.width - Self.lockWidth, height: rect.height))
+        var content = rect
+        if improve {
+            content.size.width -= Self.sparkleWidth
+            drawSparkle(in: NSRect(x: content.maxX - 4, y: rect.minY, width: Self.sparkleWidth, height: rect.height))
+        }
+        guard style == .locked else { return drawBars(in: content) }
+        drawLock(in: NSRect(x: content.minX + 12, y: content.minY, width: Self.lockWidth - 2, height: content.height))
+        drawBars(in: NSRect(x: content.minX + Self.lockWidth, y: content.minY, width: content.width - Self.lockWidth,
+                            height: content.height))
+    }
+
+    /// Steady while listening; pulses while Claude is cleaning the text up.
+    private func drawSparkle(in rect: NSRect) {
+        let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [Self.sparkleColor]))
+        guard let sparkle = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Improve")?
+            .withSymbolConfiguration(config) else { return }
+        let alpha = style == .wave ? 0.45 + 0.55 * (sin(phase * 2.5) + 1) / 2 : 1
+        let size = sparkle.size
+        sparkle.draw(in: NSRect(x: rect.minX, y: rect.midY - size.height / 2, width: size.width, height: size.height),
+                     from: .zero, operation: .sourceOver, fraction: alpha)
     }
 
     /// The lock shown while dictation keeps listening without the key held.

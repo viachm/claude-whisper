@@ -49,7 +49,7 @@ final class ClaudeSession {
 
         let prefs = Preferences.shared
         let claude = prefs.resolvedClaudePath
-        let args = [claude, "--settings", Self.settingsJSON(language: prefs.language)] + prefs.extraArgumentList
+        let args = [claude, "--settings", SessionSettings.json(language: prefs.language)] + prefs.extraArgumentList
         let capture = Self.editorScript()
         var env = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("CLAUDE") }
         env["TERM"] = "xterm-256color"
@@ -94,15 +94,6 @@ final class ClaudeSession {
             waitpid(child, &status, 0)
             DispatchQueue.main.async { self?.childExited(child, status: status) }
         }
-    }
-
-    /// Settings layered over the user's own for this session only: voice on, held key, never
-    /// submit, and the dictation language when one is chosen in Claude Whisper.
-    private static func settingsJSON(language: String) -> String {
-        var settings: [String: Any] = ["voice": ["enabled": true, "mode": "hold", "autoSubmit": false]]
-        if !language.isEmpty { settings["language"] = language }
-        let data = (try? JSONSerialization.data(withJSONObject: settings, options: [.sortedKeys])) ?? Data()
-        return String(decoding: data, as: UTF8.self)
     }
 
     /// Claude Code splits $EDITOR on spaces, and the app's own path has one ("Claude Whisper.app"),
@@ -236,13 +227,23 @@ final class ClaudeSession {
             }
             if since.contains("processing") { sawProcessing = true }
             let stillProcessing = lastChunk.contains("processing")
-            let done = (sawProcessing && !stillProcessing && quiet > 0.4)
+            let done = (sawProcessing && !stillProcessing && quiet > 0.15)
                 || (!sawProcessing && elapsed > 2.5 && quiet > 0.6)
                 || elapsed > 20
-            if done { return capture(completion: completion) }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: poll)
+            if done { return captureRetryingOnce(retry: sawProcessing, completion: completion) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: poll)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: poll)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: poll)
+    }
+
+    /// The wait for Claude to finish is kept short, so in the rare case the transcript had not
+    /// reached the prompt yet, look once more.
+    private func captureRetryingOnce(retry: Bool, completion: @escaping (String) -> Void) {
+        capture { [weak self] text in
+            guard text.isEmpty, retry, let self else { return completion(text) }
+            Log.write("prompt was empty after processing; capturing again")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self.capture(completion: completion) }
+        }
     }
 
     /// Drops whatever is being recorded: releases the key and cancels with Esc, then clears

@@ -92,6 +92,7 @@ with every update, so macOS asks for the permissions again after updating.
 | While holding, press Right Option | locked: keeps listening after you let go |
 | Double-tap Right Command | locked from the start |
 | Tap Right Command while locked | stops; text is pasted unsent |
+| Shift (the improve key) while dictating | Claude cleans this dictation up (a sparkle shows) |
 | Esc | cancels and discards |
 | Right Command with another key (Cmd+C…) | a normal shortcut; dictation is dropped |
 
@@ -107,6 +108,15 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 - **Mode**: hold to talk (default), or tap to start and tap to stop.
 - **Cancel key**: Esc by default.
 - **After dictating**: paste at the cursor, paste and always press Return, or only copy.
+- **Cleanup**: Claude cleans a dictation up before it is pasted: filler words and self-corrections
+  go ("option 2, no, option 1" becomes "option 1"), punctuation is fixed, your words and language
+  stay. By default only when you press the **improve key** (Shift, or any modifier key you record
+  in Settings) while dictating: a sparkle shows on the capsule, and pressing it again takes it
+  back. It can also be Never, or Always (then the improve key skips it). Keys that can't work are
+  refused with the reason: non-modifier keys, the dictation and lock keys, and keys another app
+  rewrites (such as a Hyper key in Raycast).
+  Haiku (fastest) or Sonnet. It uses your Claude subscription and adds about a second; if Claude
+  doesn't answer within 10 seconds, the transcript is pasted as it was.
 - **Auto-send into Claude**: on after a hold; optionally also after a locked dictation. Other apps
   can be added to always get Return.
 - **Sounds**: on or off, one of five sound sets (Click by default; Chime, Soft, Bubble, Glass) with a
@@ -125,14 +135,20 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 
 1. On start, Claude Whisper launches `claude` in its own pseudo-terminal, in
    `~/Library/Application Support/Claude Whisper/workspace`, with voice mode switched on through
-   `--settings` (hold mode, no auto-submit), whatever your own settings say.
+   `--settings` (hold mode, no auto-submit), whatever your own settings say. Not tap mode: there
+   the stopping press sends the transcript to Claude as a message, whatever auto-submit says.
 2. While you hold the key, it types Claude Code's voice key into that terminal every 50 ms, which is
    what Claude Code sees from a held key. The key is read from `~/.claude/keybindings.json` (the last
    Chat binding for `voice:pushToTalk`), Space by default.
 3. When you let go, Claude Code transcribes into its prompt. Claude Whisper presses Ctrl+G; Claude
    Code opens the prompt in `$EDITOR`, which is a small script (`claude-whisper-capture`) that writes
    the text out and empties the prompt. Nothing is ever sent to Claude as a message.
-4. The text is pasted into the app you were in, and your clipboard is restored.
+4. With Cleanup on, the text goes to a separate `claude -p` process (stream-json, no tools, MCP
+   servers or settings files) together with the name of the app in front. Starting `claude` takes
+   longer than the model call, so the process is started ahead of time: when the improve key is pressed (the
+   rest of the dictation covers the start-up), or all the time when cleanup is always on. Each one
+   handles a single dictation, so nothing carries over between dictations.
+5. The text is pasted into the app you were in, and your clipboard is restored.
 
 The start sound and capsule wait until the microphone is actually running, so a press Claude Code
 ignored never looks as if it worked.
@@ -158,10 +174,15 @@ Sources/
   SettingsWindow.swift  the Settings window (SwiftUI)
   Preferences.swift     settings, kept in UserDefaults
   History.swift         the last 30 dictations
+  ImproveKey.swift      the improve key: which modifier keys count, and checking a recorded one
+  Refiner.swift         cleanup with Claude: the pre-started claude -p processes
+  RefinerProtocol.swift its arguments, system prompt, message and result parsing
   Support.swift         log, sounds, microphone state, paste, permissions
 Resources/              Info.plist, sounds, icon, the $EDITOR capture script
 tools/make-icon.sh      renders the app icon (Assets.car needs Xcode's actool)
+Tests/main.swift        tests for RefinerProtocol, CleanupMode, ImproveKey and SessionSettings
 build.sh                builds the app: --install, --universal
+test.sh                 builds and runs the tests
 ```
 
 Plain `swiftc`, no Xcode project and no dependencies. Pushes to `main` are built by GitHub Actions;

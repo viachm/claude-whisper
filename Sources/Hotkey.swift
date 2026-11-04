@@ -18,6 +18,7 @@ final class Hotkey {
         var shortcut: KeyCombo
         var mode: HotkeyMode
         var cancelKey: KeyCombo
+        var improveKey: ImproveKey
     }
 
     var onStart: (() -> Void)?
@@ -26,6 +27,8 @@ final class Hotkey {
     var onStop: ((_ held: Bool) -> Void)?
     var onCancel: ((_ deliberate: Bool) -> Void)?
     var onLock: (() -> Void)?
+    /// The improve key went down. The app decides whether it means anything right now.
+    var onImprove: (() -> Void)?
     /// Whether the app is still recording. A tap or hands-free state is dropped once it is not
     /// (Claude never started listening, the session restarted), so the next press starts afresh.
     var isRecording: () -> Bool = { false }
@@ -58,6 +61,7 @@ final class Hotkey {
     private var secondTapTimeout: DispatchWorkItem?
     private var modifierDown = false
     private var partnerDown = false
+    private var improveDown = false
     private var tap: CFMachPort?
     private var tapSource: CFRunLoopSource?
     private var hotKeyRef: EventHotKeyRef?
@@ -91,6 +95,8 @@ final class Hotkey {
 
     func disarm() {
         if case .idle = gesture {} else { cancel(deliberate: false) }
+        // A key held while disarmed goes up unseen.
+        improveDown = false
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -157,6 +163,15 @@ final class Hotkey {
         }
     }
 
+    /// The keys the dictation key and its lock key take, and what they do, so the improve key
+    /// can't be one of them.
+    static func keysInUse(trigger: TriggerKey, mode: HotkeyMode) -> [Int64: String] {
+        var keys: [Int64: String] = [:]
+        if mode == .hold, let partner = partnerKey(trigger) { keys[partner.keyCode] = "locks dictation" }
+        if let key = modifierKey(trigger) { keys[key.keyCode] = "starts dictation" }
+        return keys
+    }
+
     private static let rightCommand = ModifierKey(keyCode: 54, deviceMask: 0x10, flag: .maskCommand, name: "Right Command")
     private static let rightOption = ModifierKey(keyCode: 61, deviceMask: 0x40, flag: .maskAlternate, name: "Right Option")
 
@@ -166,9 +181,16 @@ final class Hotkey {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
         case .flagsChanged:
-            guard let key = Self.modifierKey(config.trigger) else { return }
             let code = event.getIntegerValueField(.keyboardEventKeycode)
             let flags = event.flags
+            // The dictation and lock keys win should the improve key be set to one of them.
+            if Self.keysInUse(trigger: config.trigger, mode: config.mode)[code] == nil,
+               let down = config.improveKey.isDown(keyCode: code, flags: flags.rawValue) {
+                if down && !improveDown { onImprove?() }
+                improveDown = down
+                return
+            }
+            guard let key = Self.modifierKey(config.trigger) else { return }
             let partner = config.mode == .hold ? Self.partnerKey(config.trigger) : nil
             if let partner, code == partner.keyCode {
                 let down = flags.rawValue & partner.deviceMask != 0
