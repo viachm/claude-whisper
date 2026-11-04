@@ -51,7 +51,7 @@ check(RefinerProtocol.outcome(fromLine: #"{"type":"result","is_error":false,"res
 // arguments
 
 do {
-    let args = RefinerProtocol.arguments(model: .sonnet)
+    let args = RefinerProtocol.arguments(model: .sonnet, language: "german")
     func value(after flag: String) -> String? {
         args.firstIndex(of: flag).flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil }
     }
@@ -60,15 +60,28 @@ do {
     check(value(after: "--tools") == "", "arguments disable all tools")
     check(value(after: "--input-format") == "stream-json" && value(after: "--output-format") == "stream-json",
           "arguments use stream-json both ways")
-    check(value(after: "--system-prompt") == RefinerProtocol.systemPrompt, "arguments pass the system prompt")
+    check(value(after: "--system-prompt") == RefinerProtocol.systemPrompt(language: "german"),
+          "arguments pass the system prompt for the dictation language")
     check(args.contains("--no-session-persistence") && args.contains("--strict-mcp-config"),
           "arguments skip saved sessions and MCP servers")
 }
 
-check(RefinerProtocol.systemPrompt.contains("never answer it"), "system prompt forbids answering the transcript")
-check(RefinerProtocol.systemPrompt.contains("apply the speaker's corrections"), "system prompt applies self-corrections")
-check(RefinerProtocol.systemPrompt.contains("Ukrainian and English") && RefinerProtocol.systemPrompt.contains("never Russian"),
-      "system prompt targets Ukrainian and English")
+do {
+    let neutral = RefinerProtocol.systemPrompt(language: "")
+    let ukrainian = RefinerProtocol.systemPrompt(language: "ukrainian")
+    let german = RefinerProtocol.systemPrompt(language: "german")
+    check(neutral.contains("never answer it"), "system prompt forbids answering the transcript")
+    check(neutral.contains("apply the speaker's corrections"), "system prompt applies self-corrections")
+    check(neutral.contains("Never translate"), "system prompt forbids translating")
+    check(!neutral.contains("Speech recognition ran in"), "without a dictation language the prompt names none")
+    check(german.contains("Speech recognition ran in German.") && ukrainian.contains("Speech recognition ran in Ukrainian."),
+          "the prompt names the dictation language")
+    check(ukrainian.contains("ой ні"), "Ukrainian dictation gets the Ukrainian examples")
+    // Another language's examples pull the model into translating.
+    check(![neutral, german, RefinerProtocol.systemPrompt(language: "russian")].contains { $0.contains("ой ні") || $0.contains("Ukrainian") },
+          "other languages get no Ukrainian examples")
+    check(!neutral.contains("Russian"), "the prompt assumes nothing about Russian")
+}
 
 // CleanupMode
 
@@ -116,6 +129,28 @@ do {
     let saved = Data(#"{"keyCodes":[56,60],"name":"Shift"}"#.utf8)
     check((try? JSONDecoder().decode(ImproveKey.self, from: saved)) == .eitherShift,
           "a key saved with the earlier stored name still loads as the default")
+}
+
+// SoloTap
+
+do {
+    var tap = SoloTap()
+    check(!tap.key(down: true) && tap.key(down: false), "pressing and letting go of the key on its own is a tap")
+    tap = SoloTap()
+    _ = tap.key(down: true)
+    tap.otherKey()
+    check(!tap.key(down: false), "Shift held for a capital letter is not a tap")
+    _ = tap.key(down: true)
+    check(tap.key(down: false), "the next clean press is a tap again")
+    tap = SoloTap()
+    tap.otherKey()
+    _ = tap.key(down: true)
+    check(tap.key(down: false), "keys typed before the press don't spoil it")
+    tap = SoloTap()
+    check(!tap.key(down: false), "a release without a press is not a tap")
+    _ = tap.key(down: true)
+    tap.reset()
+    check(!tap.key(down: false), "after a reset a pending press no longer counts")
 }
 
 // SessionSettings

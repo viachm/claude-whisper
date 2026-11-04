@@ -103,3 +103,30 @@ struct ImproveKey: Codable, Equatable {
         return .recorded(ImproveKey(keyCodes: [keyCode]))
     }
 }
+
+/// A modifier key pressed and let go on its own. Shift held for a capital letter, or any modifier
+/// held for a shortcut, is not a tap: during a locked dictation the user may be typing elsewhere.
+struct SoloTap {
+    private var down = false
+    private var withOtherKey = false
+
+    /// The key went down or up; true when it went up without another key in between.
+    mutating func key(down isDown: Bool) -> Bool {
+        defer { down = isDown }
+        if isDown {
+            if !down { withOtherKey = false }
+            return false
+        }
+        return down && !withOtherKey
+    }
+
+    /// Another key (or modifier) went down; a tap in progress no longer counts.
+    mutating func otherKey() {
+        if down { withOtherKey = true }
+    }
+
+    mutating func reset() {
+        down = false
+        withOtherKey = false
+    }
+}

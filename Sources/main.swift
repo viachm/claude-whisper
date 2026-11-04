@@ -244,7 +244,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.refiner.reset()
             self?.prepareRefiner()
         }
-        watch(prefs.$language) { [weak self] in self?.restartSession() }
+        watch(prefs.$language) { [weak self] in
+            self?.restartSession()
+            self?.prepareRefiner()
+        }
         watch(prefs.$cleanup) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$refineModel) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$extraArguments) { [weak self] in self?.restartSession() }
@@ -351,7 +354,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         improveToggled.toggle()
         Log.write("cleanup \(improves ? "on" : "off") for this dictation")
         overlay.setImprove(prefs.showOverlay && improves)
-        Sound.play("Tink")
+        Sound.play("improve")
         if improves { refiner.prepare(model: prefs.refineModel) }
     }
 

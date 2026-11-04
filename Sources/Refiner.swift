@@ -16,24 +16,32 @@ final class Refiner {
 
     private var spare: Worker?
     private var spareModel: RefineModel?
+    /// The dictation language the waiting process's prompt was written for.
+    private var spareLanguage: String?
     private let directory: URL
 
     init(directory: URL) {
         self.directory = directory
     }
 
-    /// Starts a waiting process for `model` unless one is already there.
+    /// Starts a waiting process for `model` and the current dictation language unless one is
+    /// already there.
     func prepare(model: RefineModel) {
-        if let spare, spare.process.isRunning, spareModel == model { return }
+        let language = Preferences.shared.language
+        if let spare, spare.process.isRunning, spareModel == model, spareLanguage == language { return }
         reset()
-        spare = spawn(model: model)
-        spareModel = spare == nil ? nil : model
+        spare = spawn(model: model, language: language)
+        if spare != nil {
+            spareModel = model
+            spareLanguage = language
+        }
     }
 
     func reset() {
         if let spare, spare.process.isRunning { spare.process.terminate() }
         spare = nil
         spareModel = nil
+        spareLanguage = nil
     }
 
     /// Calls back on the main queue with the cleaned text, or nil when Claude failed or took too
@@ -45,6 +53,7 @@ final class Refiner {
         guard let worker = spare else { return completion(nil) }
         spare = nil
         spareModel = nil
+        spareLanguage = nil
         let started = Date()
 
         func finish(_ result: String?, _ note: String) {
@@ -86,10 +95,10 @@ final class Refiner {
         if keepWarm { DispatchQueue.main.async { [weak self] in self?.prepare(model: model) } }
     }
 
-    private func spawn(model: RefineModel) -> Worker? {
+    private func spawn(model: RefineModel, language: String) -> Worker? {
         let worker = Worker()
         worker.process.executableURL = URL(fileURLWithPath: Preferences.shared.resolvedClaudePath)
-        worker.process.arguments = RefinerProtocol.arguments(model: model)
+        worker.process.arguments = RefinerProtocol.arguments(model: model, language: language)
         worker.process.currentDirectoryURL = directory
         var env = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("CLAUDE") }
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }

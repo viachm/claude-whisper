@@ -92,7 +92,7 @@ with every update, so macOS asks for the permissions again after updating.
 | While holding, press Right Option | locked: keeps listening after you let go |
 | Double-tap Right Command | locked from the start |
 | Tap Right Command while locked | stops; text is pasted unsent |
-| Shift (the improve key) while dictating | Claude cleans this dictation up (a sparkle shows) |
+| Tap Shift (the improve key) while dictating | Claude cleans this dictation up (a sparkle shows) |
 | Esc | cancels and discards |
 | Right Command with another key (Cmd+C…) | a normal shortcut; dictation is dropped |
 
@@ -110,17 +110,21 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 - **After dictating**: paste at the cursor, paste and always press Return, or only copy.
 - **Cleanup**: Claude cleans a dictation up before it is pasted: filler words and self-corrections
   go ("option 2, no, option 1" becomes "option 1"), punctuation is fixed, your words and language
-  stay. By default only when you press the **improve key** (Shift, or any modifier key you record
-  in Settings) while dictating: a sparkle shows on the capsule, and pressing it again takes it
-  back. It can also be Never, or Always (then the improve key skips it). Keys that can't work are
-  refused with the reason: non-modifier keys, the dictation and lock keys, and keys another app
-  rewrites (such as a Hyper key in Raycast).
+  stay; product names and technical terms that recognition spelled out phonetically get their
+  original spelling. With a Dictation language set (Settings › Claude), the prompt names it, and
+  for Ukrainian adds Ukrainian examples. By default only when you tap the **improve key** (Shift,
+  or any modifier key you record in Settings) on its own while dictating: a sparkle shows on the
+  capsule, and tapping it again takes it back. Shift held for a capital letter while you type
+  elsewhere during a locked dictation doesn't count. It can also be Never, or Always (then the
+  improve key skips it). Keys that can't work are refused with the reason: non-modifier keys, the
+  dictation and lock keys, and keys another app rewrites (such as a Hyper key in Raycast).
   Haiku (fastest) or Sonnet. It uses your Claude subscription and adds about a second; if Claude
   doesn't answer within 10 seconds, the transcript is pasted as it was.
 - **Auto-send into Claude**: on after a hold; optionally also after a locked dictation. Other apps
   can be added to always get Return.
 - **Sounds**: on or off, one of five sound sets (Click by default; Chime, Soft, Bubble, Glass) with a
-  play button to try them, and a volume slider. They are synthesised by `tools/make-sounds.py`.
+  play button to try them, and a volume slider. Each set has a start, a stop and an improve cue,
+  synthesised by `tools/make-sounds.py`.
 - The on-screen **capsule**, and **Open at login**.
 - **Claude** tab:
   - **Faster start**: makes Option+K Claude Code's voice key (in `~/.claude/keybindings.json`).

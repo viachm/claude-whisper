@@ -27,7 +27,7 @@ final class Hotkey {
     var onStop: ((_ held: Bool) -> Void)?
     var onCancel: ((_ deliberate: Bool) -> Void)?
     var onLock: (() -> Void)?
-    /// The improve key went down. The app decides whether it means anything right now.
+    /// The improve key was tapped on its own. The app decides whether it means anything right now.
     var onImprove: (() -> Void)?
     /// Whether the app is still recording. A tap or hands-free state is dropped once it is not
     /// (Claude never started listening, the session restarted), so the next press starts afresh.
@@ -61,7 +61,7 @@ final class Hotkey {
     private var secondTapTimeout: DispatchWorkItem?
     private var modifierDown = false
     private var partnerDown = false
-    private var improveDown = false
+    private var improveTap = SoloTap()
     private var tap: CFMachPort?
     private var tapSource: CFRunLoopSource?
     private var hotKeyRef: EventHotKeyRef?
@@ -96,7 +96,7 @@ final class Hotkey {
     func disarm() {
         if case .idle = gesture {} else { cancel(deliberate: false) }
         // A key held while disarmed goes up unseen.
-        improveDown = false
+        improveTap.reset()
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -186,10 +186,10 @@ final class Hotkey {
             // The dictation and lock keys win should the improve key be set to one of them.
             if Self.keysInUse(trigger: config.trigger, mode: config.mode)[code] == nil,
                let down = config.improveKey.isDown(keyCode: code, flags: flags.rawValue) {
-                if down && !improveDown { onImprove?() }
-                improveDown = down
+                if improveTap.key(down: down) { onImprove?() }
                 return
             }
+            improveTap.otherKey()
             guard let key = Self.modifierKey(config.trigger) else { return }
             let partner = config.mode == .hold ? Self.partnerKey(config.trigger) : nil
             if let partner, code == partner.keyCode {
@@ -216,6 +216,7 @@ final class Hotkey {
                 triggerUp()
             }
         case .keyDown:
+            improveTap.otherKey()
             let code = event.getIntegerValueField(.keyboardEventKeycode)
             // The shortcut's own key (and its auto-repeat), should the tap get to see it at all.
             if config.trigger == .shortcut && code == Int64(config.shortcut.keyCode) { return }

@@ -215,9 +215,7 @@ final class Preferences: ObservableObject {
         claudePath = defaults.string(forKey: "claudePath") ?? ""
         language = defaults.string(forKey: "language") ?? ""
         extraArguments = defaults.string(forKey: "extraArguments") ?? ""
-        // "refine" is the earlier on/off switch.
-        cleanup = CleanupMode(rawValue: defaults.string(forKey: "cleanup") ?? "")
-            ?? (defaults.bool(forKey: "refine") ? .always : .onShift)
+        cleanup = CleanupMode(rawValue: defaults.string(forKey: "cleanup") ?? "") ?? .onShift
         improveKey = Self.load(ImproveKey.self, "improveKey", from: defaults) ?? .eitherShift
         refineModel = RefineModel(rawValue: defaults.string(forKey: "refineModel") ?? "") ?? .haiku
         shortcut = Self.load(KeyCombo.self, "shortcut", from: defaults) ?? .controlOptionSpace
