@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.viachm.ClaudeWhisper</string>
+	<key>CFBundleName</key>
+	<string>Claude Whisper</string>
+	<key>CFBundleDisplayName</key>
+	<string>Claude Whisper</string>
+	<key>CFBundleExecutable</key>
+	<string>ClaudeWhisper</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Claude Whisper asks your terminal which tab has focus, so it only sends a dictation when that tab is running Claude Code.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Claude Whisper's hidden Claude Code session records your voice while you dictate.</string>
+</dict>
+</plist>

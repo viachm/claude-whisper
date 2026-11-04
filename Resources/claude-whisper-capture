@@ -1,0 +1,6 @@
+#!/bin/sh
+# Claude Code runs this as $EDITOR when Claude Whisper presses Ctrl+G. It hands the prompt text to
+# Claude Whisper through the outbox file and leaves the prompt empty.
+tmp="$CLAUDE_WHISPER_OUTBOX.tmp"
+cat "$1" > "$tmp" && mv "$tmp" "$CLAUDE_WHISPER_OUTBOX"
+: > "$1"
