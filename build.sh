@@ -31,7 +31,9 @@ rm -f $SLICES
 cp Resources/Info.plist "$APP/Contents/"
 cp Resources/*.wav Resources/AppIcon.icns Resources/Assets.car Resources/claude-whisper-capture "$APP/Contents/Resources/"
 
-IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development/{print $2; exit}')
+# SIGN_IDENTITY=- forces an ad-hoc signature (as the release does), whatever certificates exist.
+IDENTITY=${SIGN_IDENTITY-$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development/{print $2; exit}')}
+[ "$IDENTITY" = "-" ] && IDENTITY=
 codesign --force --deep --sign "${IDENTITY:--}" "$APP"
 echo "Built $APP ($ARCHS, signed with ${IDENTITY:-ad-hoc identity})"
 
