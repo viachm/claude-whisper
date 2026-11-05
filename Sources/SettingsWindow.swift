@@ -460,7 +460,7 @@ private struct KeyboardHint: View {
             HStack(alignment: .top, spacing: 5) {
                 ForEach(Key.allCases, id: \.self) { key in
                     let role = role(of: key, dictate: dictate, lock: lock)
-                    keycap(key, role: role, color: key == dictate ? .accentColor : .orange)
+                    keycap(key, role: role, color: key == dictate ? .accentColor : Color(white: 0.38))
                         .modifier(PointingHand(active: role != nil))
                         .onHover { inside in hover(role != nil && inside ? key : nil) }
                 }
@@ -471,9 +471,7 @@ private struct KeyboardHint: View {
                     .foregroundStyle(Color.primary.opacity(0.7))
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-                    // As wide as the key row (7 keys of 27, a space bar of 96, 7 gaps of 5), so the text
-                    // starts under its left edge.
-                    .frame(width: 320, alignment: .leading)
+                    .frame(maxWidth: 460, alignment: .leading)
                     .transition(.opacity)
             }
         }
@@ -514,6 +512,14 @@ private struct KeyboardHint: View {
         }
     }
 
+    /// Under the lock key: the lock, plus the sparkle when its second tap improves the text, the
+    /// same symbols the capsule shows.
+    private func caption(_ role: String?) -> Text {
+        guard role == "lock" else { return Text(role ?? " ") }
+        let lock = Text(Image(systemName: "lock.fill"))
+        return cleanupOn ? lock + Text(" + ") + Text(Image(systemName: "sparkles")) : lock + Text(" lock")
+    }
+
     private func keycap(_ key: Key, role: String?, color: Color) -> some View {
         VStack(spacing: 3) {
             Group {
@@ -526,7 +532,7 @@ private struct KeyboardHint: View {
                     .fill(role != nil ? color : Color.primary.opacity(0.06)))
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.primary.opacity(role != nil ? 0 : 0.12)))
             // With cleanup on, the lock key's later taps switch it, so the caption shows both.
-            Text(role == "lock" && cleanupOn ? "lock ✨" : (role ?? " "))
+            caption(role)
                 .font(.caption2)
                 .fixedSize()
                 .foregroundStyle(role != nil ? color : .clear)
