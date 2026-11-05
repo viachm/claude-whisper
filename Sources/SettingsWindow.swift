@@ -517,8 +517,10 @@ private struct KeyboardHint: View {
                 .background(RoundedRectangle(cornerRadius: 5)
                     .fill(role != nil ? color : Color.primary.opacity(0.06)))
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.primary.opacity(role != nil ? 0 : 0.12)))
-            Text(role ?? " ")
+            // With cleanup on, the lock key's later taps switch it, so the caption shows both.
+            Text(role == "lock" && cleanupOn ? "lock ✨" : (role ?? " "))
                 .font(.caption2)
+                .fixedSize()
                 .foregroundStyle(role != nil ? color : .clear)
         }
         .contentShape(Rectangle())
