@@ -486,7 +486,7 @@ private struct KeyboardHint: View {
         pendingHover?.cancel()
         let work = DispatchWorkItem { hovered = key }
         pendingHover = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + (key == nil ? 0.12 : 0.18), execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (key == nil ? 0.12 : 0.15), execute: work)
     }
 
     private func role(of key: Key, dictate: Key?, lock: Key?) -> String? {
