@@ -84,7 +84,8 @@ update; a build signed with your Apple Development certificate keeps them.
   - **Auto-send into Claude**: after a hold, and optionally after a locked dictation; extra apps
     that always get Return.
   - **Text**: paste, paste and press Return, or copy only; restore the clipboard.
-  - **Feedback**: sounds (five sets, with a volume slider), the capsule, open at login.
+  - **Feedback**: sounds (five sets, with a volume slider), the capsule and where it shows (bottom,
+    top, left or right), open at login.
 - **Claude**: **Faster start** (makes Option+K Claude Code's voice key in
   `~/.claude/keybindings.json`, so listening starts about 0.2 s sooner; Space then stops dictating
   inside Claude Code itself), dictation language, `claude` path and extra arguments, session status.
