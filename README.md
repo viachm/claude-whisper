@@ -93,6 +93,7 @@ with every update, so macOS asks for the permissions again after updating.
 | Double-tap Right Command | locked from the start |
 | Tap Right Command while locked | stops; text is pasted unsent |
 | Tap Shift (the improve key) while dictating | Claude cleans this dictation up (a sparkle shows) |
+| Tap Right Option again while locked | the same as the improve key |
 | Esc | cancels and discards |
 | Right Command with another key (Cmd+C…) | a normal shortcut; dictation is dropped |
 

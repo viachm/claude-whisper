@@ -62,6 +62,8 @@ final class Hotkey {
     private var modifierDown = false
     private var partnerDown = false
     private var improveTap = SoloTap()
+    /// The lock key tapped again once locked: a second way to the improve key.
+    private var lockKeyTap = SoloTap()
     private var tap: CFMachPort?
     private var tapSource: CFRunLoopSource?
     private var hotKeyRef: EventHotKeyRef?
@@ -97,6 +99,7 @@ final class Hotkey {
         if case .idle = gesture {} else { cancel(deliberate: false) }
         // A key held while disarmed goes up unseen.
         improveTap.reset()
+        lockKeyTap.reset()
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -199,9 +202,11 @@ final class Hotkey {
                     partnerPressed()
                 } else if !down {
                     partnerDown = false
+                    if lockKeyTap.key(down: false) { onImprove?() }
                 }
                 return
             }
+            lockKeyTap.otherKey()
             guard code == key.keyCode else { return }
             let down = flags.rawValue & key.deviceMask != 0
             if down && !modifierDown {
@@ -217,6 +222,7 @@ final class Hotkey {
             }
         case .keyDown:
             improveTap.otherKey()
+            lockKeyTap.otherKey()
             let code = event.getIntegerValueField(.keyboardEventKeycode)
             // The shortcut's own key (and its auto-repeat), should the tap get to see it at all.
             if config.trigger == .shortcut && code == Int64(config.shortcut.keyCode) { return }
@@ -246,10 +252,19 @@ final class Hotkey {
     }
 
     /// The lock key while the trigger is held: keep listening after the trigger is let go.
+    /// The lock key: while the trigger is held it locks listening on, so it keeps going after the
+    /// trigger is let go. Tapped again once locked (on its own, not as part of a shortcut), it works
+    /// like the improve key: a hidden shortcut that keeps the hand where it already is.
     private func partnerPressed() {
-        guard case .down = gesture else { return }
-        gesture = .handsFree
-        onLock?()
+        switch gesture {
+        case .down:
+            gesture = .handsFree
+            onLock?()
+        case .handsFree, .stopDown:
+            _ = lockKeyTap.key(down: true)
+        default:
+            break
+        }
     }
 
     private func triggerUp() {
@@ -303,6 +318,7 @@ final class Hotkey {
     private func reset() {
         secondTapTimeout?.cancel()
         secondTapTimeout = nil
+        lockKeyTap.reset()
         gesture = .idle
     }
 

@@ -228,7 +228,8 @@ private struct GeneralPane: View {
                     ForEach(TriggerKey.allCases) { keyLabel($0).tag($0) }
                 }
                 if prefs.trigger != .shortcut {
-                    KeyboardHint(trigger: prefs.trigger, showLock: prefs.mode == .hold, holdMode: prefs.mode == .hold)
+                    KeyboardHint(trigger: prefs.trigger, showLock: prefs.mode == .hold, holdMode: prefs.mode == .hold,
+                                 cleanupOn: prefs.cleanup != .off)
                 }
                 if prefs.trigger == .shortcut {
                     LabeledContent("Shortcut") { KeyField(combo: $prefs.shortcut, prefs: prefs, isShortcut: true) }
@@ -407,6 +408,8 @@ private struct KeyboardHint: View {
     let trigger: TriggerKey
     let showLock: Bool
     var holdMode = true
+    /// Cleanup is available, so the lock key's second tap (it works like the improve key) is worth a mention.
+    var cleanupOn = false
     /// The key under the mouse; its explanation appears under the row only while hovering.
     /// Native tooltips (.help) do not appear inside a Form row.
     @State private var hovered: Key?
@@ -496,7 +499,8 @@ private struct KeyboardHint: View {
                 ? "\(key.name): hold it while you speak, let go to paste the text (and send it, in Claude). Double-tap it to lock listening on."
                 : "\(key.name): tap to start listening, tap again to paste the text."
         case "lock":
-            return "\(key.name): press it while holding the dictation key to lock listening on. Then let go and keep talking; tap the dictation key to stop. A lock shows in the capsule."
+            let lock = "\(key.name): press it while holding the dictation key to lock listening on. Then let go and keep talking; tap the dictation key to stop. A lock shows in the capsule."
+            return cleanupOn ? lock + " Tap \(key.name) again while locked to have Claude clean the text up, like the improve key." : lock
         default:
             return key.name
         }
