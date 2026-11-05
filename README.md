@@ -113,30 +113,9 @@ update; a build signed with your Apple Development certificate keeps them.
   Restart Claude Session.
 - **Log**: `~/Library/Logs/Claude Whisper.log` (Settings › Claude › Open Log).
 
-## Development
+## Contributing
 
-```text
-Sources/
-  main.swift            app delegate: menu bar, dictation flow, pasting
-  ClaudeSession.swift   the hidden Claude Code session in a pseudo-terminal
-  Hotkey.swift          the dictation key: event tap, hold / lock / tap gestures
-  VoiceKey.swift        which key Claude Code listens to; Faster start
-  ImproveKey.swift      the improve key: which modifiers count, checking a recorded one
-  Refiner.swift         Improve: the pre-started claude -p processes
-  RefinerProtocol.swift Improve: arguments, prompt, message and result parsing
-  AutoSend.swift        whether the target is Claude (desktop app, terminal tab running claude)
-  Overlay.swift         the on-screen capsule
-  SettingsWindow.swift  the Settings window (SwiftUI)
-  Preferences.swift     settings, in UserDefaults
-  History.swift         the last 30 dictations
-  Support.swift         log, sounds, microphone state, paste, permissions
-Resources/              Info.plist, sounds, icon, the $EDITOR capture script
-Tests/main.swift        tests for the parts without AppKit
-tools/                  make-icon.sh (needs Xcode's actool), make-sounds.py
-build.sh                builds the app: --install, --universal
-test.sh                 builds and runs the tests
-```
-
-Plain `swiftc`, no Xcode project and no dependencies. Changes go in through pull requests, which
-GitHub Actions builds and tests. Every merge to `main` is released automatically: the last number of
-the version goes up by one and the release gets `Claude-Whisper.zip`.
+`./build.sh` builds the app (`--install` to install and start it, `--universal` for both
+architectures) and `./test.sh` runs the tests; plain `swiftc`, no Xcode project or dependencies.
+Changes go in through pull requests, which GitHub Actions builds and tests; every merge to `main`
+is released automatically with the next version number.
