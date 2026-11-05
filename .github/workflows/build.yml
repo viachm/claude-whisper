@@ -1,5 +1,8 @@
 name: Build
 
+# Pull requests are built and tested. Every push to main is also released: the last number of the
+# newest vX.Y.Z tag goes up by one, the app is built with that version, and the release (with its
+# tag) is published with Claude-Whisper.zip. A tag pushed by hand is released under its own name.
 on:
   push:
     branches: [main]
@@ -9,6 +12,11 @@ on:
 
 permissions:
   contents: write
+
+# Two merges in quick succession must not both pick the same next version.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'release' }}
+  cancel-in-progress: false
 
 jobs:
   # Quick checks on Linux; also shows whether runners pick up jobs at all.
@@ -23,6 +31,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use the newest Xcode on the runner
         run: |
@@ -30,12 +40,21 @@ jobs:
           sudo xcode-select -s "$XCODE"
           swiftc --version
 
-      - name: Set the version from the tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Pick the release version
+        id: version
+        if: github.event_name == 'push'
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Resources/Info.plist
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            LATEST=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+            LATEST=${LATEST:-v0.0.0}
+            TAG=$(echo "$LATEST" | awk -F. '{ printf "%s.%s.%d", $1, $2, $3 + 1 }')
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${TAG#v}" Resources/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" Resources/Info.plist
+          echo "Releasing $TAG"
 
       - name: Tests
         run: ./test.sh
@@ -52,12 +71,13 @@ jobs:
           path: Claude-Whisper.zip
 
       - name: Publish the release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" Claude-Whisper.zip --clobber
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Claude-Whisper.zip --clobber
           else
-            gh release create "$GITHUB_REF_NAME" Claude-Whisper.zip --title "Claude Whisper $GITHUB_REF_NAME" --generate-notes
+            gh release create "$TAG" Claude-Whisper.zip --target "$GITHUB_SHA" --title "Claude Whisper $TAG" --generate-notes
           fi

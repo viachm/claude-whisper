@@ -190,5 +190,6 @@ build.sh                builds the app: --install, --universal
 test.sh                 builds and runs the tests
 ```
 
-Plain `swiftc`, no Xcode project and no dependencies. Pushes to `main` are built by GitHub Actions;
-a tag such as `v0.2.0` publishes a release with the zip.
+Plain `swiftc`, no Xcode project and no dependencies. Changes go in through pull requests, which
+GitHub Actions builds and tests. Every merge to `main` is released automatically: the last number
+of the version goes up by one (v0.1.2 → v0.1.3) and the release gets the zip.
