@@ -466,7 +466,7 @@ private struct KeyboardHint: View {
                 }
             }
             if let hovered {
-                Text(tip(for: hovered, role: role(of: hovered, dictate: dictate, lock: lock)))
+                tip(for: hovered, role: role(of: hovered, dictate: dictate, lock: lock))
                     .font(.system(size: 11))
                     .foregroundStyle(Color.primary.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -492,17 +492,20 @@ private struct KeyboardHint: View {
         key == dictate ? "dictate" : (key == lock ? "lock" : nil)
     }
 
-    private func tip(for key: Key, role: String?) -> String {
+    /// The explanation for a key; the lock and the sparkle are the same symbols the capsule shows.
+    private func tip(for key: Key, role: String?) -> Text {
         switch role {
         case "dictate":
-            return holdMode
+            return Text(holdMode
                 ? "\(key.name): hold it while you speak, let go to paste the text (and send it, in Claude). Double-tap it to lock listening on."
-                : "\(key.name): tap to start listening, tap again to paste the text."
+                : "\(key.name): tap to start listening, tap again to paste the text.")
         case "lock":
-            let lock = "\(key.name): press it while holding the dictation key to lock listening on. Then let go and keep talking; tap the dictation key to stop. A lock shows in the capsule."
-            return cleanupOn ? lock + " Tap \(key.name) again while locked to have Claude clean the text up, like the improve key." : lock
+            let lock = Text(Image(systemName: "lock.fill")) + Text(" \(key.name): press it while holding the dictation key to lock listening on. Then let go and keep talking; tap the dictation key to stop.")
+            guard cleanupOn else { return lock }
+            return lock + Text("\n") + Text(Image(systemName: "sparkles"))
+                + Text(" Tap \(key.name) again while locked to have Claude clean the text up, like the improve key.")
         default:
-            return key.name
+            return Text(key.name)
         }
     }
 
