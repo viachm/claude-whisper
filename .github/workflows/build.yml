@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Shell scripts parse
-        run: sh -n build.sh test.sh tools/make-icon.sh Resources/claude-whisper-capture
+        run: sh -n macos/build.sh macos/test.sh macos/tools/make-icon.sh macos/Resources/claude-whisper-capture
 
   build:
     runs-on: macos-14
@@ -52,18 +52,18 @@ jobs:
             TAG=$(echo "$LATEST" | awk -F. '{ printf "%s.%s.%d", $1, $2, $3 + 1 }')
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${TAG#v}" Resources/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${TAG#v}" macos/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" macos/Resources/Info.plist
           echo "Releasing $TAG"
 
       - name: Tests
-        run: ./test.sh
+        run: macos/test.sh
 
       - name: Build (Apple silicon + Intel, ad-hoc signed)
-        run: ./build.sh --universal
+        run: macos/build.sh --universal
 
       - name: Zip
-        run: ditto -c -k --keepParent "build/Claude Whisper.app" Claude-Whisper.zip
+        run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper.zip
 
       - uses: actions/upload-artifact@v4
         with:
