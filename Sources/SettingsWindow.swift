@@ -469,8 +469,11 @@ private struct KeyboardHint: View {
                 tip(for: hovered, role: role(of: hovered, dictate: dictate, lock: lock))
                     .font(.system(size: 11))
                     .foregroundStyle(Color.primary.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 420)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    // As wide as the key row (7 keys of 27, a space bar of 96, 7 gaps of 5), so the text
+                    // starts under its left edge.
+                    .frame(width: 320, alignment: .leading)
                     .transition(.opacity)
             }
         }
