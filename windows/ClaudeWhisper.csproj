@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Claude Whisper for Windows: a tray app, plain WinForms and Win32 calls, no packages.
+       Build: dotnet build windows/ClaudeWhisper.csproj -r win-x64   (also compiles on macOS and Linux)
+       Ship:  dotnet publish windows/ClaudeWhisper.csproj -c Release -r win-x64
+              (one .exe in windows/bin/Release/net8.0-windows/win-x64/publish) -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>ClaudeWhisper</AssemblyName>
+    <RootNamespace>ClaudeWhisper</RootNamespace>
+    <Product>Claude Whisper</Product>
+    <Company>viachm</Company>
+    <Copyright>MIT License</Copyright>
+    <Version>0.1.0</Version>
+    <ApplicationIcon>Resources/AppIcon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- Lets the compile step run on the macOS and Linux CI runners too. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- Publish settings: one self-contained .exe, nothing to install. -->
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- WinForms cannot be trimmed, so the runtime is compressed instead: ~65 MB rather than ~145 MB. -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The cue sounds are shared with the macOS app; the capture script is written out at run time. -->
+    <EmbeddedResource Include="../macos/Resources/*.wav" LogicalName="sounds/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Resources/claude-whisper-capture.cmd" LogicalName="claude-whisper-capture.cmd" />
+  </ItemGroup>
+
+</Project>
