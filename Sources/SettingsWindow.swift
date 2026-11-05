@@ -335,6 +335,11 @@ private struct GeneralPane: View {
                 }
                 .disabled(!prefs.playSounds)
                 Toggle("Show the dictation capsule on screen", isOn: $prefs.showOverlay)
+                Picker("Capsule position", selection: $prefs.capsulePosition) {
+                    ForEach(CapsulePosition.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .disabled(!prefs.showOverlay)
             }
 
             Section {
