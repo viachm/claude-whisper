@@ -117,19 +117,31 @@ private final class CapsuleView: NSView {
     }
 
     /// Extra width on the left for the lock symbol while locked.
-    private static let lockWidth: CGFloat = 16
+    /// The lock and the sparkle sit the same distance from the bars, on either side.
+    private static let iconGap: CGFloat = 5
+    private static let barWidth: CGFloat = 2, barGap: CGFloat = 2.4
+    private static var barsSpan: CGFloat { CGFloat(barCount) * barWidth + CGFloat(barCount - 1) * barGap }
+    private static var sidePadding: CGFloat { (barsWidth - barsSpan) / 2 }
+
+    private static let lockImage = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Locked")?
+        .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor.white.withAlphaComponent(0.9)])))
+    private static let sparkleImage = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Improve")?
+        .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [sparkleColor])))
 
     override var fittingSize: NSSize {
         if case .text = style {
             return NSSize(width: ceil(label.intrinsicContentSize.width) + 36, height: Self.height)
         }
-        let lock = style == .locked ? Self.lockWidth : 0
-        return NSSize(width: Self.barsWidth + lock + (improve ? Self.sparkleWidth : 0), height: Self.height)
+        var width = Self.barsWidth
+        if style == .locked, let lock = Self.lockImage { width += lock.size.width + Self.iconGap }
+        if improve, let sparkle = Self.sparkleImage { width += sparkle.size.width + Self.iconGap }
+        return NSSize(width: ceil(width), height: Self.height)
     }
 
     /// Claude's coral, so the sparkle reads as "Claude is involved".
     private static let sparkleColor = NSColor(srgbRed: 0.85, green: 0.47, blue: 0.34, alpha: 1)
-    private static let sparkleWidth: CGFloat = 22
 
     private var pending: CGFloat = 0
     private var lastShift = Date.distantPast
@@ -177,42 +189,27 @@ private final class CapsuleView: NSView {
         shape.fill()
 
         if case .text = style { return }
-        var content = rect
-        if improve {
-            content.size.width -= Self.sparkleWidth
-            drawSparkle(in: NSRect(x: content.maxX - 4, y: rect.minY, width: Self.sparkleWidth, height: rect.height))
+        // Laid out left to right: padding, lock, bars, sparkle, padding.
+        var x = rect.minX + Self.sidePadding
+        if style == .locked, let lock = Self.lockImage {
+            let size = lock.size
+            lock.draw(in: NSRect(x: x, y: rect.midY - size.height / 2, width: size.width, height: size.height))
+            x += size.width + Self.iconGap
         }
-        guard style == .locked else { return drawBars(in: content) }
-        drawLock(in: NSRect(x: content.minX + 12, y: content.minY, width: Self.lockWidth - 2, height: content.height))
-        drawBars(in: NSRect(x: content.minX + Self.lockWidth, y: content.minY, width: content.width - Self.lockWidth,
-                            height: content.height))
-    }
-
-    /// Steady while listening; pulses while Claude is cleaning the text up.
-    private func drawSparkle(in rect: NSRect) {
-        let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
-            .applying(NSImage.SymbolConfiguration(paletteColors: [Self.sparkleColor]))
-        guard let sparkle = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Improve")?
-            .withSymbolConfiguration(config) else { return }
-        let alpha = style == .wave ? 0.45 + 0.55 * (sin(phase * 2.5) + 1) / 2 : 1
-        let size = sparkle.size
-        sparkle.draw(in: NSRect(x: rect.minX, y: rect.midY - size.height / 2, width: size.width, height: size.height),
-                     from: .zero, operation: .sourceOver, fraction: alpha)
-    }
-
-    /// The lock shown while dictation keeps listening without the key held.
-    private func drawLock(in rect: NSRect) {
-        let config = NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-            .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor.white.withAlphaComponent(0.9)]))
-        guard let lock = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Locked")?
-            .withSymbolConfiguration(config) else { return }
-        let size = lock.size
-        lock.draw(in: NSRect(x: rect.minX, y: rect.midY - size.height / 2, width: size.width, height: size.height))
+        drawBars(in: NSRect(x: x, y: rect.minY, width: Self.barsSpan, height: rect.height))
+        x += Self.barsSpan + Self.iconGap
+        if improve, let sparkle = Self.sparkleImage {
+            // Steady while listening; pulses while Claude is cleaning the text up.
+            let alpha = style == .wave ? 0.45 + 0.55 * (sin(phase * 2.5) + 1) / 2 : 1
+            let size = sparkle.size
+            sparkle.draw(in: NSRect(x: x, y: rect.midY - size.height / 2, width: size.width, height: size.height),
+                         from: .zero, operation: .sourceOver, fraction: alpha)
+        }
     }
 
     private func drawBars(in rect: NSRect) {
         let count = Self.barCount
-        let barWidth: CGFloat = 2, gap: CGFloat = 2.4
+        let barWidth = Self.barWidth, gap = Self.barGap
         let total = CGFloat(count) * barWidth + CGFloat(count - 1) * gap
         var x = rect.midX - total / 2
         let maxHeight = rect.height - 10, minHeight: CGFloat = 2.5

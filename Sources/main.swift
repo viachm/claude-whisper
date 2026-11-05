@@ -379,7 +379,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return Log.write("cleanup finished after a new dictation started; kept in History only")
             }
             self.deliver(refined ?? text)
-            if refined == nil { self.show(.message("Pasted without cleanup")) }
+            if refined == nil { self.show(.message("Pasted without improving")) }
         }
     }
 

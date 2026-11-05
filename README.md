@@ -109,7 +109,7 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 - **Mode**: hold to talk (default), or tap to start and tap to stop.
 - **Cancel key**: Esc by default.
 - **After dictating**: paste at the cursor, paste and always press Return, or only copy.
-- **Cleanup**: Claude cleans a dictation up before it is pasted: filler words and self-corrections
+- **Improve**: Claude cleans a dictation up before it is pasted: filler words and self-corrections
   go ("option 2, no, option 1" becomes "option 1"), punctuation is fixed, your words and language
   stay; product names and technical terms that recognition spelled out phonetically get their
   original spelling. With a Dictation language set (Settings › Claude), the prompt names it, and
@@ -148,7 +148,7 @@ Session** and **Quit**. Quitting also stops the hidden Claude Code session.
 3. When you let go, Claude Code transcribes into its prompt. Claude Whisper presses Ctrl+G; Claude
    Code opens the prompt in `$EDITOR`, which is a small script (`claude-whisper-capture`) that writes
    the text out and empties the prompt. Nothing is ever sent to Claude as a message.
-4. With Cleanup on, the text goes to a separate `claude -p` process (stream-json, no tools, MCP
+4. With Improve on, the text goes to a separate `claude -p` process (stream-json, no tools, MCP
    servers or settings files) together with the name of the app in front. Starting `claude` takes
    longer than the model call, so the process is started ahead of time: when the improve key is pressed (the
    rest of the dictation covers the start-up), or all the time when cleanup is always on. Each one

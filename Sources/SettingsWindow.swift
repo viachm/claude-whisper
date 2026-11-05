@@ -254,7 +254,7 @@ private struct GeneralPane: View {
             }
 
             Section {
-                Picker("Clean up with Claude", selection: $prefs.cleanup) {
+                Picker("Improve with Claude", selection: $prefs.cleanup) {
                     ForEach(CleanupMode.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.radioGroup)
@@ -265,11 +265,11 @@ private struct GeneralPane: View {
                 }
                 .disabled(prefs.cleanup == .off)
             } header: {
-                Text("Cleanup")
+                Text("Improve")
             } footer: {
                 Text("""
                     Claude removes filler words and self-corrections ("option 2, no, option 1" becomes "option 1") and \
-                    fixes punctuation, keeping your words and language. Press the improve key while dictating to switch \
+                    fixes punctuation, keeping your words and language. Tap the improve key while dictating to switch \
                     it on for that dictation: a sparkle shows on the capsule. It uses your Claude subscription and adds \
                     about a second; if Claude doesn't answer within 10 seconds, the text is pasted as it was transcribed.
                     """)
@@ -500,10 +500,12 @@ private struct KeyboardHint: View {
                 ? "\(key.name): hold it while you speak, let go to paste the text (and send it, in Claude). Double-tap it to lock listening on."
                 : "\(key.name): tap to start listening, tap again to paste the text.")
         case "lock":
-            let lock = Text(Image(systemName: "lock.fill")) + Text(" \(key.name): press it while holding the dictation key to lock listening on. Then let go and keep talking; tap the dictation key to stop.")
+            // 1× locks, 2× (once locked) improves: the same symbols the capsule shows.
+            let lock = Text("1× ") + Text(Image(systemName: "lock.fill"))
+                + Text("  Lock: press \(key.name) while holding the dictation key, then let go and keep talking; tap the dictation key to stop.")
             guard cleanupOn else { return lock }
-            return lock + Text("\n") + Text(Image(systemName: "sparkles"))
-                + Text(" Tap \(key.name) again while locked to have Claude clean the text up, like the improve key.")
+            return lock + Text("\n2× ") + Text(Image(systemName: "sparkles"))
+                + Text("  Improve: tap \(key.name) again while locked, and Claude improves the text, like the improve key.")
         default:
             return Text(key.name)
         }
