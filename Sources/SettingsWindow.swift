@@ -244,15 +244,6 @@ private struct GeneralPane: View {
                 if let problem = state.hotkeyProblem { Text(problem).foregroundStyle(.red) }
             }
 
-            Section("Text") {
-                Picker("After dictating", selection: $prefs.output) {
-                    ForEach(OutputAction.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.radioGroup)
-                Toggle("Put the previous clipboard back after pasting", isOn: $prefs.restoreClipboard)
-                    .disabled(prefs.output == .copy)
-            }
-
             Section {
                 Picker("Improve with Claude", selection: $prefs.cleanup) {
                     ForEach(CleanupMode.allCases) { Text($0.title).tag($0) }
@@ -307,6 +298,15 @@ private struct GeneralPane: View {
                 .foregroundStyle(.secondary)
             }
             .disabled(prefs.output != .paste)
+
+            Section("Text") {
+                Picker("After dictating", selection: $prefs.output) {
+                    ForEach(OutputAction.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.radioGroup)
+                Toggle("Put the previous clipboard back after pasting", isOn: $prefs.restoreClipboard)
+                    .disabled(prefs.output == .copy)
+            }
 
             Section("Feedback") {
                 Toggle("Play sounds", isOn: $prefs.playSounds)
