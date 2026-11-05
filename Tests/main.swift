@@ -41,11 +41,17 @@ do {
 
 check(RefinerProtocol.outcome(fromLine: #"{"type":"system","subtype":"init"}"#) == nil, "outcome ignores non-result events")
 check(RefinerProtocol.outcome(fromLine: "not json") == nil, "outcome ignores lines that are not JSON")
-check(RefinerProtocol.outcome(fromLine: #"{"type":"result","subtype":"success","is_error":false,"result":"  Привіт, світ.\n"}"#)
-      == .text("Привіт, світ."), "outcome trims the result text")
+check(RefinerProtocol.outcome(fromLine: #"{"type":"result","subtype":"success","is_error":false,"result":"<text>  Привіт, світ.\n</text>"}"#)
+      == .text("Привіт, світ."), "outcome takes the text from its tags, trimmed")
+check(RefinerProtocol.outcome(fromLine: #"{"type":"result","is_error":false,"result":"Привіт, світ."}"#)
+      == .failed("no <text> in the answer"), "an answer without the tags is not used")
+check(RefinerProtocol.finalText(in: "<text>Фронтенд, е-е, впав.</text>\n\nWait, that is not right: the filler should go.\n\n<text>Фронтенд впав.</text>")
+      == "Фронтенд впав.", "only the last tagged text is used; thinking aloud is dropped")
+check(RefinerProtocol.finalText(in: "<text>Рядок 1\nРядок 2</text>") == "Рядок 1\nРядок 2", "tagged text keeps its line breaks")
+check(RefinerProtocol.finalText(in: "<text>не закрито") == nil, "an unclosed tag is not used")
 check(RefinerProtocol.outcome(fromLine: #"{"type":"result","is_error":true,"result":"Not logged in"}"#)
       == .failed("Not logged in"), "outcome reports an error result")
-check(RefinerProtocol.outcome(fromLine: #"{"type":"result","is_error":false,"result":"   "}"#)
+check(RefinerProtocol.outcome(fromLine: #"{"type":"result","is_error":false,"result":"<text>  </text>"}"#)
       == .failed("empty result"), "outcome treats a blank result as a failure")
 
 // arguments
