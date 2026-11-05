@@ -460,7 +460,7 @@ private struct KeyboardHint: View {
             HStack(alignment: .top, spacing: 5) {
                 ForEach(Key.allCases, id: \.self) { key in
                     let role = role(of: key, dictate: dictate, lock: lock)
-                    keycap(key, role: role, color: key == dictate ? .accentColor : Color(white: 0.38))
+                    keycap(key, role: role, color: key == dictate ? .accentColor : .orange)
                         .modifier(PointingHand(active: role != nil))
                         .onHover { inside in hover(role != nil && inside ? key : nil) }
                 }
@@ -514,10 +514,14 @@ private struct KeyboardHint: View {
 
     /// Under the lock key: the lock, plus the sparkle when its second tap improves the text, the
     /// same symbols the capsule shows.
-    private func caption(_ role: String?) -> Text {
-        guard role == "lock" else { return Text(role ?? " ") }
-        let lock = Text(Image(systemName: "lock.fill"))
-        return cleanupOn ? lock + Text(" + ") + Text(Image(systemName: "sparkles")) : lock + Text(" lock")
+    private func caption(_ role: String?, color: Color) -> Text {
+        guard role == "lock" else { return Text(role ?? " ").foregroundColor(role == nil ? .clear : color) }
+        let icon = Color.secondary
+        let lock = Text(Image(systemName: "lock.fill")).foregroundColor(icon)
+        guard cleanupOn else { return lock + Text(" lock").foregroundColor(icon) }
+        // A dimmer, tighter plus, so the two symbols stand out.
+        return lock + Text("\u{2009}+\u{2009}").foregroundColor(icon.opacity(0.5))
+            + Text(Image(systemName: "sparkles")).foregroundColor(icon)
     }
 
     private func keycap(_ key: Key, role: String?, color: Color) -> some View {
@@ -532,10 +536,9 @@ private struct KeyboardHint: View {
                     .fill(role != nil ? color : Color.primary.opacity(0.06)))
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.primary.opacity(role != nil ? 0 : 0.12)))
             // With cleanup on, the lock key's later taps switch it, so the caption shows both.
-            caption(role)
+            caption(role, color: color)
                 .font(.caption2)
                 .fixedSize()
-                .foregroundStyle(role != nil ? color : .clear)
         }
         .contentShape(Rectangle())
     }
