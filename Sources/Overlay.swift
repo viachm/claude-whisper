@@ -70,12 +70,22 @@ final class Overlay {
     }
 
     /// Just above the Dock, centred on the screen the mouse is on.
+    /// On the screen the mouse is on, at the edge chosen in Settings: centred along the top or
+    /// bottom (clear of the menu bar and the Dock), or halfway up the left or right side.
     private func position(size: NSSize) {
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
         guard let frame = screen?.visibleFrame else { return }
-        panel.setFrame(NSRect(x: (frame.midX - size.width / 2).rounded(), y: frame.minY + 14,
-                              width: size.width, height: size.height), display: true)
+        let margin: CGFloat = 14
+        let origin: NSPoint
+        switch Preferences.shared.capsulePosition {
+        case .bottom: origin = NSPoint(x: frame.midX - size.width / 2, y: frame.minY + margin)
+        case .top: origin = NSPoint(x: frame.midX - size.width / 2, y: frame.maxY - margin - size.height)
+        case .left: origin = NSPoint(x: frame.minX + margin, y: frame.midY - size.height / 2)
+        case .right: origin = NSPoint(x: frame.maxX - margin - size.width, y: frame.midY - size.height / 2)
+        }
+        panel.setFrame(NSRect(x: origin.x.rounded(), y: origin.y.rounded(), width: size.width, height: size.height),
+                       display: true)
     }
 }
 

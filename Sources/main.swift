@@ -252,6 +252,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         watch(prefs.$refineModel) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$extraArguments) { [weak self] in self?.restartSession() }
         watch(prefs.$showOverlay) { [weak self] in self?.overlay.hide() }
+        // Show where the capsule will be from now on.
+        watch(prefs.$capsulePosition) { [weak self] in self?.show(.message("Dictation shows here")) }
     }
 
     /// @Published emits before the property is set, so the action runs on the next main-queue

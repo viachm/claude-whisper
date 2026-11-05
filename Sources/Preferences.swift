@@ -57,6 +57,14 @@ enum SoundSet: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
+/// Where the dictation capsule sits on the screen.
+enum CapsulePosition: String, CaseIterable, Identifiable {
+    case bottom, top, left, right
+
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+}
+
 enum OutputAction: String, CaseIterable, Identifiable {
     case paste, pasteAndReturn, copy
 
@@ -176,6 +184,7 @@ final class Preferences: ObservableObject {
     /// The slider position, 0…1; Sound curves it into the playback volume.
     @Published var soundVolume: Double { didSet { defaults.set(soundVolume, forKey: "soundVolume") } }
     @Published var showOverlay: Bool { didSet { defaults.set(showOverlay, forKey: "showOverlay") } }
+    @Published var capsulePosition: CapsulePosition { didSet { defaults.set(capsulePosition.rawValue, forKey: "capsulePosition") } }
 
     /// Press Return after pasting a held dictation into Claude: the desktop app, a terminal tab
     /// running Claude Code, or one of `autoSendApps`.
@@ -209,6 +218,7 @@ final class Preferences: ObservableObject {
         soundSet = SoundSet(rawValue: defaults.string(forKey: "soundSet") ?? "") ?? .click
         soundVolume = defaults.object(forKey: "soundVolume") as? Double ?? 0.6
         showOverlay = defaults.object(forKey: "showOverlay") as? Bool ?? true
+        capsulePosition = CapsulePosition(rawValue: defaults.string(forKey: "capsulePosition") ?? "") ?? .bottom
         autoSend = defaults.object(forKey: "autoSend") as? Bool ?? true
         sendAfterLock = defaults.object(forKey: "sendAfterLock") as? Bool ?? false
         autoSendApps = defaults.stringArray(forKey: "autoSendApps") ?? []

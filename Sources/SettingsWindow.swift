@@ -72,8 +72,12 @@ final class SettingsWindowController {
             // A plain title bar: drawing the sidebar under a transparent one left artefacts at the top.
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
+            // Opened from another desktop (Space), it comes to the current one instead of staying put.
+            window.collectionBehavior = [.moveToActiveSpace]
             self.window = window
         }
+        // SwiftUI sizes the window lazily; lay it out first so it is centred by its real size.
+        window?.layoutIfNeeded()
         centerOnScreen()
         // A menu bar app is not active on its own; without this the window opens behind others.
         NSApp.activate()
@@ -335,6 +339,11 @@ private struct GeneralPane: View {
                 }
                 .disabled(!prefs.playSounds)
                 Toggle("Show the dictation capsule on screen", isOn: $prefs.showOverlay)
+                Picker("Capsule position", selection: $prefs.capsulePosition) {
+                    ForEach(CapsulePosition.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .disabled(!prefs.showOverlay)
             }
 
             Section {
@@ -486,7 +495,7 @@ private struct KeyboardHint: View {
         pendingHover?.cancel()
         let work = DispatchWorkItem { hovered = key }
         pendingHover = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + (key == nil ? 0.12 : 0.18), execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (key == nil ? 0.12 : 0.15), execute: work)
     }
 
     private func role(of key: Key, dictate: Key?, lock: Key?) -> String? {
