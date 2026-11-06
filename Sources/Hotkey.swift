@@ -80,14 +80,21 @@ final class Hotkey {
         // Without Input Monitoring the tap is created but never sees a key.
         guard CGPreflightListenEventAccess() else { return false }
         let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
+            | (1 << CGEventType.keyUp.rawValue)
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             let hotkey = Unmanaged<Hotkey>.fromOpaque(refcon!).takeUnretainedValue()
+            let swallow = hotkey.shouldSwallow(type: type, event: event)
             hotkey.handle(type: type, event: event)
-            return Unmanaged.passUnretained(event)
+            return swallow ? nil : Unmanaged.passUnretained(event)
         }
-        guard let port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
-                                           eventsOfInterest: CGEventMask(mask), callback: callback,
-                                           userInfo: Unmanaged.passUnretained(self).toOpaque()) else { return false }
+        // An active tap can keep the cancel key from the app in front (needs Accessibility); a
+        // listen-only one still works for everything else, so fall back to it.
+        let userInfo = Unmanaged.passUnretained(self).toOpaque()
+        let port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+                                     eventsOfInterest: CGEventMask(mask), callback: callback, userInfo: userInfo)
+            ?? CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
+                                 eventsOfInterest: CGEventMask(mask), callback: callback, userInfo: userInfo)
+        guard let port else { return false }
         tap = port
         tapSource = CFMachPortCreateRunLoopSource(nil, port, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), tapSource, .commonModes)
@@ -100,6 +107,7 @@ final class Hotkey {
         // A key held while disarmed goes up unseen.
         improveTap.reset()
         lockKeyTap.reset()
+        swallowedKey = nil
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -177,6 +185,24 @@ final class Hotkey {
 
     private static let rightCommand = ModifierKey(keyCode: 54, deviceMask: 0x10, flag: .maskCommand, name: "Right Command")
     private static let rightOption = ModifierKey(keyCode: 61, deviceMask: 0x40, flag: .maskAlternate, name: "Right Option")
+
+    /// The cancel key while a dictation is going belongs to Claude Whisper alone: it must not also
+    /// reach the app in front, where Esc would, say, interrupt Claude Code. Its auto-repeats and
+    /// its key-up go with it. Every other key passes through untouched.
+    private var swallowedKey: Int64?
+
+    private func shouldSwallow(type: CGEventType, event: CGEvent) -> Bool {
+        guard let config, type == .keyDown || type == .keyUp else { return false }
+        let code = event.getIntegerValueField(.keyboardEventKeycode)
+        if let swallowedKey, code == swallowedKey {
+            if type == .keyUp { self.swallowedKey = nil }
+            return true
+        }
+        guard type == .keyDown, code == Int64(config.cancelKey.keyCode), isRecording() else { return false }
+        if case .idle = gesture { return false }
+        swallowedKey = code
+        return true
+    }
 
     private func handle(type: CGEventType, event: CGEvent) {
         guard let config else { return }
