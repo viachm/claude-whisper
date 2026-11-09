@@ -27,7 +27,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Locked before Claude was listening: the capsule shows the lock once it is.
     private var locked = false
     /// Whether the dictation being transcribed was held and let go (rather than locked or
-    /// tapped), which decides whether it is auto-sent.
+    /// tapped), which decides whether "Paste and press Return" presses Return.
     private var held = false
     /// Whether the improve key flipped the cleanup default for the current dictation.
     private var improveToggled = false
@@ -301,6 +301,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             phase = .idle
             show(.message("Claude didn't start listening"))
             Sound.play("Basso")
+            // A stuck session rarely recovers by itself; a fresh one is ready in about a second.
+            restartSession()
             return
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { [weak self] in
@@ -391,26 +393,12 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Log.write("\(prefs.output == .copy ? "copying" : "pasting") \(text.count) characters, \(msSinceRelease()) ms after release")
         history.add(text)
         if prefs.output == .copy { show(.message("Copied to clipboard")) }
-        let target = NSWorkspace.shared.frontmostApplication
         // A trailing space so the next dictation or typing doesn't run into this one; a message
         // that gets sent is unaffected.
         let pasted = prefs.output == .copy ? text : text + " "
-        Paster.deliver(pasted, as: prefs.output, restoreClipboard: prefs.restoreClipboard)
-        if prefs.output == .paste && (held || prefs.sendAfterLock) { autoSend(to: target, pastedAt: Date()) }
-    }
-
-    /// Return after the paste when the dictation was meant to be sent and went into Claude. A
-    /// terminal check can take a moment; Return only goes out if the same app is still in front.
-    private func autoSend(to target: NSRunningApplication?, pastedAt: Date) {
-        AutoSend.shouldSend(to: target) { send in
-            guard send else { return }
-            let elapsed = Date().timeIntervalSince(pastedAt)
-            guard elapsed < 2, NSWorkspace.shared.frontmostApplication?.processIdentifier == target?.processIdentifier else {
-                return Log.write("auto-send: skipped, focus moved")
-            }
-            Log.write("auto-send: Return in \(target?.bundleIdentifier ?? "?")")
-            DispatchQueue.main.asyncAfter(deadline: .now() + max(0, Paster.returnDelay - elapsed), execute: Paster.pressReturn)
-        }
+        // Return only after a hold: a locked dictation is inserted unsent.
+        let action: OutputAction = prefs.output == .pasteAndReturn && !held ? .paste : prefs.output
+        Paster.deliver(pasted, as: action, restoreClipboard: prefs.restoreClipboard)
     }
 
     private func show(_ mode: Overlay.Mode) {

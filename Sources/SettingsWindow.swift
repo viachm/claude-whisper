@@ -272,44 +272,20 @@ private struct GeneralPane: View {
             }
 
             Section {
-                Toggle("Send after holding the key", isOn: $prefs.autoSend)
-                Toggle("Also send locked and tap-mode dictations", isOn: $prefs.sendAfterLock)
-                    .disabled(!prefs.autoSend)
-                Group {
-                    ForEach(prefs.autoSendApps, id: \.self) { id in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(appName(id))
-                                Text(id).font(.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button("Remove") { prefs.autoSendApps.removeAll { $0 == id } }
-                        }
-                    }
-                    HStack {
-                        Spacer()
-                        Button("Add App…", action: addApp)
-                    }
-                }
-                .disabled(!prefs.autoSend)
-            } header: {
-                Text("Auto-send into Claude")
-            } footer: {
-                Text("""
-                    Presses Return after the text is pasted into Claude (the desktop app, or a Ghostty, Terminal or iTerm2 \
-                    tab running Claude Code), so the message goes straight to Claude. Apps added here always get Return.
-                    """)
-                .foregroundStyle(.secondary)
-            }
-            .disabled(prefs.output != .paste)
-
-            Section("Text") {
                 Picker("After dictating", selection: $prefs.output) {
                     ForEach(OutputAction.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.radioGroup)
                 Toggle("Put the previous clipboard back after pasting", isOn: $prefs.restoreClipboard)
                     .disabled(prefs.output == .copy)
+            } header: {
+                Text("Text")
+            } footer: {
+                Text("""
+                    With Return, a dictation you held the key for is sent straight away, in Claude or any other \
+                    app where Return sends; a locked one is only pasted.
+                    """)
+                .foregroundStyle(.secondary)
             }
 
             Section("Feedback") {
@@ -366,20 +342,6 @@ private struct GeneralPane: View {
     private func keyLabel(_ key: TriggerKey) -> Text {
         let symbol = key == .fn ? Text(Image(systemName: "globe")) : Text(key.symbol)
         return symbol + Text("  \(key.title)")
-    }
-
-    private func appName(_ bundleID: String) -> String {
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return bundleID }
-        return FileManager.default.displayName(atPath: url.path)
-    }
-
-    private func addApp() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        guard panel.runModal() == .OK, let url = panel.url,
-              let id = Bundle(url: url)?.bundleIdentifier, !prefs.autoSendApps.contains(id) else { return }
-        prefs.autoSendApps.append(id)
     }
 
     private func setOpenAtLogin(_ on: Bool) {
@@ -507,7 +469,7 @@ private struct KeyboardHint: View {
         switch role {
         case "dictate":
             return Text(holdMode
-                ? "\(key.name): hold it while you speak, let go to paste the text (and send it, in Claude). Double-tap it to lock listening on."
+                ? "\(key.name): hold it while you speak, let go to paste the text. Double-tap it to lock listening on."
                 : "\(key.name): tap to start listening, tap again to paste the text.")
         case "lock":
             // 1× locks, 2× (once locked) improves: the same symbols the capsule shows.

@@ -55,6 +55,9 @@ final class ClaudeSession {
         env["TERM"] = "xterm-256color"
         env["EDITOR"] = capture
         env["VISUAL"] = capture
+        // The user's own claude updates itself; this hidden copy must not, since an update notice
+        // in its prompt can keep it from starting to listen.
+        env["DISABLE_AUTOUPDATER"] = "1"
         env["CLAUDE_WHISPER_OUTBOX"] = outbox.path
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
 

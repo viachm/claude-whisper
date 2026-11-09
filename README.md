@@ -13,17 +13,18 @@ so it runs on the Claude account you are already signed in with.
 
 | Do this | What happens |
 |---|---|
-| Hold **Right Command**, speak, let go | the text is pasted at the cursor; in Claude it is also sent |
+| Hold **Right Command**, speak, let go | the text is pasted at the cursor |
 | While holding, press **Right Option** | 🔒 locked: keeps listening after you let go |
 | Double-tap Right Command | 🔒 locked from the start |
-| Tap Right Command while locked | stops; the text is pasted without sending |
+| Tap Right Command while locked | stops; the text is pasted |
 | Tap **Shift** while dictating | ✨ improve: Claude cleans this dictation up |
 | Tap Right Option again while locked | ✨ the same as Shift |
 | Esc | cancels and discards |
 | Right Command with another key (Cmd+C…) | a normal shortcut; the dictation is dropped |
+| Typing while locked | goes to the app as usual; the dictation goes on |
 
-- **Auto-send into Claude**: after a hold, Return is pressed when the text went into the Claude
-  desktop app or a Ghostty, Terminal or iTerm2 tab running Claude Code.
+- **Paste and press Return** (Settings › Text, off by default) sends a held dictation straight
+  away, in Claude or any app where Return sends; a locked one is only pasted.
 - **Improve** removes fillers and self-corrections ("option 2, no, option 1" → "option 1"), fixes
   punctuation and restores the spelling of product names and technical terms, keeping your words
   and language. It runs a separate `claude -p` (Haiku by default), adds about a second and uses your
@@ -69,8 +70,7 @@ cd claude-whisper
 | Input Monitoring | seeing the dictation key |
 | Microphone | letting the hidden Claude Code session hear you |
 
-The first auto-send into a terminal also asks to let Claude Whisper control it (to see which tab is
-in front). Release builds are ad-hoc signed, so macOS asks for the permissions again after each
+Release builds are ad-hoc signed, so macOS asks for the permissions again after each
 update; a build signed with your Apple Development certificate keeps them.
 
 ## Settings
@@ -81,9 +81,7 @@ update; a build signed with your Apple Development certificate keeps them.
     key dictates and which locks (point at a key for what it does).
   - **Improve**: never, when you tap the improve key (default), or always (then the key skips it);
     the improve key (any single modifier, Shift by default); Haiku or Sonnet.
-  - **Auto-send into Claude**: after a hold, and optionally after a locked dictation; extra apps
-    that always get Return.
-  - **Text**: paste, paste and press Return, or copy only; restore the clipboard.
+  - **Text**: paste (default), paste and press Return, or copy only; restore the clipboard.
   - **Feedback**: sounds (five sets, with a volume slider), the capsule and where it shows (bottom,
     top, left or right), open at login.
 - **Claude**: **Faster start** (makes Option+K Claude Code's voice key in
