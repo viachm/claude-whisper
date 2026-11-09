@@ -82,7 +82,7 @@ sealed class Preferences
     private TriggerKey trigger = TriggerKey.RightControl;
     private KeyCombo shortcut = KeyCombo.ControlAltSpace;
     private HotkeyMode mode = HotkeyMode.Hold;
-    private bool autoSend = true;
+    private bool autoSend = false;
     private bool autoSendTerminals = false;
     private bool restoreClipboard = true;
     private bool playSounds = true;
@@ -95,7 +95,8 @@ sealed class Preferences
     public TriggerKey Trigger { get => trigger; set => Set(ref trigger, value); }
     public KeyCombo Shortcut { get => shortcut; set => Set(ref shortcut, value); }
     public HotkeyMode Mode { get => mode; set => Set(ref mode, value); }
-    /// Press Return after pasting a held dictation into the Claude desktop app.
+    /// Press Return after pasting a held dictation into the Claude desktop app. Off by default: a
+    /// dictation is just inserted at the cursor, and the Enter is opt-in.
     public bool AutoSend { get => autoSend; set => Set(ref autoSend, value); }
     /// Also into a console window whose process tree runs Claude Code. Off by default: a
     /// terminal with several tabs cannot tell which tab is in front, and Return in a shell runs
