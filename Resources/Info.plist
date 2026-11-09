@@ -24,8 +24,6 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>Claude Whisper asks your terminal which tab has focus, so it only sends a dictation when that tab is running Claude Code.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Claude Whisper's hidden Claude Code session records your voice while you dictate.</string>
 </dict>

@@ -73,7 +73,7 @@ enum OutputAction: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .paste: return "Paste at the cursor"
-        case .pasteAndReturn: return "Paste and press Return"
+        case .pasteAndReturn: return "Paste and press Return to send it"
         case .copy: return "Copy to the clipboard only"
         }
     }
@@ -186,13 +186,6 @@ final class Preferences: ObservableObject {
     @Published var showOverlay: Bool { didSet { defaults.set(showOverlay, forKey: "showOverlay") } }
     @Published var capsulePosition: CapsulePosition { didSet { defaults.set(capsulePosition.rawValue, forKey: "capsulePosition") } }
 
-    /// Press Return after pasting a held dictation into Claude: the desktop app, a terminal tab
-    /// running Claude Code, or one of `autoSendApps`.
-    @Published var autoSend: Bool { didSet { defaults.set(autoSend, forKey: "autoSend") } }
-    /// Also send a locked (or tap-mode) dictation, which is otherwise only inserted.
-    @Published var sendAfterLock: Bool { didSet { defaults.set(sendAfterLock, forKey: "sendAfterLock") } }
-    /// Bundle ids where a sent dictation always gets Return.
-    @Published var autoSendApps: [String] { didSet { defaults.set(autoSendApps, forKey: "autoSendApps") } }
 
     /// Empty means the first install found (`defaultClaudePath`). Same key as the old
     /// `defaults write … claudePath`.
@@ -219,9 +212,6 @@ final class Preferences: ObservableObject {
         soundVolume = defaults.object(forKey: "soundVolume") as? Double ?? 0.6
         showOverlay = defaults.object(forKey: "showOverlay") as? Bool ?? true
         capsulePosition = CapsulePosition(rawValue: defaults.string(forKey: "capsulePosition") ?? "") ?? .bottom
-        autoSend = defaults.object(forKey: "autoSend") as? Bool ?? true
-        sendAfterLock = defaults.object(forKey: "sendAfterLock") as? Bool ?? false
-        autoSendApps = defaults.stringArray(forKey: "autoSendApps") ?? []
         claudePath = defaults.string(forKey: "claudePath") ?? ""
         language = defaults.string(forKey: "language") ?? ""
         extraArguments = defaults.string(forKey: "extraArguments") ?? ""
