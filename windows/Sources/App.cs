@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
+using System.Reflection;
 
 namespace ClaudeWhisper;
 
@@ -36,6 +37,9 @@ sealed class App : ApplicationContext
         tray = new NotifyIcon { Text = Paths.AppName, Visible = true, ContextMenuStrip = BuildMenu() };
         SetIcon(active: false);
         tray.DoubleClick += (_, _) => OpenSettings();
+        // Windows only opens the menu on right-click; show it on a left-click too, since that is
+        // what most people try first and a menu-bar app on macOS opens on a plain click.
+        tray.MouseUp += (_, e) => { if (e.Button == MouseButtons.Left) ShowTrayMenu(); };
 
         hotkey.OnStart += Pressed;
         hotkey.OnStop += Released;
@@ -72,6 +76,14 @@ sealed class App : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit Claude Whisper", null, (_, _) => ExitThread());
         return menu;
+    }
+
+    /// Opens the tray menu at the icon, the same popup a right-click shows. NotifyIcon has no public
+    /// way to do this, so its own internal method is used.
+    private void ShowTrayMenu()
+    {
+        typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?.Invoke(tray, null);
     }
 
     /// Built each time it opens: the latest dictations, a click copies one.

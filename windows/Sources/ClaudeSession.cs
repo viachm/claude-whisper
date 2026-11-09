@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace ClaudeWhisper;
@@ -51,6 +53,7 @@ sealed class ClaudeSession
         {
             Directory.CreateDirectory(Paths.Workspace);
             Directory.CreateDirectory(Paths.Bin);
+            EnsureWorkspaceTrusted();
             // `--settings` takes a file as well as JSON; a file needs no quoting tricks through cmd.exe.
             var settingsFile = Path.Combine(Paths.Local, "session-settings.json");
             File.WriteAllText(settingsFile, SessionSettings.Json(prefs.Language));
@@ -91,6 +94,54 @@ sealed class ClaudeSession
             int code = current.WaitForExit();
             Ui.Post(() => ChildExited(current, code));
         }) { IsBackground = true, Name = "conpty-wait" }.Start();
+    }
+
+    /// Claude Code asks to trust a folder the first time it is used, as a full-screen prompt that
+    /// must be answered before the session is usable and whose default choice is "No, exit". The
+    /// hidden session's workspace is ours and always safe, so trust is granted ahead of time by
+    /// recording it the way Claude itself does: `hasTrustDialogAccepted` on the workspace's entry
+    /// in ~/.claude.json. Without this the session sits at the prompt and, when the answer does not
+    /// take, exits, so it is started again and again. The old reply to the prompt (see `Received`)
+    /// stays as a fallback for when the config cannot be written.
+    private static void EnsureWorkspaceTrusted()
+    {
+        var configPath = Path.Combine(Paths.Home, ".claude.json");
+        try
+        {
+            // Claude keys projects by the working directory written with forward slashes.
+            var key = Paths.Workspace.Replace('\\', '/');
+            var root = File.Exists(configPath)
+                ? JsonNode.Parse(File.ReadAllText(configPath)) as JsonObject
+                : new JsonObject();
+            if (root == null) { Log.Write($"{configPath} is not a JSON object; leaving it alone"); return; }
+
+            if (root["projects"] is not JsonObject projects)
+            {
+                projects = new JsonObject();
+                root["projects"] = projects;
+            }
+            if (projects[key] is not JsonObject project)
+            {
+                project = new JsonObject();
+                projects[key] = project;
+            }
+            if (project["hasTrustDialogAccepted"] is JsonValue v && v.TryGetValue(out bool accepted) && accepted)
+                return; // already trusted; don't rewrite the user's config
+            project["hasTrustDialogAccepted"] = true;
+
+            // Write to a sibling file and swap it in, so an interrupted write can't truncate the
+            // user's config.
+            var tmp = configPath + ".whisper.tmp";
+            File.WriteAllText(tmp, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            if (File.Exists(configPath)) File.Replace(tmp, configPath, null);
+            else File.Move(tmp, configPath);
+            Log.Write($"trusted the workspace in {configPath}");
+        }
+        catch (Exception e)
+        {
+            // Not fatal: Claude will show the trust prompt and `Received` will try to answer it.
+            Log.Write($"could not pre-trust the workspace: {e.Message}");
+        }
     }
 
     public void Stop()
