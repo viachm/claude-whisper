@@ -107,8 +107,7 @@ final class Hotkey {
         // A key held while disarmed goes up unseen.
         improveTap.reset()
         lockKeyTap.reset()
-        swallowedKeys = []
-        heldSince = nil
+        swallowedKey = nil
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
             CFMachPortInvalidate(tap)
@@ -187,38 +186,22 @@ final class Hotkey {
     private static let rightCommand = ModifierKey(keyCode: 54, deviceMask: 0x10, flag: .maskCommand, name: "Right Command")
     private static let rightOption = ModifierKey(keyCode: 61, deviceMask: 0x40, flag: .maskAlternate, name: "Right Option")
 
-    /// Keys Claude Whisper keeps from the app in front, with their auto-repeats and key-ups:
-    /// - the cancel key while a dictation is going, since Esc would, say, interrupt Claude Code;
-    /// - any key pressed while the dictation key has been held past `tapLength`. That dictation
-    ///   carries on, and the key, which the app would see with Command, does nothing at all.
-    /// Every other key passes through untouched.
-    private var swallowedKeys: Set<Int64> = []
-    /// When the dictation key went down to start the current dictation, while it is still held.
-    private var heldSince: Date?
+    /// The cancel key while a dictation is going belongs to Claude Whisper alone: it must not also
+    /// reach the app in front, where Esc would, say, interrupt Claude Code. Its auto-repeats and
+    /// its key-up go with it. Every other key passes through untouched.
+    private var swallowedKey: Int64?
 
     private func shouldSwallow(type: CGEventType, event: CGEvent) -> Bool {
         guard let config, type == .keyDown || type == .keyUp else { return false }
         let code = event.getIntegerValueField(.keyboardEventKeycode)
-        if swallowedKeys.contains(code) {
-            if type == .keyUp { swallowedKeys.remove(code) }
+        if let swallowedKey, code == swallowedKey {
+            if type == .keyUp { self.swallowedKey = nil }
             return true
         }
-        guard type == .keyDown, isRecording() else { return false }
+        guard type == .keyDown, code == Int64(config.cancelKey.keyCode), isRecording() else { return false }
         if case .idle = gesture { return false }
-        guard code == Int64(config.cancelKey.keyCode) || ignoresKeys else { return false }
-        if config.trigger == .shortcut && code == Int64(config.shortcut.keyCode) { return false }
-        swallowedKeys.insert(code)
+        swallowedKey = code
         return true
-    }
-
-    /// The dictation key held long enough to be a dictation rather than the start of a shortcut
-    /// (Right Command+C): other keys then neither end it nor reach the app.
-    private var ignoresKeys: Bool {
-        guard modifierDown, let heldSince, Date().timeIntervalSince(heldSince) >= Self.tapLength else { return false }
-        switch gesture {
-        case .down, .handsFree: return true
-        default: return false
-        }
     }
 
     private func handle(type: CGEventType, event: CGEvent) {
@@ -261,7 +244,6 @@ final class Hotkey {
                 triggerDown()
             } else if !down && modifierDown {
                 modifierDown = false
-                heldSince = nil
                 triggerUp()
             }
         case .keyDown:
@@ -270,7 +252,6 @@ final class Hotkey {
             let code = event.getIntegerValueField(.keyboardEventKeycode)
             // The shortcut's own key (and its auto-repeat), should the tap get to see it at all.
             if config.trigger == .shortcut && code == Int64(config.shortcut.keyCode) { return }
-            if swallowedKeys.contains(code) && code != Int64(config.cancelKey.keyCode) { return }
             otherKey(isCancel: code == Int64(config.cancelKey.keyCode))
         default:
             break
@@ -284,8 +265,7 @@ final class Hotkey {
         switch gesture {
         case .idle:
             onStart?()
-            heldSince = Date()
-            gesture = .down(since: heldSince!)
+            gesture = .down(since: Date())
         case .awaitingSecondTap:
             secondTapTimeout?.cancel()
             gesture = .secondTapDown
@@ -366,7 +346,6 @@ final class Hotkey {
         secondTapTimeout = nil
         lockKeyTap.reset()
         gesture = .idle
-        heldSince = nil
     }
 
     private func stop(held: Bool) {

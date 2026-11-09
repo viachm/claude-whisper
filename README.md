@@ -20,8 +20,7 @@ so it runs on the Claude account you are already signed in with.
 | Tap **Shift** while dictating | ✨ improve: Claude cleans this dictation up |
 | Tap Right Option again while locked | ✨ the same as Shift |
 | Esc | cancels and discards |
-| Another key while holding Right Command | ignored: the dictation goes on, and the key does nothing |
-| Right Command with another key at once (Cmd+C…) | a normal shortcut; the dictation is dropped |
+| Right Command with another key (Cmd+C…) | a normal shortcut; the dictation is dropped |
 
 - **Auto-send into Claude**: after a hold, Return is pressed when the text went into the Claude
   desktop app or a Ghostty, Terminal or iTerm2 tab running Claude Code.
