@@ -301,6 +301,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             phase = .idle
             show(.message("Claude didn't start listening"))
             Sound.play("Basso")
+            // A stuck session rarely recovers by itself; a fresh one is ready in about a second.
+            restartSession()
             return
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { [weak self] in
