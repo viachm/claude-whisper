@@ -323,10 +323,9 @@ final class Hotkey {
         case .idle:
             break
         case .handsFree:
+            // Locked: only the cancel key or the dictation key ends it; every other key just goes
+            // to the app, even with the dictation key still down.
             if isCancel { cancel(deliberate: true) }
-            // A key while the trigger is still held after locking was a Command+Option shortcut,
-            // not dictation. Once it is let go, typing elsewhere does not end it.
-            else if modifierDown { cancel(deliberate: false) }
         case .stopDown:
             if isCancel { cancel(deliberate: true) } else { gesture = .stopDown(interrupted: true) }
         case .down, .awaitingSecondTap, .secondTapDown:
