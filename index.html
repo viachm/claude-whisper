@@ -9,23 +9,23 @@
   RENAMING THE APP
   The page body takes the product name, the repo and the file names from the
   APP object in the <script> at the end of <body>: change it there and every
-  visible occurrence follows (headings, buttons, links, the zip name and the
+  visible occurrence follows (headings, buttons, links, the zip names and the
   `xattr` command).
 
   The tags in this block are read by link previews and search crawlers, which
   do not run JavaScript, so they carry the name as plain text. Update them in
-  the same edit (the script also rewrites them at runtime):
+  the same edit (the script also rewrites the title at runtime):
     <title>, description, og:title, og:site_name, og:url, og:image,
     twitter:title, twitter:image, canonical.
   ============================================================================
 -->
 <title>Claude Whisper: hold a key, speak, and it types for you</title>
-<meta name="description" content="Free, open-source macOS menu bar app: hold Right Command anywhere, speak, let go, and the text is pasted at your cursor. Runs on Claude Code's own voice dictation and the Claude account you already use. Unofficial, not affiliated with Anthropic.">
+<meta name="description" content="Free, open-source voice typing for macOS and Windows: hold a key anywhere, speak, let go, and the text is pasted at your cursor. Runs on Claude Code's own voice dictation and the Claude account you already use. Unofficial, not affiliated with Anthropic.">
 <link rel="canonical" href="https://viachm.github.io/claude-whisper/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Claude Whisper">
 <meta property="og:title" content="Claude Whisper: system-wide voice typing on your Claude account">
-<meta property="og:description" content="Hold Right Command, speak, let go: the text is pasted wherever your cursor is. A free, open-source macOS menu bar app that drives Claude Code's built-in voice dictation.">
+<meta property="og:description" content="Hold a key, speak, let go: the text is pasted wherever your cursor is. A free, open-source menu bar app for macOS (and a first Windows version) that drives Claude Code's built-in voice dictation.">
 <meta property="og:url" content="https://viachm.github.io/claude-whisper/">
 <meta property="og:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
 <meta property="og:image:width" content="512">
@@ -33,108 +33,114 @@
 <meta property="og:image:alt" content="App icon: white voice bars on a dark square">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Claude Whisper: system-wide voice typing on your Claude account">
-<meta name="twitter:description" content="Hold Right Command, speak, let go: the text is pasted wherever your cursor is. Free and open source, for macOS.">
+<meta name="twitter:description" content="Hold a key, speak, let go: the text is pasted wherever your cursor is. Free and open source, for macOS and Windows.">
 <meta name="twitter:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
 <!-- end of the name block -->
 
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e0f12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1018" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --bg: #f6f6f4;
-  --bg-alt: #eeeeeb;
+  --bg: #f7f7fb;
+  --bg-alt: #eef0f7;
   --surface: #ffffff;
-  --ink: #121316;
-  --ink-2: #3a3c43;
-  --muted: #6b6e78;
-  --line: #e2e2de;
-  --line-strong: #cfcfca;
-  --accent: #0d7c74;
+  --ink: #161a2b;
+  --ink-2: #3c4258;
+  --muted: #5b6176;
+  --line: #e1e4ee;
+  --line-strong: #c9cede;
+  --accent: #4a4fc4;
+  --accent-hover: #3d41a8;
   --accent-ink: #ffffff;
-  --accent-soft: #dff1ee;
-  --spark: #d9922e;
+  --accent-soft: #e8e9fb;
+  --accent-text: #3f44b5;
+  --spark: #b4520a;
   --key-top: #ffffff;
-  --key-side: #d6d6d2;
-  --key-ink: #2a2c31;
-  --code-bg: #16171b;
-  --code-ink: #e8e8ea;
-  --desk-1: #dfe3e2;
-  --desk-2: #c9d3d1;
-  --shadow: 0 1px 2px rgb(20 20 30 / .06), 0 12px 32px -12px rgb(20 20 30 / .18);
-  --radius: 16px;
-  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --key-side: #d3d7e4;
+  --key-ink: #262b3d;
+  --code-bg: #151827;
+  --code-ink: #e6e8f2;
+  --code-muted: #9aa0b6;
+  --stage-1: #e9ebf8;
+  --stage-2: #d9ddf0;
+  --shadow: 0 1px 2px rgb(22 26 43 / .05), 0 14px 34px -14px rgb(22 26 43 / .18);
+  --radius: 18px;
+  --sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e0f12;
-    --bg-alt: #14161a;
-    --surface: #17191e;
-    --ink: #f1f1ef;
-    --ink-2: #c9cad0;
-    --muted: #8d909b;
-    --line: #25282f;
-    --line-strong: #343842;
-    --accent: #5fd0c3;
-    --accent-ink: #06201d;
-    --accent-soft: #12302d;
-    --spark: #f0b45c;
-    --key-top: #2a2d34;
-    --key-side: #15171b;
-    --key-ink: #e9e9ec;
-    --code-bg: #0a0b0d;
-    --code-ink: #e8e8ea;
-    --desk-1: #262d31;
-    --desk-2: #1a2023;
+    --bg: #0e1018;
+    --bg-alt: #141722;
+    --surface: #191c28;
+    --ink: #eef0f7;
+    --ink-2: #c3c7d6;
+    --muted: #9097ab;
+    --line: #262a38;
+    --line-strong: #363b4d;
+    --accent: #a3a7ff;
+    --accent-hover: #bcbfff;
+    --accent-ink: #151735;
+    --accent-soft: #22254a;
+    --accent-text: #b3b6ff;
+    --spark: #f2b467;
+    --key-top: #262a37;
+    --key-side: #0c0e14;
+    --key-ink: #e8eaf2;
+    --code-bg: #0a0c12;
+    --code-ink: #e6e8f2;
+    --code-muted: #8d93a8;
+    --stage-1: #1e2236;
+    --stage-2: #141826;
     --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 16px 40px -16px rgb(0 0 0 / .7);
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e0f12; --bg-alt: #14161a; --surface: #17191e; --ink: #f1f1ef; --ink-2: #c9cad0;
-  --muted: #8d909b; --line: #25282f; --line-strong: #343842; --accent: #5fd0c3; --accent-ink: #06201d;
-  --accent-soft: #12302d; --spark: #f0b45c; --key-top: #2a2d34; --key-side: #15171b; --key-ink: #e9e9ec;
-  --code-bg: #0a0b0d; --code-ink: #e8e8ea; --desk-1: #262d31; --desk-2: #1a2023;
+  --bg: #0e1018; --bg-alt: #141722; --surface: #191c28; --ink: #eef0f7; --ink-2: #c3c7d6;
+  --muted: #9097ab; --line: #262a38; --line-strong: #363b4d; --accent: #a3a7ff; --accent-hover: #bcbfff;
+  --accent-ink: #151735; --accent-soft: #22254a; --accent-text: #b3b6ff; --spark: #f2b467;
+  --key-top: #262a37; --key-side: #0c0e14; --key-ink: #e8eaf2; --code-bg: #0a0c12; --code-ink: #e6e8f2;
+  --code-muted: #8d93a8; --stage-1: #1e2236; --stage-2: #141826;
   --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 16px 40px -16px rgb(0 0 0 / .7);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 76px; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font: 400 17px/1.6 var(--sans);
-  font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 img { max-width: 100%; display: block; }
-a { color: inherit; }
+a { color: var(--accent-text); text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
 p { margin: 0 0 1em; }
-h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; text-wrap: balance; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.02em; line-height: 1.12; text-wrap: balance; }
 code, kbd, pre { font-family: var(--mono); }
-code { font-size: .88em; background: var(--bg-alt); border: 1px solid var(--line); padding: .08em .38em; border-radius: 6px; white-space: nowrap; }
+code { font-size: .84em; background: var(--bg-alt); border: 1px solid var(--line); padding: .1em .38em; border-radius: 6px; overflow-wrap: anywhere; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
-.wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 @media (max-width: 520px) { .wrap { padding: 0 16px; } }
 
 /* ---------- header ---------- */
 .top {
   position: sticky; top: 0; z-index: 10;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
   backdrop-filter: saturate(1.4) blur(14px);
   -webkit-backdrop-filter: saturate(1.4) blur(14px);
   border-bottom: 1px solid transparent;
@@ -142,9 +148,10 @@ code { font-size: .88em; background: var(--bg-alt); border: 1px solid var(--line
 }
 .top.scrolled { border-bottom-color: var(--line); }
 .top .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; white-space: nowrap; }
+.brand:hover { color: var(--ink); }
 .brand img { width: 26px; height: 26px; border-radius: 7px; }
-.nav { display: flex; gap: 22px; margin-left: auto; font-size: 15px; }
+.nav { display: flex; align-items: center; gap: 22px; margin-left: auto; font-size: 15px; font-weight: 500; }
 .nav a { text-decoration: none; color: var(--muted); transition: color .15s; }
 .nav a:hover { color: var(--ink); }
 .nav .gh { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
@@ -153,58 +160,50 @@ code { font-size: .88em; background: var(--bg-alt); border: 1px solid var(--line
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  height: 50px; padding: 0 22px; border-radius: 999px;
-  font: 600 16px/1 var(--sans); text-decoration: none; letter-spacing: -0.005em;
-  border: 1px solid transparent; transition: transform .15s, background .15s, border-color .15s;
+  height: 50px; padding: 0 22px; border-radius: 12px;
+  font: 600 16px/1 var(--sans); text-decoration: none;
+  border: 1px solid transparent; transition: transform .15s, background .15s, border-color .15s, color .15s;
   white-space: nowrap;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--ink); color: var(--bg); }
-.btn-primary:hover { background: color-mix(in srgb, var(--ink) 86%, var(--accent)); }
-.btn-ghost { border-color: var(--line-strong); color: var(--ink); background: transparent; }
-.btn-ghost:hover { border-color: var(--ink); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-hover); color: var(--accent-ink); }
+.btn-ghost { border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--ink); }
 .btn svg { width: 18px; height: 18px; flex: none; }
 
 /* ---------- hero ---------- */
-.hero { padding: 72px 0 88px; }
+.hero { padding: 64px 0 80px; background: radial-gradient(70% 60% at 85% 10%, var(--accent-soft), transparent 70%); }
 .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; align-items: center; }
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 22px;
-  font: 500 13px/1 var(--mono); letter-spacing: .02em; color: var(--muted); text-transform: uppercase;
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 22px; padding: 6px 12px;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface);
+  font: 500 13.5px/1.2 var(--sans); color: var(--ink-2);
 }
-.eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.hero h1 { font-size: clamp(44px, 6.4vw, 76px); letter-spacing: -0.035em; line-height: 1; font-weight: 600; }
-.hero h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; color: var(--accent); }
-.lead { font-size: clamp(18px, 1.7vw, 20px); color: var(--ink-2); margin: 24px 0 32px; max-width: 34em; line-height: 1.55; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.hero h1 { font-size: clamp(42px, 6vw, 70px); letter-spacing: -0.035em; line-height: 1.02; }
+.hero h1 span { color: var(--accent-text); }
+.lead { font-size: clamp(18px, 1.7vw, 20px); color: var(--ink-2); margin: 22px 0 30px; max-width: 32em; line-height: 1.55; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; }
-.fine { margin-top: 20px; font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
-.fine span { display: inline-flex; align-items: center; gap: 6px; }
-.fine span + span::before { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--line-strong); margin-right: 10px; }
+.fine { margin: 18px 0 0; font-size: 14.5px; color: var(--muted); }
 @media (max-width: 900px) {
-  .hero { padding: 40px 0 64px; }
-  .hero .wrap { grid-template-columns: 1fr; gap: 44px; }
+  .hero { padding: 36px 0 60px; }
+  .hero .wrap { grid-template-columns: 1fr; gap: 40px; }
 }
-@media (max-width: 520px) {
-  .cta .btn { flex: 1 1 100%; }
-  .fine span + span::before { display: none; }
-}
+@media (max-width: 520px) { .cta .btn { flex: 1 1 100%; } }
 
 /* ---------- hero scene ---------- */
 .scene {
-  position: relative; border-radius: 22px; padding: 28px 28px 30px;
-  background: radial-gradient(120% 90% at 20% 0%, var(--desk-1), var(--desk-2));
+  position: relative; border-radius: 22px; padding: 26px 26px 28px;
+  background: linear-gradient(160deg, var(--stage-1), var(--stage-2));
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
-.window {
-  background: var(--surface); border-radius: 12px; border: 1px solid var(--line);
-  box-shadow: 0 10px 30px -14px rgb(0 0 0 / .35);
-  overflow: hidden;
-}
+.window { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 10px 30px -14px rgb(0 0 0 / .3); overflow: hidden; }
 .window-bar { display: flex; gap: 7px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .window-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line-strong); }
-.window-body { padding: 18px 20px 22px; min-height: 172px; }
+.window-body { padding: 18px 20px 22px; min-height: 164px; }
 .skel { height: 9px; border-radius: 5px; background: var(--bg-alt); margin-bottom: 11px; }
 .skel.w1 { width: 72%; } .skel.w2 { width: 88%; } .skel.w3 { width: 46%; }
 .typed { margin-top: 18px; font-size: 16px; line-height: 1.5; color: var(--ink); min-height: 3em; }
@@ -216,13 +215,10 @@ code { font-size: .88em; background: var(--bg-alt); border: 1px solid var(--line
 .scene .layer-wave { animation: layerWave 9s infinite; }
 .scene .hold { animation: press 9s infinite; }
 .key-row { display: flex; align-items: center; gap: 10px; font: 500 12px/1 var(--mono); color: var(--ink-2); }
-.key-row .tag { text-transform: uppercase; letter-spacing: .06em; opacity: .75; }
+.key-row > span { text-transform: uppercase; letter-spacing: .06em; }
+@media (max-width: 520px) { .scene { padding: 18px 16px 22px; } .window-body { padding: 16px; min-height: 150px; } }
 
-@keyframes paste {
-  0%, 59% { opacity: 0; }
-  61%, 95% { opacity: 1; }
-  100% { opacity: 0; }
-}
+@keyframes paste { 0%, 59% { opacity: 0; } 61%, 95% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes capsule {
   0%, 5% { opacity: 0; transform: translateY(6px) scale(.96); }
   8%, 57% { opacity: 1; transform: none; }
@@ -245,166 +241,132 @@ code { font-size: .88em; background: var(--bg-alt); border: 1px solid var(--line
   background: rgb(15 15 20 / .94); color: #fff;
   box-shadow: 0 8px 24px -8px rgb(0 0 0 / .55), inset 0 0 0 1px rgb(255 255 255 / .1);
 }
-.capsule svg { width: 14px; height: 14px; flex: none; }
-.capsule .spark { color: var(--spark); width: 15px; height: 15px; }
-.capsule .spark.pulse { animation: pulse 1.3s ease-in-out infinite; }
 .bars-stack { position: relative; width: 82px; height: calc(var(--h) - 14px); }
 .bars { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; }
 .bars span { display: block; width: 3px; height: 100%; border-radius: 3px; background: #fff; transform-origin: center; transform: scaleY(.12); }
 .bars.voice span { animation: talk var(--t, .9s) ease-in-out var(--d, 0s) infinite alternate; }
 .bars.wave span { opacity: .55; animation: wave 1.35s ease-in-out infinite; animation-delay: calc(var(--i) * -0.1s); }
-.bars.idle span { opacity: .35; }
 @keyframes talk { from { transform: scaleY(.12); } to { transform: scaleY(var(--a, .8)); } }
 @keyframes wave { 0%, 100% { transform: scaleY(.28); } 50% { transform: scaleY(.6); } }
-@keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 
 /* ---------- keycaps ---------- */
 .key {
   display: inline-flex; flex-direction: column; justify-content: space-between;
-  min-width: 46px; height: 46px; padding: 6px 8px 6px;
+  min-width: 44px; height: 44px; padding: 6px 8px;
   border-radius: 8px; background: var(--key-top); color: var(--key-ink);
   border: 1px solid var(--line-strong);
-  box-shadow: 0 3px 0 var(--key-side), 0 4px 8px -2px rgb(0 0 0 / .2);
-  font: 500 11px/1 var(--sans); letter-spacing: .01em; vertical-align: middle;
+  box-shadow: 0 3px 0 var(--key-side), 0 4px 8px -2px rgb(0 0 0 / .18);
+  font: 500 11px/1 var(--sans); vertical-align: middle;
 }
 .key .g { align-self: flex-end; font-size: 15px; line-height: 1; }
 .key .l { align-self: flex-start; font-size: 10.5px; }
-.key.wide { min-width: 78px; }
-.key.single { justify-content: center; align-items: center; font-size: 13px; }
+.key.wide { min-width: 76px; }
+.key.single { justify-content: center; align-items: center; }
 .key.single .l { align-self: center; font-size: 12px; }
-.key.big { min-width: 96px; height: 56px; padding: 8px 10px; }
-.key.big .g { font-size: 18px; }
-.key.big .l { font-size: 12px; }
 .plus { font: 500 14px/1 var(--mono); color: var(--muted); }
 
 /* ---------- sections ---------- */
-section { padding: 96px 0; }
+section { padding: 88px 0; }
 section.alt { background: var(--bg-alt); border-block: 1px solid var(--line); }
-.kicker { font: 500 13px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-bottom: 14px; }
-.h2 { font-size: clamp(32px, 4.2vw, 48px); letter-spacing: -0.03em; max-width: 18em; }
-.h2 em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
-.intro { color: var(--ink-2); font-size: 18px; max-width: 40em; margin: 20px 0 0; }
-.section-head { margin-bottom: 48px; }
-@media (max-width: 700px) { section { padding: 68px 0; } .section-head { margin-bottom: 36px; } }
+.kicker { font: 600 13px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--accent-text); margin-bottom: 14px; }
+.h2 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.03em; max-width: 18em; }
+.intro { color: var(--ink-2); font-size: 18px; max-width: 38em; margin: 16px 0 0; }
+.section-head { margin-bottom: 40px; }
+.more { margin: 28px 0 0; font-size: 15.5px; color: var(--muted); }
+@media (max-width: 700px) { section { padding: 64px 0; } .section-head { margin-bottom: 30px; } }
 
-.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
-.card {
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 24px; min-width: 0;
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; min-width: 0; }
+@media (max-width: 520px) { .card { padding: 20px; } }
+
+/* how it works */
+.demo { margin: 0 auto 32px; max-width: 900px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 18px 40px -24px rgb(20 24 60 / .35); background: #323232; }
+.demo img { display: block; width: 100%; height: auto; }
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+.steps li { counter-increment: s; }
+.steps li::before {
+  content: counter(s); display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 16px;
+  border-radius: 10px; background: var(--accent-soft); color: var(--accent-text); font: 600 15px/1 var(--mono);
 }
-.card h3 { font-size: 18px; letter-spacing: -0.015em; margin-bottom: 8px; }
-.card p { color: var(--ink-2); font-size: 15.5px; margin: 0; }
-.card .ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 18px; }
-.card .ico svg { width: 19px; height: 19px; }
+.steps h3 { font-size: 19px; margin-bottom: 8px; }
+.steps p { margin: 0; color: var(--ink-2); font-size: 16px; }
 
-/* gestures */
-.gestures { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 960px) { .gestures { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .gestures { grid-template-columns: 1fr; } }
-.gesture { display: flex; flex-direction: column; gap: 18px; }
-.gesture .keys { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 60px; padding-bottom: 4px; }
-.gesture .mod { font: 500 11.5px/1.2 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-.gesture h3 { display: flex; align-items: center; gap: 8px; }
-.gesture h3 svg { width: 17px; height: 17px; flex: none; }
-.gesture h3 .lock { color: var(--ink-2); }
-.gesture h3 .sp { color: var(--spark); }
-.note { margin-top: 22px; color: var(--muted); font-size: 15px; max-width: 46em; }
+/* keys */
+.keylist { padding: 0; }
+.krow { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: center; padding: 20px 26px; border-top: 1px solid var(--line); }
+.krow:first-child { border-top: 0; }
+.krow .keys { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.krow .or { font: 500 12px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.krow h3 { font-size: 17px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.krow p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
+.tag { font: 500 11.5px/1 var(--mono); padding: 4px 7px; border-radius: 6px; background: var(--bg-alt); border: 1px solid var(--line); color: var(--muted); letter-spacing: .02em; }
+@media (max-width: 620px) { .krow { grid-template-columns: 1fr; gap: 14px; padding: 20px; } }
+.platform-note { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 16px 20px; border-radius: 14px; background: var(--accent-soft); color: var(--ink); font-size: 15.5px; }
+.platform-note svg { width: 20px; height: 20px; flex: none; color: var(--accent-text); margin-top: 2px; }
+.platform-note p { margin: 0; }
 
 /* improve */
 .improve { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
-@media (max-width: 900px) { .improve { grid-template-columns: 1fr; gap: 36px; } }
+@media (max-width: 900px) { .improve { grid-template-columns: 1fr; gap: 32px; } }
 .ba { display: grid; gap: 12px; }
 .ba .row { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
-.ba .row .lab { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-.ba .row .lab svg { width: 14px; height: 14px; color: var(--spark); }
-.ba .row q { quotes: "\201C" "\201D"; font-size: 22px; letter-spacing: -0.01em; }
-.ba .row.after { border-color: color-mix(in srgb, var(--spark) 45%, var(--line)); }
-.ba s { color: var(--muted); text-decoration-color: color-mix(in srgb, var(--spark) 80%, transparent); text-decoration-thickness: 2px; }
-.ticks { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 12px; }
-.ticks li { position: relative; padding-left: 30px; color: var(--ink-2); }
-.ticks li::before {
-  content: ""; position: absolute; left: 0; top: .32em; width: 18px; height: 18px; border-radius: 50%;
-  background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%230d7c74' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 10.5l3 3 6-7'/%3E%3C/svg%3E") center/12px no-repeat;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .ticks li::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235fd0c3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 10.5l3 3 6-7'/%3E%3C/svg%3E"); }
-}
-
-/* states */
-.states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
-@media (max-width: 960px) { .states { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 480px) { .states { grid-template-columns: 1fr; } }
-.state { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
-.state .stage { width: 100%; display: grid; place-items: center; height: 84px; border-radius: 12px; background: radial-gradient(120% 120% at 30% 0%, var(--desk-1), var(--desk-2)); }
-.state h3 { font-size: 16px; margin: 0 0 4px; }
-.state p { font-size: 14.5px; }
-
-/* how it works */
-.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; display: grid; gap: 0; border-top: 1px solid var(--line); }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 20px; padding: 26px 0; border-bottom: 1px solid var(--line); }
-.steps li::before { content: "0" counter(s); font: 400 34px/1 var(--serif); font-style: italic; color: var(--accent); }
-.steps h3 { font-size: 19px; margin-bottom: 6px; }
-.steps p { margin: 0; color: var(--ink-2); max-width: 44em; }
-@media (max-width: 560px) { .steps li { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; } .steps li::before { font-size: 28px; } }
-.callout { margin-top: 28px; display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: 14px; background: var(--accent-soft); color: var(--ink); }
-.callout svg { width: 20px; height: 20px; flex: none; color: var(--accent); margin-top: 3px; }
-.callout p { margin: 0; }
+.ba .lab { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.ba .lab svg { width: 14px; height: 14px; color: var(--spark); }
+.ba q { quotes: "\201C" "\201D"; font-size: 22px; letter-spacing: -0.01em; }
+.ba .after { border-color: color-mix(in srgb, var(--spark) 45%, var(--line)); }
+.ba s { color: var(--muted); text-decoration-color: var(--spark); text-decoration-thickness: 2px; }
+.ticks { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
+.ticks li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; color: var(--ink-2); }
+.ticks svg { width: 20px; height: 20px; color: var(--accent-text); margin-top: 3px; }
 
 /* install */
-.install { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.need { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+.need svg { width: 22px; height: 22px; flex: none; color: var(--accent-text); margin-top: 3px; }
+.need p { margin: 0; color: var(--ink-2); }
+.need strong { color: var(--ink); }
+.install { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 900px) { .install { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .install .card, .card { padding: 20px; } .istep { grid-template-columns: 28px minmax(0, 1fr); gap: 12px; } .perm th { white-space: normal; } }
-.install .card { padding: 28px; }
-.install h3 { font-size: 20px; margin-bottom: 14px; }
-.istep { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 14px; padding: 18px 0; border-top: 1px solid var(--line); }
-.istep:first-of-type { border-top: 0; padding-top: 4px; }
-.istep .n { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font: 500 13px/1 var(--mono); color: var(--ink-2); }
-.istep h4 { margin: 2px 0 6px; font-size: 16.5px; font-weight: 600; letter-spacing: -0.01em; }
-.istep p { margin: 0 0 .6em; color: var(--ink-2); font-size: 15.5px; }
-.istep p:last-child { margin-bottom: 0; }
-.codebox { margin: 12px 0 4px; border-radius: 10px; background: var(--code-bg); border: 1px solid rgb(255 255 255 / .07); overflow: hidden; }
-.codebar { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px 14px; border-bottom: 1px solid rgb(255 255 255 / .08); font: 500 11.5px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: #8b8f99; }
-pre.code { margin: 0; padding: 12px 14px 14px; color: var(--code-ink); font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-pre.code code { background: none; border: 0; padding: 0; border-radius: 0; color: inherit; font-size: inherit; white-space: inherit; }
+.install h3 { font-size: 21px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.install h3 small { font: 500 13.5px/1.3 var(--sans); color: var(--muted); letter-spacing: 0; }
+.istep { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px; padding: 16px 0 0; }
+.istep .n { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; font: 600 13px/1 var(--mono); }
+.istep p { margin: 2px 0 0; color: var(--ink-2); font-size: 15.5px; }
+.istep strong { color: var(--ink); }
+.install .btn { margin-top: 22px; width: 100%; }
+.codebox { margin: 10px 0 2px; border-radius: 10px; background: var(--code-bg); border: 1px solid rgb(255 255 255 / .07); overflow: hidden; }
+.codebar { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px 14px; border-bottom: 1px solid rgb(255 255 255 / .08); font: 500 11.5px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--code-muted); }
+pre.code { margin: 0; padding: 12px 14px 14px; color: var(--code-ink); font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.code code { background: none; border: 0; padding: 0; border-radius: 0; color: inherit; font-size: inherit; }
 .copy {
   height: 26px; padding: 0 10px; border-radius: 6px;
-  border: 1px solid rgb(255 255 255 / .14); background: rgb(255 255 255 / .06); color: #d7d8dc;
-  font: 500 12px/1 var(--sans); letter-spacing: 0; text-transform: none; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / .16); background: rgb(255 255 255 / .06); color: #e1e3ec;
+  font: 500 12px/1 var(--sans); cursor: pointer;
 }
 .copy:hover { background: rgb(255 255 255 / .12); }
-table.perm { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
-.perm th, .perm td { text-align: left; padding: 10px 0; border-top: 1px solid var(--line); vertical-align: top; }
-.perm th { font-weight: 600; padding-right: 16px; white-space: nowrap; }
-.perm td { color: var(--ink-2); }
-.req { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
-.req li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; color: var(--ink-2); font-size: 15.5px; }
-.req li svg { width: 20px; height: 20px; color: var(--accent); margin-top: 2px; }
-.req strong { color: var(--ink); font-weight: 600; }
-.side { display: grid; gap: 24px; }
+
+/* privacy */
+.priv { display: grid; gap: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 960px) { .priv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .priv { grid-template-columns: 1fr; } }
+.priv .card h3 { font-size: 17px; margin-bottom: 6px; }
+.priv .card p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
 
 /* faq */
-.faq { max-width: 820px; }
+.faq { max-width: 800px; }
 .faq details { border-bottom: 1px solid var(--line); }
 .faq details:first-child { border-top: 1px solid var(--line); }
 .faq summary {
-  list-style: none; cursor: pointer; padding: 22px 40px 22px 0; position: relative;
-  font-size: 18.5px; font-weight: 600; letter-spacing: -0.015em;
+  list-style: none; cursor: pointer; padding: 20px 40px 20px 0; position: relative;
+  font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
 }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after {
-  content: ""; position: absolute; right: 6px; top: 50%; width: 12px; height: 12px; margin-top: -8px;
+  content: ""; position: absolute; right: 6px; top: 50%; width: 10px; height: 10px; margin-top: -7px;
   border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .2s;
 }
 .faq details[open] summary::after { transform: rotate(-135deg); margin-top: -2px; }
-.faq .a { padding: 0 0 22px; color: var(--ink-2); max-width: 46em; }
+.faq .a { padding: 0 0 20px; color: var(--ink-2); max-width: 44em; }
 .faq .a p:last-child { margin-bottom: 0; }
-
-/* closing cta */
-.closing { text-align: center; padding: 104px 0; }
-.closing img { width: 88px; height: 88px; border-radius: 20px; margin: 0 auto 28px; box-shadow: var(--shadow); }
-.closing .h2 { margin: 0 auto; }
-.closing .lead { margin: 18px auto 32px; }
-.closing .cta { justify-content: center; }
 
 /* footer */
 footer { border-top: 1px solid var(--line); padding: 40px 0 56px; font-size: 14px; color: var(--muted); }
@@ -412,7 +374,7 @@ footer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2
 footer .links { display: flex; gap: 20px; flex-wrap: wrap; }
 footer .links a { text-decoration: none; color: var(--ink-2); }
 footer .links a:hover { color: var(--ink); }
-footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
+footer p { max-width: 44em; margin: 10px 0 0; }
 @media (max-width: 700px) { footer .wrap { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -420,7 +382,6 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
   html { scroll-behavior: auto; }
   .scene .layer-wave { opacity: 0; }
   .bars.voice span { transform: scaleY(var(--a, .6)); }
-  .bars.wave span { transform: scaleY(.45); }
 }
 </style>
 </head>
@@ -428,24 +389,20 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
 
 <!-- Inline SVG icons, used through <use href="#…">. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-lock" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10V7.5a5 5 0 0 1 10 0V10h.5A2.5 2.5 0 0 1 20 12.5v7A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-7A2.5 2.5 0 0 1 6.5 10H7Zm2 0h6V7.5a3 3 0 0 0-6 0V10Z"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M10 2.5c.3 0 .55.2.62.5l.9 3.6a5 5 0 0 0 3.63 3.63l3.6.9a.64.64 0 0 1 0 1.24l-3.6.9a5 5 0 0 0-3.63 3.63l-.9 3.6a.64.64 0 0 1-1.24 0l-.9-3.6a5 5 0 0 0-3.63-3.63l-3.6-.9a.64.64 0 0 1 0-1.24l3.6-.9A5 5 0 0 0 8.48 6.6l.9-3.6c.07-.3.33-.5.62-.5Zm8.5-.5c.2 0 .36.13.41.32l.3 1.2c.15.6.62 1.07 1.22 1.22l1.2.3a.43.43 0 0 1 0 .82l-1.2.3c-.6.15-1.07.62-1.22 1.22l-.3 1.2a.43.43 0 0 1-.82 0l-.3-1.2a1.68 1.68 0 0 0-1.22-1.22l-1.2-.3a.43.43 0 0 1 0-.82l1.2-.3c.6-.15 1.07-.62 1.22-1.22l.3-1.2A.43.43 0 0 1 18.5 2Z"/></symbol>
   <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></symbol>
-  <symbol id="i-user" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></symbol>
-  <symbol id="i-cursor" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 4h6M9 20h6M12 4v16"/></symbol>
-  <symbol id="i-send" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M19 5v6a3 3 0 0 1-3 3H6m0 0 4-4m-4 4 4 4"/></symbol>
-  <symbol id="i-code" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m8.5 8-4 4 4 4m7-8 4 4-4 4M13.5 5l-3 14"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6.5 9.5 17 4 11.5"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-10v5.5m0-8.5v.01"/></symbol>
+  <symbol id="i-term" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Zm3 4 3 2.5-3 2.5m5 0h5"/></symbol>
 </svg>
 
 <header class="top" id="top">
   <div class="wrap">
     <a class="brand" href="#"><img src="favicon-64.png" alt="" width="26" height="26"><span data-app="name"></span></a>
     <nav class="nav" aria-label="Sections">
-      <a href="#keys">Keys</a>
       <a href="#how">How it works</a>
+      <a href="#keys">Keys</a>
       <a href="#install">Install</a>
       <a href="#faq">FAQ</a>
       <a class="gh" data-app-href="repo" href="#"><svg width="17" height="17" aria-hidden="true"><use href="#i-gh"/></svg>GitHub</a>
@@ -458,14 +415,14 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
   <section class="hero" aria-labelledby="hero-title">
     <div class="wrap">
       <div>
-        <div class="eyebrow">Free &amp; open source · macOS menu bar app</div>
-        <h1 id="hero-title">Hold a key.<br>Speak. <em>Let go.</em></h1>
-        <p class="lead">Your words are pasted wherever the cursor is, in any app. <span data-app="name"></span> drives Claude Code’s built-in voice dictation, so it runs on the Claude account you already use: no extra subscription, no API key.</p>
+        <div class="pill">100% free · open source · macOS and Windows</div>
+        <h1 id="hero-title">Hold a key. Speak. <span>Let go.</span></h1>
+        <p class="lead">The text is typed where your cursor is, in any app. <span data-app="name"></span> is completely free: it runs on Claude Code’s own voice dictation and the Claude account you already use, with no extra subscription, no API key and nothing to pay.</p>
         <div class="cta">
           <a class="btn btn-primary" data-app-href="download" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
-          <a class="btn btn-ghost" data-app-href="repo" href="#"><svg aria-hidden="true"><use href="#i-gh"/></svg>View on GitHub</a>
+          <a class="btn btn-ghost" data-app-href="downloadWin" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
         </div>
-        <div class="fine"><span>macOS 14 Sonoma or later</span><span>Apple silicon &amp; Intel</span><span>MIT license</span></div>
+        <p class="fine">Free download · macOS 14+ · Windows 10/11, first version · needs <a href="#install">Claude Code</a></p>
       </div>
 
       <div class="scene" role="img" aria-label="Illustration: holding Right Command shows a small dark capsule with voice bars; on release the dictated sentence appears at the cursor.">
@@ -485,42 +442,26 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
               <div class="bars wave layer-wave" data-bars></div>
             </div>
           </div>
-          <div class="key-row"><span class="tag">hold right</span><kbd class="key wide hold"><span class="g">⌘</span><span class="l">command</span></kbd></div>
+          <div class="key-row"><span>hold right</span><kbd class="key wide hold"><span class="g">⌘</span><span class="l">command</span></kbd></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ======================= why ======================= -->
-  <section class="alt" id="why" aria-labelledby="why-title">
+  <!-- ======================= how it works ======================= -->
+  <section class="alt" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <div class="section-head">
-        <div class="kicker">Why</div>
-        <h2 class="h2" id="why-title">System-wide voice typing, <em>without</em> another subscription.</h2>
-        <p class="intro">Dictation apps for the whole Mac usually come with a plan of their own. If you already use Claude Code, the speech recognition is already there, in its <code>/voice</code> mode. <span data-app="name"></span> puts it on one key, everywhere.</p>
+        <div class="kicker">How it works</div>
+        <h2 class="h2" id="how-title">A small app around a hidden Claude Code session.</h2>
       </div>
-      <div class="grid">
-        <div class="card">
-          <div class="ico"><svg aria-hidden="true"><use href="#i-user"/></svg></div>
-          <h3>Runs on your Claude account</h3>
-          <p>It does no speech recognition of its own. A hidden Claude Code session, signed in as you, does the listening. Nothing new to sign up for, no key to paste.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg aria-hidden="true"><use href="#i-cursor"/></svg></div>
-          <h3>Works in any app</h3>
-          <p>The text is pasted at the cursor, followed by a space, and your clipboard is put back afterwards.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg aria-hidden="true"><use href="#i-send"/></svg></div>
-          <h3>Made for talking to Claude</h3>
-          <p>Turn on <em>Paste and press Return</em> and a held dictation is sent straight away, in Claude or any app where Return sends. Off by default.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg aria-hidden="true"><use href="#i-code"/></svg></div>
-          <h3>Small, local, open</h3>
-          <p>A menu bar app under the MIT license, built with plain <code>swiftc</code>: no Xcode project, no dependencies. Read it, build it, change it.</p>
-        </div>
-      </div>
+      <figure class="demo"><img src="demo.gif" width="900" height="552" loading="lazy" alt="Holding Right Command in Claude Code: a small capsule with voice bars appears, and on release the spoken sentence is typed at the prompt"></figure>
+      <ol class="steps">
+        <li class="card"><h3>Hold the key and talk</h3><p>A small capsule near the bottom of the screen shows it is listening. The start sound plays once the microphone is really on.</p></li>
+        <li class="card"><h3>Claude Code transcribes</h3><p>A hidden Claude Code session, signed in as you, turns speech into text. Nothing is sent to Claude as a message.</p></li>
+        <li class="card"><h3>It lands at your cursor</h3><p>The text is pasted into the app you were in, followed by a space, and your clipboard is put back.</p></li>
+      </ol>
+      <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Restart Claude Session. For the internals, see <a data-app-href="readmeHow" href="#">how it works in the README</a>.</p>
     </div>
   </section>
 
@@ -529,35 +470,31 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
     <div class="wrap">
       <div class="section-head">
         <div class="kicker">The keys</div>
-        <h2 class="h2" id="keys-title">One key does it. <em>A few more</em> if you want them.</h2>
+        <h2 class="h2" id="keys-title">One key to talk, a few more when you want them.</h2>
       </div>
-      <div class="grid gestures">
-        <div class="card gesture">
-          <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="mod">right · hold</span></div>
-          <div><h3>Hold to dictate</h3><p>Hold Right Command, speak, let go. The text is pasted at the cursor.</p></div>
+      <div class="card keylist">
+        <div class="krow">
+          <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">right · hold</span></div>
+          <div><h3>Hold to talk</h3><p>Speak, let go, and the text is pasted at the cursor. With Settings › Text set to <strong>Paste and press Return</strong>, it is sent straight away too, handy in Claude.</p></div>
         </div>
-        <div class="card gesture">
-          <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="plus">+</span><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd></div>
-          <div><h3><svg class="lock" aria-hidden="true"><use href="#i-lock"/></svg>Lock</h3><p>While holding, press Right Option and it keeps listening after you let go. Or double-tap Right Command to lock from the start. Tap Right Command to stop and paste.</p></div>
+        <div class="krow">
+          <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">or double-tap ⌘</span></div>
+          <div><h3>Lock, hands-free</h3><p>Press Right Option while holding, or double-tap Right Command, and it keeps listening after you let go. Tap Right Command to stop: the text is inserted, not sent.</p></div>
         </div>
-        <div class="card gesture">
-          <div class="keys"><kbd class="key wide"><span class="g">⇧</span><span class="l">shift</span></kbd><span class="mod">tap while dictating</span></div>
-          <div><h3><svg class="sp" aria-hidden="true"><use href="#i-spark"/></svg>Improve</h3><p>Claude cleans this dictation up before it is pasted. While locked, tapping Right Option again does the same.</p></div>
+        <div class="krow">
+          <div class="keys"><kbd class="key wide"><span class="g">⇧</span><span class="l">shift</span></kbd><span class="or">tap while talking</span></div>
+          <div><h3>Improve <span class="tag">macOS</span></h3><p>Claude tidies this dictation up before it is pasted. <a href="#improve">What it does</a></p></div>
         </div>
-        <div class="card gesture">
+        <div class="krow">
           <div class="keys"><kbd class="key single"><span class="l">esc</span></kbd></div>
-          <div><h3>Cancel</h3><p>Cancels the dictation and discards it. Nothing is pasted.</p></div>
+          <div><h3>Cancel</h3><p>Discards the dictation. Nothing is pasted.</p></div>
         </div>
-        <div class="card gesture">
+        <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="plus">+</span><kbd class="key single"><span class="l">C</span></kbd></div>
-          <div><h3>Shortcuts still work</h3><p>Right Command with another key is a normal shortcut; the dictation is dropped.</p></div>
-        </div>
-        <div class="card gesture">
-          <div class="keys"><kbd class="key single"><span class="l">A</span></kbd><kbd class="key single"><span class="l">B</span></kbd><kbd class="key single"><span class="l">C</span></kbd><span class="mod">while locked</span></div>
-          <div><h3>Keep typing</h3><p>While locked, what you type goes to the app as usual and the dictation goes on.</p></div>
+          <div><h3>Shortcuts still work</h3><p>The dictation key with another key is a normal shortcut; nothing is pasted, what you said is kept in History.</p></div>
         </div>
       </div>
-      <p class="note">Prefer another key? Pick Right Command, Right Option, Left Option, Right Control, Fn or a recorded shortcut in Settings, and choose hold-to-talk or tap to start and stop. The cancel and improve keys can be changed too.</p>
+      <div class="platform-note"><svg aria-hidden="true"><use href="#i-info"/></svg><p>Every key can be changed in Settings. On Windows, Right Ctrl dictates and Right Alt locks.</p></div>
     </div>
   </section>
 
@@ -565,17 +502,16 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
   <section class="alt" id="improve" aria-labelledby="improve-title">
     <div class="wrap improve">
       <div>
-        <div class="kicker">Improve</div>
-        <h2 class="h2" id="improve-title">Think out loud. <em>Paste</em> the version you meant.</h2>
+        <div class="kicker">Improve · macOS</div>
+        <h2 class="h2" id="improve-title">Think out loud, paste what you meant.</h2>
         <ul class="ticks">
-          <li>Removes fillers and self-corrections.</li>
-          <li>Fixes punctuation and restores the spelling of product names and technical terms.</li>
-          <li>Keeps your words and your language. It never translates.</li>
-          <li>Runs a separate <code>claude -p</code> (Haiku by default, or Sonnet) on your Claude subscription and adds about a second. If Claude doesn’t answer within 10&nbsp;s, the text is pasted as transcribed.</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Removes fillers and self-corrections, and fixes punctuation.</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Restores the spelling of product names and technical terms, keeping your words and language.</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Adds about a second. If Claude doesn’t answer within 10&nbsp;s, the text is pasted as transcribed.</span></li>
         </ul>
-        <p class="note">Use it per dictation with the improve key (the default), always, or never.</p>
+        <p class="more">Tap Shift for one dictation, or set it to always or never in Settings. It runs a separate <code>claude -p</code> on your Claude subscription.</p>
       </div>
-      <div class="ba" aria-label="Example from the README">
+      <div class="ba" aria-label="Example">
         <div class="row">
           <div class="lab">You say</div>
           <q>option 2, <s>no,</s> option 1</q>
@@ -588,58 +524,6 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
     </div>
   </section>
 
-  <!-- ======================= capsule + small things ======================= -->
-  <section id="details" aria-labelledby="details-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="kicker">While you talk</div>
-        <h2 class="h2" id="details-title">A small capsule shows what it’s doing.</h2>
-        <p class="intro">It sits near the bottom of the screen (or the top, left or right), never takes focus, and the start sound plays only once the microphone is really on.</p>
-      </div>
-      <div class="states" aria-hidden="false">
-        <div class="card state">
-          <div class="stage"><div class="capsule"><div class="bars-stack"><div class="bars voice" data-bars></div></div></div></div>
-          <div><h3>Listening</h3><p>Bars follow your voice.</p></div>
-        </div>
-        <div class="card state">
-          <div class="stage"><div class="capsule"><svg aria-hidden="true"><use href="#i-lock"/></svg><div class="bars-stack"><div class="bars voice" data-bars></div></div></div></div>
-          <div><h3>Locked</h3><p>A lock while it keeps listening hands-free.</p></div>
-        </div>
-        <div class="card state">
-          <div class="stage"><div class="capsule"><div class="bars-stack"><div class="bars voice" data-bars></div></div><svg class="spark" aria-hidden="true"><use href="#i-spark"/></svg></div></div>
-          <div><h3>Improve on</h3><p>A sparkle when Claude will clean it up.</p></div>
-        </div>
-        <div class="card state">
-          <div class="stage"><div class="capsule"><div class="bars-stack"><div class="bars wave" data-bars></div></div></div></div>
-          <div><h3>Transcribing</h3><p>A wave while Claude turns speech into text.</p></div>
-        </div>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>History</h3><p>The last 30 dictations are in the menu bar; click one to copy it. Handy when you pasted into a window with no text field.</p></div>
-        <div class="card"><h3>Sounds</h3><p>Five sound sets with a volume slider, or none at all.</p></div>
-        <div class="card"><h3>Dictation language</h3><p>Set the language for the session in Settings, or leave Claude Code’s own setting in charge.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======================= how it works ======================= -->
-  <section class="alt" id="how" aria-labelledby="how-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="kicker">How it works</div>
-        <h2 class="h2" id="how-title">A thin wrapper around a <em>hidden</em> Claude Code session.</h2>
-      </div>
-      <ol class="steps">
-        <li><div><h3>Claude Code runs in the background</h3><p>The app starts <code>claude</code> in its own hidden terminal, with voice dictation on in hold mode and auto-submit off, whatever your own settings say.</p></div></li>
-        <li><div><h3>Your key becomes Claude’s voice key</h3><p>While you hold the dictation key, it presses Claude Code’s voice key in that terminal, the way a held key would (Space by default, or whatever <code>~/.claude/keybindings.json</code> says).</p></div></li>
-        <li><div><h3>Claude Code transcribes</h3><p>When you let go, Claude Code puts the transcription in its prompt. The app then has Claude Code hand that prompt to a tiny editor script, which writes the text out and empties the prompt.</p></div></li>
-        <li><div><h3>Optionally, Claude tidies it</h3><p>With Improve on, the text goes to a separate <code>claude -p</code> process with no tools, MCP servers or settings, started ahead of time so you don’t wait for it.</p></div></li>
-        <li><div><h3>It’s pasted where you were</h3><p>The text lands in the app you were using, and your clipboard is restored.</p></div></li>
-      </ol>
-      <div class="callout"><svg aria-hidden="true"><use href="#i-info"/></svg><p>Nothing you dictate is sent to Claude as a chat message. The hidden session is only used for its voice input.</p></div>
-    </div>
-  </section>
-
   <!-- ======================= install ======================= -->
   <section id="install" aria-labelledby="install-title">
     <div class="wrap">
@@ -647,116 +531,87 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
         <div class="kicker">Install</div>
         <h2 class="h2" id="install-title">Set up in a couple of minutes.</h2>
       </div>
+      <div class="card need">
+        <svg aria-hidden="true"><use href="#i-term"/></svg>
+        <p><strong>First, Claude Code.</strong> Install <a href="https://code.claude.com">Claude Code</a> and sign in with your Claude account, then check that voice dictation works: run <code>claude</code>, type <code>/voice</code> and hold Space.</p>
+      </div>
       <div class="install">
         <div class="card">
-          <div class="istep">
-            <div class="n">1</div>
+          <h3>macOS <small>14 Sonoma or later · Apple silicon or Intel</small></h3>
+          <div class="istep"><div class="n">1</div><p>Download <code data-app="zip"></code>, unzip it and move <strong data-app="bundle"></strong> to Applications.</p></div>
+          <div class="istep"><div class="n">2</div>
             <div>
-              <h4>Download and move to Applications</h4>
-              <p>Get <code data-app="zip"></code> from the <a data-app-href="download" href="#">latest release</a>, unzip it, and move <strong data-app="bundle"></strong> to Applications.</p>
-            </div>
-          </div>
-          <div class="istep">
-            <div class="n">2</div>
-            <div>
-              <h4>Allow the first launch</h4>
-              <p>The app isn’t notarized, so macOS blocks it the first time. Click <strong>Open Anyway</strong> in System Settings › Privacy &amp; Security, or run:</p>
+              <p>The app is not notarized, so the first launch is blocked. Click <strong>Open Anyway</strong> in System Settings › Privacy &amp; Security, or run:</p>
               <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button">Copy</button></div><pre class="code"><code data-app="xattr"></code></pre></div>
             </div>
           </div>
-          <div class="istep">
-            <div class="n">3</div>
-            <div>
-              <h4>Grant three permissions</h4>
-              <p>While one is missing, Settings opens with a banner; its <strong>Manage…</strong> button links to each System Settings pane and offers a relaunch.</p>
-              <table class="perm">
-                <tr><th>Accessibility</th><td>pasting into the app you are in</td></tr>
-                <tr><th>Input Monitoring</th><td>seeing the dictation key</td></tr>
-                <tr><th>Microphone</th><td>letting the hidden Claude Code session hear you</td></tr>
-              </table>
-              <p style="margin-top:12px;font-size:14.5px;color:var(--muted)">Release builds are ad-hoc signed, so macOS asks for the permissions again after each update. A build signed with your own Apple Development certificate keeps them.</p>
-            </div>
-          </div>
+          <div class="istep"><div class="n">3</div><p>Allow <strong>Accessibility</strong> (to paste), <strong>Input Monitoring</strong> (to see the key) and <strong>Microphone</strong>. Settings opens with a banner that links to each one.</p></div>
+          <a class="btn btn-primary" data-app-href="download" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
         </div>
+        <div class="card">
+          <h3>Windows <small>10/11 · x64 or ARM64 · first version</small></h3>
+          <div class="istep"><div class="n">1</div><p>Download <code data-app="zipWin"></code> (the <a data-app-href="latest" href="#">latest release</a> also has an <code>-arm64</code> zip for ARM PCs), unzip it anywhere and run <strong data-app="exe"></strong>.</p></div>
+          <div class="istep"><div class="n">2</div><p>The app is not signed, so SmartScreen stops the first launch: click <strong>More info</strong>, then <strong>Run anyway</strong>.</p></div>
+          <div class="istep"><div class="n">3</div><p>Let desktop apps use the microphone in Windows Settings › Privacy &amp; security › Microphone, and turn on <strong>Open at login</strong> to keep it.</p></div>
+          <a class="btn btn-ghost" data-app-href="downloadWin" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
+        </div>
+      </div>
+      <p class="more">Rather build it yourself? The <a data-app-href="readmeInstall" href="#">README</a> has the steps for both apps.</p>
+    </div>
+  </section>
 
-        <div class="side">
-          <div class="card">
-            <h3>Requirements</h3>
-            <ul class="req">
-              <li><svg aria-hidden="true"><use href="#i-check"/></svg><span><strong>macOS 14 Sonoma</strong> or later, Apple silicon or Intel.</span></li>
-              <li><svg aria-hidden="true"><use href="#i-check"/></svg><span><strong>Claude Code</strong> installed and signed in, with voice dictation working: run <code>claude</code>, then <code>/voice</code>, and hold Space.</span></li>
-              <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>It finds <code>claude</code> in <code>~/.local/bin</code>, Homebrew or npm; another path can be set in Settings.</span></li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3>Or build it yourself</h3>
-            <p style="color:var(--ink-2);font-size:15.5px;margin:0">Needs the Xcode command line tools (<code>xcode-select --install</code>).</p>
-            <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button">Copy</button></div><pre class="code"><code data-app="build"></code></pre></div>
-          </div>
-        </div>
+  <!-- ======================= privacy ======================= -->
+  <section class="alt" id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Privacy</div>
+        <h2 class="h2" id="privacy-title">Your account, your computer.</h2>
+      </div>
+      <div class="priv">
+        <div class="card"><h3>Your own Claude account</h3><p>Dictation is done by Claude Code, signed in as you. The app does no speech recognition of its own.</p></div>
+        <div class="card"><h3>No connections of its own</h3><p>The app itself makes no network connections.</p></div>
+        <div class="card"><h3>Improve sends text</h3><p>Improve sends the transcribed text, not audio, to a separate <code>claude -p</code> process.</p></div>
+        <div class="card"><h3>History stays local</h3><p>The last 30 dictations are kept on your computer, in the menu’s History.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ======================= faq ======================= -->
-  <section class="alt" id="faq" aria-labelledby="faq-title">
+  <section id="faq" aria-labelledby="faq-title">
     <div class="wrap">
       <div class="section-head">
         <div class="kicker">FAQ</div>
-        <h2 class="h2" id="faq-title">Questions, answered.</h2>
+        <h2 class="h2" id="faq-title">Questions</h2>
       </div>
       <div class="faq">
         <details open>
           <summary>Does it cost anything extra?</summary>
-          <div class="a"><p>No. The app is free and open source. Dictation is done by Claude Code with the Claude account you are already signed in with, and Improve uses your Claude subscription through <code>claude -p</code>. There is no separate API key or service.</p></div>
+          <div class="a"><p>No. The app is free and open source. Dictation runs on the Claude account you are already signed in with, and Improve uses your Claude subscription. There is no separate API key or service.</p></div>
         </details>
         <details>
-          <summary>Is my audio sent anywhere besides Claude?</summary>
-          <div class="a">
-            <p>The app does no speech recognition and doesn’t record you itself: Claude Code’s own voice dictation does the recording and transcribing. The app reads the microphone level only to animate the bars in the capsule.</p>
-            <p>With Improve on, the transcribed text (not audio) goes to Claude through a separate <code>claude -p</code> call. Your last 30 dictations are kept on your Mac, in the app’s History.</p>
-          </div>
+          <summary>What can the Windows version do?</summary>
+          <div class="a"><p>It is a first version for Windows 10 and 11 (x64 and ARM64). It dictates on Right Ctrl and locks with Right Alt. It has no Improve, no capsule position and no Faster start yet.</p></div>
         </details>
         <details>
           <summary>Which languages does it understand?</summary>
-          <div class="a">
-            <p>The ones Claude Code’s voice mode accepts. Settings › Claude lists them: English, Ukrainian, Spanish, French, German, Portuguese, Italian, Dutch, Polish, Czech, Russian, Greek, Turkish, Danish, Swedish, Norwegian, Japanese, Korean, Hindi and Indonesian. Anything else falls back to English.</p>
-            <p>Improve writes in the language you spoke, or the same mix of languages, and never translates.</p>
-          </div>
+          <div class="a"><p>The ones Claude Code’s voice dictation supports. Pick the dictation language in Settings › Claude.</p></div>
         </details>
         <details>
-          <summary>Why isn’t it notarized?</summary>
-          <div class="a"><p>Release builds are ad-hoc signed rather than signed and notarized through Apple, so Gatekeeper blocks the first launch until you click <strong>Open Anyway</strong> or clear the quarantine flag. The same reason makes macOS ask for the permissions again after each update. The source is public, and one command builds and installs it from source if you’d rather do that.</p></div>
+          <summary>Why does macOS ask for the permissions again after an update?</summary>
+          <div class="a"><p>Release builds are ad-hoc signed rather than notarized, which is also why the first launch needs <strong>Open Anyway</strong>. A build signed with your own Apple Development certificate keeps the permissions; the <a data-app-href="readmeInstall" href="#">README</a> shows how to build it.</p></div>
         </details>
         <details>
-          <summary>Can I use it alongside Wispr Flow or superwhisper?</summary>
-          <div class="a"><p>Not on the same key. Apps that listen to the same key (Wispr Flow, superwhisper, Karabiner rules) have to be quit or moved to another key, or you can pick a different dictation key here.</p></div>
+          <summary>The key does nothing. What now?</summary>
+          <div class="a"><p>On macOS, check the three permissions, then quit and reopen the app. Another app or a Karabiner rule on the same key has to be quit or moved, or you can pick a different dictation key in Settings.</p></div>
         </details>
         <details>
-          <summary>What if the capsule says “Claude didn’t start listening”?</summary>
-          <div class="a"><p>Check that <code>/voice</code> works in <code>claude</code> itself, then choose <strong>Restart Claude Session</strong> from the menu bar icon.</p></div>
-        </details>
-        <details>
-          <summary>Is there a Windows version?</summary>
-          <div class="a"><p>Yes, a first version for Windows 10 and 11 (x64 and ARM64): download <code>Claude-Whisper-Windows.zip</code> from the <a href="https://github.com/viachm/claude-whisper/releases/latest">latest release</a> and run <code>ClaudeWhisper.exe</code>. It dictates on Right Ctrl and locks with Right Alt; it doesn’t have Improve yet.</p></div>
+          <summary>The capsule says “Claude didn’t start listening”.</summary>
+          <div class="a"><p>Check that <code>/voice</code> works in <code>claude</code> itself, then choose <strong>Restart Claude Session</strong> from the menu.</p></div>
         </details>
         <details>
           <summary>Is this made by Anthropic?</summary>
-          <div class="a"><p>No. It is an unofficial, independent project, not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.</p></div>
+          <div class="a"><p>No. It is an unofficial, independent project, not made by, affiliated with or endorsed by Anthropic.</p></div>
         </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======================= closing ======================= -->
-  <section class="closing" aria-labelledby="closing-title">
-    <div class="wrap">
-      <img src="icon-512.png" alt="" width="88" height="88">
-      <h2 class="h2" id="closing-title">Your voice, on <em>one key</em>.</h2>
-      <p class="lead">Free, open source, and running on the Claude account you already have.</p>
-      <div class="cta">
-        <a class="btn btn-primary" data-app-href="download" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
-        <a class="btn btn-ghost" data-app-href="repo" href="#"><svg aria-hidden="true"><use href="#i-gh"/></svg>Source on GitHub</a>
       </div>
     </div>
   </section>
@@ -766,8 +621,8 @@ footer .disclaimer { max-width: 44em; margin: 10px 0 0; }
   <div class="wrap">
     <div>
       <a class="brand" href="#"><img src="favicon-64.png" alt="" width="26" height="26"><span data-app="name"></span></a>
-      <p class="disclaimer">Unofficial: not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.</p>
-      <p class="disclaimer">Free and open source, released under the <a data-app-href="license" href="#">MIT License</a>.</p>
+      <p>Unofficial: not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.</p>
+      <p>Free and open source, released under the <a data-app-href="license" href="#">MIT License</a>.</p>
     </div>
     <div class="links">
       <a data-app-href="repo" href="#">GitHub</a>
@@ -789,22 +644,29 @@ const APP = {
   repo: "viachm/claude-whisper",     // GitHub owner/repo
 };
 // Derived from the two above; they follow the release and build conventions.
-APP.zip = APP.name.replace(/ /g, "-") + "-macOS.zip";    // release asset: Claude-Whisper-macOS.zip
-APP.bundle = APP.name + ".app";                           // Claude Whisper.app
+APP.zip = APP.name.replace(/ /g, "-") + "-macOS.zip";      // release asset: Claude-Whisper-macOS.zip
+APP.zipWin = APP.name.replace(/ /g, "-") + "-Windows.zip"; // release asset: Claude-Whisper-Windows.zip
+APP.bundle = APP.name + ".app";                             // Claude Whisper.app
+APP.exe = APP.name.replace(/ /g, "") + ".exe";              // ClaudeWhisper.exe
 const GH = "https://github.com/" + APP.repo;
 const LINKS = {
   repo: GH,
-  download: GH + "/releases/latest",
+  download: GH + "/releases/latest/download/" + APP.zip,
+  downloadWin: GH + "/releases/latest/download/" + APP.zipWin,
+  latest: GH + "/releases/latest",
   releases: GH + "/releases",
   issues: GH + "/issues",
   license: GH + "/blob/main/LICENSE",
+  readmeHow: GH + "#how-it-works",
+  readmeInstall: GH + "#install",
 };
 const TEXT = {
   name: APP.name,
   zip: APP.zip,
+  zipWin: APP.zipWin,
   bundle: APP.bundle,
+  exe: APP.exe,
   xattr: 'xattr -dr com.apple.quarantine "/Applications/' + APP.bundle + '"',
-  build: "git clone " + GH + ".git\ncd " + APP.repo.split("/")[1] + "\n./build.sh --install   # builds, installs and starts it",
 };
 
 document.querySelectorAll("[data-app]").forEach(el => { el.textContent = TEXT[el.dataset.app]; });
@@ -812,7 +674,7 @@ document.querySelectorAll("[data-app-href]").forEach(el => {
   el.href = LINKS[el.dataset.appHref];
   if (/^https?:/.test(el.href) && !el.href.startsWith(location.origin)) el.rel = "noopener";
 });
-// Keep the runtime title and preview tags in step with APP as well.
+// Keep the runtime title in step with APP as well.
 document.title = document.title.replace(/^[^:]+/, APP.name);
 
 // Capsule bars: 13 per row, taller in the middle, like the app's overlay.
@@ -828,7 +690,7 @@ document.querySelectorAll("[data-bars]").forEach((row, r) => {
   }
 });
 
-// Copy buttons on the code blocks.
+// Copy button on the code block.
 document.querySelectorAll(".copy").forEach(btn => {
   btn.addEventListener("click", async () => {
     const text = btn.closest(".codebox").querySelector("code").textContent;
