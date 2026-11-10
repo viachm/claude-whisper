@@ -350,10 +350,24 @@ sealed class App : ApplicationContext
     private void Cancelled(bool deliberate)
     {
         if (phase is not (Phase.WaitingForMic or Phase.Listening)) return;
+        SetIcon(active: false);
+        overlay.Hide();
+        // The dictation key used in a shortcut: nothing is pasted, but what was said so far is kept
+        // in History rather than lost.
+        if (!deliberate && phase == Phase.Listening)
+        {
+            phase = Phase.Transcribing;
+            session.Finish(text =>
+            {
+                phase = Phase.Idle;
+                if (text.Length == 0) return;
+                history.Add(text);
+                Log.Write($"dictation dropped; kept {text.Length} characters in History");
+            });
+            return;
+        }
         session.Cancel();
         phase = Phase.Idle;
-        SetIcon(active: false);
         if (deliberate) Sound.Play("stop");
-        overlay.Hide();
     }
 }

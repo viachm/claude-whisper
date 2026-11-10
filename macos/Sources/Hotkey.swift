@@ -4,7 +4,7 @@ import Carbon.HIToolbox
 /// Watches the dictation key system-wide and turns it into start, stop and cancel, following the
 /// chosen mode. A modifier key (Right Command and friends) is read from a listen-only event tap
 /// and only counts when pressed on its own: any other key while it is down means it is being
-/// used as a modifier, so the dictation is dropped quietly. A recorded shortcut is a Carbon hot
+/// used as a modifier, so the dictation is dropped quietly (what was said goes to History only). A recorded shortcut is a Carbon hot
 /// key, so the keystroke is consumed instead of also reaching the focused app. The cancel key
 /// cancels in every mode.
 ///
