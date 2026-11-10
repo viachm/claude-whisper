@@ -281,6 +281,10 @@ section.alt { background: var(--bg-alt); border-block: 1px solid var(--line); }
 /* how it works */
 .demo { margin: 0 auto 32px; max-width: 900px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 18px 40px -24px rgb(0 0 0 / .3); background: #323232; }
 .demo img { display: block; width: 100%; height: auto; }
+.demo figcaption { padding: 10px 14px; font-size: 14px; color: var(--muted); background: var(--surface); border-top: 1px solid var(--line); }
+.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; margin-top: 28px; }
+.figs .demo { margin: 0; max-width: none; }
+@media (max-width: 760px) { .figs { grid-template-columns: 1fr; } }
 .steps { list-style: none; padding: 0; margin: 0; counter-reset: s; display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
 .steps li { counter-increment: s; }
@@ -462,6 +466,10 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <li class="card"><h3>It lands at your cursor</h3><p>The text is pasted into the app you were in, followed by a space, and your clipboard is put back.</p></li>
       </ol>
       <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Restart Claude Session. For the internals, see <a data-app-href="readmeHow" href="#">how it works in the README</a>.</p>
+      <div class="figs">
+        <figure class="demo"><img src="history.gif" width="900" height="530" loading="lazy" alt="The menu bar icon's History submenu lists the latest dictations; clicking one copies it"><figcaption>History: click a dictation to copy it again.</figcaption></figure>
+        <figure class="demo"><img src="settings.gif" width="900" height="757" loading="lazy" alt="Scrolling through Settings › General: dictation key, Improve, Text and Feedback"><figcaption>Settings: keys, Improve, how text is delivered, sounds and the capsule.</figcaption></figure>
+      </div>
     </div>
   </section>
 
