@@ -465,7 +465,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <li class="card"><h3>Claude Code transcribes</h3><p>A hidden Claude Code session, signed in as you, turns speech into text. Nothing is sent to Claude as a message.</p></li>
         <li class="card"><h3>It lands at your cursor</h3><p>The text is pasted into the app you were in, followed by a space, and your clipboard is put back.</p></li>
       </ol>
-      <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Restart Claude Session. For the internals, see <a data-app-href="readmeHow" href="#">how it works in the README</a>.</p>
+      <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Restart Claude Session. For the internals, see <a data-app-href="readmeHow" href="#">how it works in the guide</a>.</p>
       <div class="figs">
         <figure class="demo"><img src="history.gif" width="900" height="530" loading="lazy" alt="The menu bar icon's History submenu lists the latest dictations; clicking one copies it"><figcaption>History: click a dictation to copy it again.</figcaption></figure>
         <figure class="demo"><img src="settings.gif" width="900" height="757" loading="lazy" alt="Scrolling through Settings › General: dictation key, Improve, Text and Feedback"><figcaption>Settings: keys, Improve, how text is delivered, sounds and the capsule.</figcaption></figure>
@@ -564,7 +564,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
           <a class="btn btn-ghost" data-app-href="downloadWin" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
         </div>
       </div>
-      <p class="more">Rather build it yourself? The <a data-app-href="readmeInstall" href="#">README</a> has the steps for both apps.</p>
+      <p class="more">Rather build it yourself? <a data-app-href="readmeInstall" href="#">CONTRIBUTING.md</a> has the steps for both apps.</p>
     </div>
   </section>
 
@@ -606,7 +606,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         </details>
         <details>
           <summary>Why does macOS ask for the permissions again after an update?</summary>
-          <div class="a"><p>Release builds are ad-hoc signed rather than notarized, which is also why the first launch needs <strong>Open Anyway</strong>. A build signed with your own Apple Development certificate keeps the permissions; the <a data-app-href="readmeInstall" href="#">README</a> shows how to build it.</p></div>
+          <div class="a"><p>Release builds are ad-hoc signed rather than notarized, which is also why the first launch needs <strong>Open Anyway</strong>. A build signed with your own Apple Development certificate keeps the permissions; <a data-app-href="readmeInstall" href="#">CONTRIBUTING.md</a> shows how to build it.</p></div>
         </details>
         <details>
           <summary>The key does nothing. What now?</summary>
@@ -665,8 +665,8 @@ const LINKS = {
   releases: GH + "/releases",
   issues: GH + "/issues",
   license: GH + "/blob/main/LICENSE",
-  readmeHow: GH + "#how-it-works",
-  readmeInstall: GH + "#install",
+  readmeHow: GH + "/blob/main/docs/GUIDE.md#how-it-works",
+  readmeInstall: GH + "/blob/main/CONTRIBUTING.md#building",
 };
 const TEXT = {
   name: APP.name,
