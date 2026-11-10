@@ -1,0 +1,30 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS, Windows]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: App version (Settings) and Claude Code version (`claude --version`).
+      placeholder: "v0.1.6, Claude Code 2.1.319"
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: The last lines of the log (Settings › Claude › Open Log) around the problem.
+      render: text

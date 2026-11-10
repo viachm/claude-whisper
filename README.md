@@ -1,11 +1,43 @@
-# Claude Whisper
+<p align="center">
+  <img src=".github/assets/icon.png" width="128" height="128" alt="Claude Whisper icon">
+</p>
 
-Hold a key anywhere on your Mac or PC, speak, let go, and the text is typed where your cursor is.
+<h1 align="center">Claude Whisper</h1>
+
+<p align="center">
+  <b>Hold a key, speak, let go: the text is typed where your cursor is.</b><br>
+  System-wide voice typing for macOS and Windows, on the Claude Code you already have.
+</p>
+
+<p align="center">
+  <a href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-000?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0id2hpdGUiPjxyZWN0IHdpZHRoPSI3LjUiIGhlaWdodD0iNy41Ii8%2BPHJlY3QgeD0iOC41IiB3aWR0aD0iNy41IiBoZWlnaHQ9IjcuNSIvPjxyZWN0IHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48cmVjdCB4PSI4LjUiIHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48L3N2Zz4="></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/viachm/claude-whisper/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/viachm/claude-whisper?label=release&color=2b7489"></a>
+  <a href="https://github.com/viachm/claude-whisper/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/viachm/claude-whisper/build.yml?branch=main&label=build"></a>
+  <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-000?logo=apple&logoColor=white">
+  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0id2hpdGUiPjxyZWN0IHdpZHRoPSI3LjUiIGhlaWdodD0iNy41Ii8%2BPHJlY3QgeD0iOC41IiB3aWR0aD0iNy41IiBoZWlnaHQ9IjcuNSIvPjxyZWN0IHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48cmVjdCB4PSI4LjUiIHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48L3N2Zz4=">
+  <img alt="Swift" src="https://img.shields.io/badge/Swift-F05138?logo=swift&logoColor=white">
+  <img alt=".NET 8" src="https://img.shields.io/badge/.NET%208-512BD4?logo=dotnet&logoColor=white">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/viachm/claude-whisper?color=yellow"></a>
+</p>
+
+<p align="center">
+  <a href="https://viachm.github.io/claude-whisper/">Website</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#using-it">How to use</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
 
 Claude Whisper is a menu bar (macOS) / tray (Windows) wrapper around
 [Claude Code](https://code.claude.com). It does no speech recognition of its own: it drives Claude
 Code's built-in voice dictation in a hidden session, so it runs on the Claude account you are
-already signed in with.
+already signed in with. Free and open source, no extra subscription or API key.
 
 > Unofficial: not made by, affiliated with or endorsed by Anthropic. "Claude" and "Claude Code" are
 > Anthropic's names, used only to say what the app works with.
@@ -53,7 +85,7 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
 
 ### macOS
 
-**Download** `Claude-Whisper.zip` from the [latest release](../../releases/latest), unzip it and
+**Download** `Claude-Whisper-macOS.zip` from the [latest release](../../releases/latest), unzip it and
 move **Claude Whisper.app** to Applications. The app is not notarized, so the first launch is
 blocked: click **Open Anyway** in System Settings › Privacy & Security, or run
 
@@ -150,9 +182,10 @@ that changed.
 
 ## Contributing
 
-The macOS app is in `macos/` (plain `swiftc`, no Xcode project or dependencies): `macos/build.sh`
-builds it (`--install` to install and start it, `--universal` for both architectures) and
-`macos/test.sh` runs the tests. The Windows app is in `windows/` (C# / .NET 8, WinForms, no
-packages): `dotnet build windows/ClaudeWhisper.csproj -r win-x64` compiles it, on any OS. Changes go
-in through pull requests, which GitHub Actions builds and tests on both platforms; every merge to
-`main` is released automatically with the next version number, with both apps in one release.
+Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) for how to
+build and test both apps, and [SECURITY.md](SECURITY.md) for reporting a vulnerability privately.
+Every merge to `main` is built by GitHub Actions and released with the next version number.
+
+## License
+
+[MIT](LICENSE) © Viacheslav Mukha

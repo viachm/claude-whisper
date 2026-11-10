@@ -2,12 +2,19 @@ name: Build
 
 # Pull requests are built and tested. Every push to main is also released: the last number of the
 # newest vX.Y.Z tag goes up by one, both apps are built with that version, and the release (with
-# its tag) is published with Claude-Whisper.zip (macOS) and Claude-Whisper-Windows.zip. A tag
-# pushed by hand is released under its own name.
+# its tag) is published with Claude-Whisper-macOS.zip (macOS) and Claude-Whisper-Windows.zip. A tag
+# pushed by hand is released under its own name. A push that only changes documentation or GitHub
+# housekeeping files is not built or released.
 on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths-ignore:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/assets/**"
+      - ".github/dependabot.yml"
+      - "LICENSE"
   pull_request:
   workflow_dispatch:
 
@@ -80,12 +87,12 @@ jobs:
         run: macos/build.sh --universal
 
       - name: Zip
-        run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper.zip
+        run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper-macOS.zip
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Claude-Whisper
-          path: Claude-Whisper.zip
+          name: Claude-Whisper-macOS
+          path: Claude-Whisper-macOS.zip
 
   windows:
     runs-on: windows-latest
