@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-000?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-000?style=for-the-badge&logo=apple&logoColor=white"></a>
   <a href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0id2hpdGUiPjxyZWN0IHdpZHRoPSI3LjUiIGhlaWdodD0iNy41Ii8%2BPHJlY3QgeD0iOC41IiB3aWR0aD0iNy41IiBoZWlnaHQ9IjcuNSIvPjxyZWN0IHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48cmVjdCB4PSI4LjUiIHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48L3N2Zz4="></a>
 </p>
 
@@ -85,7 +85,7 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
 
 ### macOS
 
-**Download** `Claude-Whisper.zip` from the [latest release](../../releases/latest), unzip it and
+**Download** `Claude-Whisper-macOS.zip` from the [latest release](../../releases/latest), unzip it and
 move **Claude Whisper.app** to Applications. The app is not notarized, so the first launch is
 blocked: click **Open Anyway** in System Settings › Privacy & Security, or run
 
