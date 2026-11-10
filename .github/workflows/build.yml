@@ -31,7 +31,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Shell scripts parse
         run: sh -n macos/build.sh macos/test.sh macos/tools/make-icon.sh macos/Resources/claude-whisper-capture
 
@@ -41,7 +41,7 @@ jobs:
     outputs:
       tag: ${{ steps.pick.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Pick the release version
@@ -64,7 +64,7 @@ jobs:
     runs-on: macos-15
     needs: version
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Use the newest Xcode on the runner
         run: |
@@ -89,7 +89,7 @@ jobs:
       - name: Zip
         run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper-macOS.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Claude-Whisper-macOS
           path: Claude-Whisper-macOS.zip
@@ -98,9 +98,9 @@ jobs:
     runs-on: windows-latest
     needs: version
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -117,7 +117,7 @@ jobs:
           Compress-Archive -Path out/x64/ClaudeWhisper.exe -DestinationPath Claude-Whisper-Windows.zip
           Compress-Archive -Path out/arm64/ClaudeWhisper.exe -DestinationPath Claude-Whisper-Windows-arm64.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Claude-Whisper-Windows
           path: |
@@ -130,7 +130,7 @@ jobs:
     needs: [version, build, windows]
     if: github.event_name == 'push'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true

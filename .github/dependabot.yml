@@ -1,7 +1,11 @@
-# Keeps the GitHub Actions used by the build up to date.
+# Keeps the GitHub Actions used by the build up to date, as one PR a month
+# (every merge to main is a release, so the bumps come together).
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
