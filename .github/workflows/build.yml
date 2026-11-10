@@ -89,7 +89,7 @@ jobs:
       - name: Zip
         run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper-macOS.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Claude-Whisper-macOS
           path: Claude-Whisper-macOS.zip
@@ -117,7 +117,7 @@ jobs:
           Compress-Archive -Path out/x64/ClaudeWhisper.exe -DestinationPath Claude-Whisper-Windows.zip
           Compress-Archive -Path out/arm64/ClaudeWhisper.exe -DestinationPath Claude-Whisper-Windows-arm64.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Claude-Whisper-Windows
           path: |
