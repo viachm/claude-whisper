@@ -77,6 +77,10 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
 - The menu bar / tray icon has **History** (the last 30 dictations; click one to copy it),
   **Settings…**, **Restart Claude Session** and **Quit**, which also stops the hidden session.
 
+<p align="center">
+  <img src=".github/assets/history.gif" width="600" alt="The menu bar icon's History submenu lists the latest dictations; clicking one copies it">
+</p>
+
 ## Requirements
 
 - macOS 14 Sonoma or later (Apple silicon or Intel), or Windows 10/11 (x64 or ARM64).
@@ -136,6 +140,10 @@ The Windows app is the first version: it has no Improve, no keyboard picture in 
 capsule position and no Faster start yet.
 
 ## Settings
+
+<p align="center">
+  <img src=".github/assets/settings.gif" width="600" alt="Scrolling through Settings › General: dictation key, Improve, Text and Feedback">
+</p>
 
 - **General**
   - **Dictation key**: Right Command, Right Option, Left Option, Right Control, Fn or a recorded
