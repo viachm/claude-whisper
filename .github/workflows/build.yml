@@ -31,7 +31,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Shell scripts parse
         run: sh -n macos/build.sh macos/test.sh macos/tools/make-icon.sh macos/Resources/claude-whisper-capture
 
@@ -41,7 +41,7 @@ jobs:
     outputs:
       tag: ${{ steps.pick.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Pick the release version
@@ -64,7 +64,7 @@ jobs:
     runs-on: macos-15
     needs: version
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Use the newest Xcode on the runner
         run: |
@@ -98,7 +98,7 @@ jobs:
     runs-on: windows-latest
     needs: version
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
