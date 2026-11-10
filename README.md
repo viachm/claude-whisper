@@ -56,7 +56,7 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
 | Tap **Shift** while dictating (macOS only) | ✨ improve: Claude cleans this dictation up |
 | Tap the lock key again while locked (macOS only) | ✨ the same as Shift |
 | Esc | cancels and discards |
-| The dictation key with another key (Cmd+C, Ctrl+C…) | a normal shortcut; the dictation is dropped |
+| The dictation key with another key (Cmd+C, Ctrl+C…) | a normal shortcut; nothing is pasted, what you said is kept in History |
 | Typing while locked (macOS) | goes to the app as usual; the dictation goes on |
 
 - **Paste and press Return** (macOS: Settings › Text) or **Auto-send** (Windows: into the Claude

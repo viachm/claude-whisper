@@ -408,11 +408,24 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func cancelled(deliberate: Bool) {
         guard phase == .waitingForMic || phase == .listening else { return }
+        setIcon(active: false)
+        overlay.hide()
+        // The dictation key used in a shortcut: nothing is pasted, but what was said so far is kept
+        // in History rather than lost.
+        if !deliberate && phase == .listening {
+            phase = .transcribing
+            session.finish { [weak self] text in
+                guard let self else { return }
+                self.phase = .idle
+                guard !text.isEmpty else { return }
+                self.history.add(text)
+                Log.write("dictation dropped; kept \(text.count) characters in History")
+            }
+            return
+        }
         session.cancel()
         phase = .idle
-        setIcon(active: false)
         if deliberate { Sound.play("stop") }
-        overlay.hide()
     }
 }
 
