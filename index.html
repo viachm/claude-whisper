@@ -789,7 +789,7 @@ const APP = {
   repo: "viachm/claude-whisper",     // GitHub owner/repo
 };
 // Derived from the two above; they follow the release and build conventions.
-APP.zip = APP.name.replace(/ /g, "-") + ".zip";          // release asset: Claude-Whisper.zip
+APP.zip = APP.name.replace(/ /g, "-") + "-macOS.zip";    // release asset: Claude-Whisper-macOS.zip
 APP.bundle = APP.name + ".app";                           // Claude Whisper.app
 const GH = "https://github.com/" + APP.repo;
 const LINKS = {
