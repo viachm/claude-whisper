@@ -188,4 +188,4 @@ Every merge to `main` is built by GitHub Actions and released with the next vers
 
 ## License
 
-[MIT](LICENSE) © Viacheslav Mukha
+[MIT](LICENSE)
