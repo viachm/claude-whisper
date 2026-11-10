@@ -32,6 +32,10 @@
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
+<p align="center">
+  <img src=".github/assets/demo.gif" width="720" alt="Holding Right Command in Claude Code: a small capsule with voice bars appears, and on release the spoken sentence is typed at the prompt">
+</p>
+
 ---
 
 Claude Whisper is a menu bar (macOS) / tray (Windows) wrapper around
