@@ -16,7 +16,7 @@
   "header.github.5442e2": "GitHub",
   "hero.100-free-open-source-macos.5aa0f1": "100% δωρεάν · ανοιχτός κώδικας · macOS και Windows",
   "hero.hold-a-key-speak-let.765cd1": "Κρατήστε ένα πλήκτρο. Μιλήστε. <span>Αφήστε το.</span>",
-  "hero.the-text-is-typed-where.ea6094": "Το κείμενο γράφεται εκεί που βρίσκεται ο κέρσορας, σε κάθε εφαρμογή. Το <span data-app=\"name\">Claude Whisper</span> είναι εντελώς δωρεάν: βασίζεται στην ενσωματωμένη φωνητική υπαγόρευση του Claude Code και στον λογαριασμό Claude που ήδη χρησιμοποιείτε, χωρίς επιπλέον συνδρομή, χωρίς κλειδί API και χωρίς καμία χρέωση.",
+  "hero.your-words-appear-at-the.551c04": "Οι λέξεις σας εμφανίζονται στον κέρσορα, σε οποιαδήποτε εφαρμογή. Το <span data-app=\"name\">Claude Whisper</span> είναι δωρεάν και λειτουργεί με το δικό σας Claude Code: χωρίς συνδρομή, χωρίς κλειδί API.",
   "hero.download-for-macos.239dce": "Λήψη για macOS",
   "hero.download-for-windows.e03d00": "Λήψη για Windows",
   "hero.free-download-macos-14-windows.788e00": "Δωρεάν λήψη · macOS 14+ · Windows 10/11, πρώτη έκδοση · απαιτεί <a href=\"#install\">Claude Code</a>",

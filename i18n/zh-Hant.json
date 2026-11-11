@@ -16,7 +16,7 @@
   "header.github.5442e2": "GitHub",
   "hero.100-free-open-source-macos.5aa0f1": "100% 免費 · 開放原始碼 · macOS 與 Windows",
   "hero.hold-a-key-speak-let.765cd1": "按住按鍵。說話。<span>放開。</span>",
-  "hero.the-text-is-typed-where.ea6094": "不管在哪個 App，文字都會打在游標所在的位置。<span data-app=\"name\">Claude Whisper</span> 完全免費：它使用 Claude Code 內建的語音聽寫和你原本的 Claude 帳號，不必另外訂閱，不需要 API 金鑰，也不用付任何費用。",
+  "hero.your-words-appear-at-the.551c04": "在任何 App 裡，你說的話都會出現在游標處。<span data-app=\"name\">Claude Whisper</span> 免費，用你的 Claude Code 就能運作：不必訂閱，也不需要 API 金鑰。",
   "hero.download-for-macos.239dce": "下載 macOS 版",
   "hero.download-for-windows.e03d00": "下載 Windows 版",
   "hero.free-download-macos-14-windows.788e00": "免費下載 · macOS 14+ · Windows 10/11（首個版本） · 需要 <a href=\"#install\">Claude Code</a>",
