@@ -209,7 +209,7 @@ final class Preferences: ObservableObject {
         restoreClipboard = defaults.object(forKey: "restoreClipboard") as? Bool ?? true
         playSounds = defaults.object(forKey: "playSounds") as? Bool ?? true
         soundSet = SoundSet(rawValue: defaults.string(forKey: "soundSet") ?? "") ?? .click
-        soundVolume = defaults.object(forKey: "soundVolume") as? Double ?? 0.6
+        soundVolume = defaults.object(forKey: "soundVolume") as? Double ?? 0.2
         showOverlay = defaults.object(forKey: "showOverlay") as? Bool ?? true
         capsulePosition = CapsulePosition(rawValue: defaults.string(forKey: "capsulePosition") ?? "") ?? .bottom
         claudePath = defaults.string(forKey: "claudePath") ?? ""

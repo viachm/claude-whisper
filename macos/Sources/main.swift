@@ -45,6 +45,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let firstLaunch = !UserDefaults.standard.bool(forKey: "launchedBefore")
             && UserDefaults.standard.object(forKey: "placedAtRightEnd") == nil
         UserDefaults.standard.set(true, forKey: "launchedBefore")
+        // Faster start is on for a new user: listening starts about 0.3 s sooner. It edits their
+        // ~/.claude/keybindings.json, so someone updating keeps whatever they chose.
+        if firstLaunch && !VoiceKey.isFastStart { VoiceKey.setFastStart(true) }
         setUpMenu()
         requestPermissions()
 

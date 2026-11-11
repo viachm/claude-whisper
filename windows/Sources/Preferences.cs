@@ -87,7 +87,7 @@ sealed class Preferences
     private bool restoreClipboard = true;
     private bool playSounds = true;
     private string soundSet = "click";
-    private double soundVolume = 0.6;
+    private double soundVolume = 0.2;
     private bool showOverlay = true;
     private string claudePath = "";
     private string language = "";
