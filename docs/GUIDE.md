@@ -109,7 +109,7 @@ capsule position and no Faster start yet.
     skips it); the improve key (any single modifier, Shift by default); Haiku or Sonnet.
   - **Startup**: open at login.
 - **Claude**: dictation language, `claude` path, session status, the log. macOS also has extra
-  arguments and **Faster start** (makes Option+K Claude Code's voice key in
+  arguments and **Faster start**, on by default for new installs (makes Option+K Claude Code's voice key in
   `~/.claude/keybindings.json`, so listening starts about 0.2 s sooner; Space then stops dictating
   inside Claude Code itself).
 - **History** (all 30 dictations in full) and, on macOS, **Permissions**.
