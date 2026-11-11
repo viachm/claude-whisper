@@ -4,19 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Google tag (GA4, container GTM-TKL4FNSF). Loads only after the visitor
-     allows analytics in the consent bar at the bottom of the page. -->
+<!-- Google tag (GA4 G-3645HJ2QJV through container GTM-TKL4FNSF). -->
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TKL4FNSF"></script>
 <script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-window.loadAnalytics = function () {
-  if (window.__gaLoaded) return; window.__gaLoaded = true;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  var s = document.createElement('script'); s.async = true;
-  s.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TKL4FNSF';
-  document.head.appendChild(s);
-};
-try { if (localStorage.getItem('analytics-consent') === 'granted') loadAnalytics(); } catch (e) {}
 </script>
 
 <!--
@@ -402,24 +395,6 @@ footer p { max-width: 44em; margin: 10px 0 0; }
   .scene .layer-wave { opacity: 0; }
   .bars.voice span { transform: scaleY(var(--a, .6)); }
 }
-/* analytics consent bar */
-.consent {
-  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; margin: 0 auto; max-width: 560px;
-  display: flex; gap: 12px 16px; align-items: center; flex-wrap: wrap;
-  padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px;
-  background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow); font-size: 14px;
-}
-.consent[hidden] { display: none; }
-.consent p { margin: 0; flex: 1 1 260px; }
-.consent .acts { display: flex; gap: 8px; }
-.consent button {
-  font: inherit; font-weight: 600; cursor: pointer; border-radius: 10px; padding: 8px 14px;
-  border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
-}
-.consent button.yes { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.consent button.yes:hover { background: var(--accent-hover); }
-footer .linklike { font: inherit; color: var(--ink-2); background: none; border: 0; padding: 0; cursor: pointer; }
-footer .linklike:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -670,18 +645,10 @@ footer .linklike:hover { color: var(--ink); }
       <a data-app-href="releases" href="#">Releases</a>
       <a data-app-href="issues" href="#">Issues</a>
       <a data-app-href="license" href="#">License</a>
-      <button type="button" class="linklike" id="consent-open">Analytics settings</button>
     </div>
   </div>
 </footer>
 
-<div class="consent" id="consent" role="region" aria-label="Analytics consent" hidden>
-  <p>May this site use Google Analytics to count visits? It sets cookies on this website only, not in the app.</p>
-  <div class="acts">
-    <button type="button" data-consent="denied">No thanks</button>
-    <button type="button" class="yes" data-consent="granted">Allow</button>
-  </div>
-</div>
 
 <script>
 /* ==========================================================================
@@ -754,21 +721,6 @@ document.querySelectorAll(".copy").forEach(btn => {
 const top_ = document.getElementById("top");
 const onScroll = () => top_.classList.toggle("scrolled", scrollY > 8);
 addEventListener("scroll", onScroll, { passive: true }); onScroll();
-// Analytics consent: ask once, remember the answer in this browser.
-const consentBar = document.getElementById("consent");
-let consentChoice = null;
-try { consentChoice = localStorage.getItem("analytics-consent"); } catch {}
-if (!consentChoice) consentBar.hidden = false;
-consentBar.querySelectorAll("[data-consent]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const v = btn.dataset.consent;
-    try { localStorage.setItem("analytics-consent", v); } catch {}
-    consentBar.hidden = true;
-    if (v === "granted") loadAnalytics();
-    else if (window.__gaLoaded) location.reload();
-  });
-});
-document.getElementById("consent-open").addEventListener("click", () => { consentBar.hidden = false; });
 </script>
 </body>
 </html>
