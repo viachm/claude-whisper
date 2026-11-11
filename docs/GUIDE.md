@@ -32,7 +32,7 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
   microphone is really on.
 - Text is pasted followed by a space, and your clipboard is put back.
 - The menu bar / tray icon has **History** (the last 30 dictations; click one to copy it),
-  **Settings…**, **Restart Claude Session** and **Quit**, which also stops the hidden session.
+  **Settings…**, **Check for Updates…** and **Quit**, which also stops the hidden session.
 
 
 ## Requirements
@@ -140,7 +140,7 @@ that changed.
 
 - **The key does nothing**: macOS: check the permissions, then quit and reopen the app. Other apps
   on the same key (other dictation apps, Karabiner rules, PowerToys) have to be quit or moved.
-- **"Claude didn't start listening"**: check that `/voice` works in `claude` itself, then menu ›
-  Restart Claude Session.
+- **"Claude didn't start listening"**: check that `/voice` works in `claude` itself, then
+  Settings › Claude › Restart Session (it also restarts by itself when it stops).
 - **Log**: `~/Library/Logs/Claude Whisper.log` (macOS), `%LOCALAPPDATA%\Claude Whisper\Claude
   Whisper.log` (Windows); Settings › Claude › Open Log.
