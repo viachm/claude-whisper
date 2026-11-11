@@ -106,6 +106,17 @@ jobs:
           rm -f "$RUNNER_TEMP/cert.p12"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          # An expired certificate can't sign; one close to its end date gets a warning on every build.
+          CERT=$(security find-certificate -c "Developer ID Application" -p "$KEYCHAIN")
+          END=$(printf '%s\n' "$CERT" | openssl x509 -noout -enddate | cut -d= -f2)
+          if ! printf '%s\n' "$CERT" | openssl x509 -noout -checkend 0 >/dev/null; then
+            echo "::error::The Developer ID certificate expired on $END. Create a new one in Apple Developer and update the MACOS_CERT_P12 and MACOS_CERT_PASSWORD secrets."
+            exit 1
+          fi
+          if ! printf '%s\n' "$CERT" | openssl x509 -noout -checkend $((60 * 24 * 3600)) >/dev/null; then
+            echo "::warning::The Developer ID certificate expires on $END. Renew it and update the MACOS_CERT_P12 and MACOS_CERT_PASSWORD secrets before then."
+          fi
+          echo "Developer ID certificate valid until $END"
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" | awk -F'"' '/Developer ID Application/{print $2; exit}')
           [ -n "$IDENTITY" ] || { echo "The certificate holds no Developer ID Application identity"; exit 1; }
           echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
