@@ -81,7 +81,6 @@ sealed class App : ApplicationContext
         historyMenu.DropDownItems.Add("No dictations yet");
         menu.Items.Add(historyMenu);
         menu.Items.Add("Settings…", null, (_, _) => OpenSettings());
-        menu.Items.Add("Restart Claude Session", null, (_, _) => RestartSession());
         // Once a check found a newer release, the item offers it straight away.
         updateItem.Click += (_, _) => CheckForUpdates();
         menu.Items.Add(updateItem);

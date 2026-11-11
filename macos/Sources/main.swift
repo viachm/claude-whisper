@@ -90,7 +90,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         historyMenu.delegate = self
         menu.addItem(withTitle: "History", action: nil, keyEquivalent: "").submenu = historyMenu
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
-        menu.addItem(withTitle: "Restart Claude Session", action: #selector(restartSession), keyEquivalent: "r").target = self
         updateItem.target = self
         menu.addItem(updateItem)
         menu.addItem(.separator())
