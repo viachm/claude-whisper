@@ -48,12 +48,8 @@ The dictation key is **Right Command** on macOS and **Right Ctrl** on Windows; t
 ### macOS
 
 **Download** `Claude-Whisper-macOS.zip` from the [latest release](https://github.com/viachm/claude-whisper/releases/latest), unzip it and
-move **Claude Whisper.app** to Applications. The app is not notarized, so the first launch is
-blocked: click **Open Anyway** in System Settings › Privacy & Security, or run
-
-```sh
-xattr -dr com.apple.quarantine "/Applications/Claude Whisper.app"
-```
+move **Claude Whisper.app** to Applications, then open it. Releases from 0.1.11 on are signed with
+a Developer ID and notarized by Apple, so it opens like any other downloaded app.
 
 **Or build it** (needs the Xcode command line tools, `xcode-select --install`):
 
@@ -72,8 +68,8 @@ macos/build.sh --install      # builds, copies to ~/Applications and starts it
 | Input Monitoring | seeing the dictation key |
 | Microphone | letting the hidden Claude Code session hear you |
 
-Release builds are ad-hoc signed, so macOS asks for the permissions again after each
-update; a build signed with your Apple Development certificate keeps them.
+Because releases are signed with the same Developer ID, macOS keeps the permissions across
+updates. Coming from 0.1.10 or earlier (ad-hoc signed), it asks for them once more.
 
 **Updating.** **Check for Updates…** in the menu asks GitHub for the latest release and, once you
 confirm, downloads it, checks it, replaces the app and opens the new version. It never checks by

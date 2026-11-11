@@ -75,9 +75,8 @@ working: run `claude`, type `/voice` and hold Space.
 
 1. Download [Claude-Whisper-macOS.zip](https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip),
    unzip it and move **Claude Whisper.app** to Applications.
-2. The app is not notarized, so macOS blocks the first launch: click **Open Anyway** in System
-   Settings › Privacy & Security, or run
-   `xattr -dr com.apple.quarantine "/Applications/Claude Whisper.app"`.
+2. Open it. It is signed with a Developer ID and notarized by Apple, so macOS only asks once
+   whether to open an app downloaded from the internet.
 3. Allow **Accessibility** (to paste), **Input Monitoring** (to see the key) and **Microphone**.
    Settings opens with a banner that links to each one.
 
