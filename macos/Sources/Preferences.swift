@@ -198,9 +198,6 @@ final class Preferences: ObservableObject {
     @Published var cleanup: CleanupMode { didSet { defaults.set(cleanup.rawValue, forKey: "cleanup") } }
     @Published var improveKey: ImproveKey { didSet { store(improveKey, "improveKey") } }
     @Published var refineModel: RefineModel { didSet { defaults.set(refineModel.rawValue, forKey: "refineModel") } }
-    /// Off by default: the app makes no network requests of its own unless this is on or
-    /// "Check for Updates…" is clicked.
-    @Published var checkForUpdates: Bool { didSet { defaults.set(checkForUpdates, forKey: "checkForUpdates") } }
 
     /// True while a shortcut field is recording, so the live hotkey does not fire meanwhile.
     @Published var isRecordingShortcut = false
@@ -223,7 +220,6 @@ final class Preferences: ObservableObject {
         refineModel = RefineModel(rawValue: defaults.string(forKey: "refineModel") ?? "") ?? .haiku
         shortcut = Self.load(KeyCombo.self, "shortcut", from: defaults) ?? .controlOptionSpace
         cancelKey = Self.load(KeyCombo.self, "cancelKey", from: defaults) ?? .escape
-        checkForUpdates = defaults.object(forKey: "checkForUpdates") as? Bool ?? false
     }
 
     var resolvedClaudePath: String {

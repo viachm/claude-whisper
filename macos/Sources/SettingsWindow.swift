@@ -335,15 +335,6 @@ private struct GeneralPane: View {
                 if let loginError { Text(loginError).foregroundStyle(.red) }
             }
 
-            Section {
-                Toggle("Check for updates automatically", isOn: $prefs.checkForUpdates)
-            } footer: {
-                Text("""
-                    Once a day Claude Whisper asks GitHub whether there is a newer release; when there is, the menu \
-                    offers it. Version \(Updater.current.description). Without this, use Check for Updates… in the menu.
-                    """)
-                .foregroundStyle(.secondary)
-            }
         }
         .formStyle(.grouped)
         .onAppear { loginStatus = SMAppService.mainApp.status }
