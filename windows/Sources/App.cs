@@ -55,7 +55,11 @@ sealed class App : ApplicationContext
         Updater.CleanUp();
         updater.Quit = ExitThread;
         updater.Changed += () => updateItem.Text = updater.Available is { } r ? $"Update to {r.Version}…" : "Check for Updates…";
-        if (!File.Exists(prefs.ResolvedClaudePath)) Ui.After(1, OpenSettings);
+        // The very first start opens Settings, and so does any start while Claude Code is missing.
+        // Someone updating from a version without LaunchedBefore already has a settings file.
+        bool firstLaunch = !prefs.LaunchedBefore && !File.Exists(Paths.Settings);
+        prefs.LaunchedBefore = true;
+        if (firstLaunch || !File.Exists(prefs.ResolvedClaudePath)) Ui.After(1, OpenSettings);
     }
 
     protected override void ExitThreadCore()
