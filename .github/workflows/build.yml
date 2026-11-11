@@ -127,11 +127,13 @@ jobs:
           printf '%s\n' "$NOTARY_KEY" > "$RUNNER_TEMP/notary.p8"
           ditto -c -k --keepParent "macos/build/Claude Whisper.app" "$RUNNER_TEMP/notarize.zip"
           xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --key "$RUNNER_TEMP/notary.p8" \
-            --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID" --wait --timeout 30m \
-            --output-format json | tee "$RUNNER_TEMP/notary.json"
+            --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID" --wait --timeout 90m \
+            --output-format json > "$RUNNER_TEMP/notary.json" || true
           rm -f "$RUNNER_TEMP/notary.p8"
-          STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$RUNNER_TEMP/notary.json")
-          [ "$STATUS" = Accepted ] || { echo "Notarization: $STATUS"; exit 1; }
+          cat "$RUNNER_TEMP/notary.json"
+          # Apple usually answers in minutes; a first submission from a new team can take hours.
+          STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status") or "no answer")' "$RUNNER_TEMP/notary.json" 2>/dev/null || echo "no answer")
+          [ "$STATUS" = Accepted ] || { echo "::error::Notarization: $STATUS (re-run the job once Apple has answered)"; exit 1; }
           xcrun stapler staple "macos/build/Claude Whisper.app"
           spctl --assess --type execute -vv "macos/build/Claude Whisper.app"
 
