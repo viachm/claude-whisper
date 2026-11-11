@@ -148,7 +148,9 @@ enum Permission: String, CaseIterable, Identifiable {
     }
 
     /// Asks macOS once, which also adds Claude Whisper to the list in System Settings, then opens that
-    /// pane, since a refused permission can only be turned on there.
+    /// pane, since a refused permission can only be turned on there. For the two lists that don't
+    /// always show the app (after an update changed its signature, say), Finder opens beside it with
+    /// the app selected, ready to be dragged in.
     func openSettings() {
         switch self {
         case .accessibility:
@@ -162,6 +164,11 @@ enum Permission: String, CaseIterable, Identifiable {
             }
         }
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?\(pane)")!)
+        if self != .microphone {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+            }
+        }
     }
 
     private var pane: String {

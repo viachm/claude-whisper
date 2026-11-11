@@ -760,8 +760,13 @@ private struct PermissionsSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Allow Claude Whisper").font(.title2.weight(.semibold))
-            Text("Turn Claude Whisper on in each of these System Settings lists.")
+            Text("""
+                Turn Claude Whisper on in each of these System Settings lists. If it isn't in the list, \
+                drag it in from the Finder window that opens next to it. If it is on but still not \
+                allowed here (an update can do that), remove it with − and drag it in again.
+                """)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             ForEach(Permission.allCases) { permission in
                 let ok = granted[permission] == true
                 HStack(spacing: 12) {
