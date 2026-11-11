@@ -5,7 +5,35 @@
     <lastmod>2026-11-11</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
     <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
   </url>
   <url>
@@ -13,7 +41,611 @@
     <lastmod>2026-11-11</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
     <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/de/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/fr/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/es/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/pt-br/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/it/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/nl/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/pl/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/cs/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/ro/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/hu/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/el/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/sv/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/da/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/nb/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/fi/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/tr/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
   </url>
   <url>
@@ -21,7 +653,467 @@
     <lastmod>2026-11-11</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
     <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/he/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/fa/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/hi/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/bn/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/id/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/ms/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/vi/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/th/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/ja/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/ko/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/zh-hans/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
+  </url>
+  <url>
+    <loc>https://viachm.github.io/claude-whisper/zh-hant/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viachm.github.io/claude-whisper/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viachm.github.io/claude-whisper/uk/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viachm.github.io/claude-whisper/de/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://viachm.github.io/claude-whisper/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://viachm.github.io/claude-whisper/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://viachm.github.io/claude-whisper/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://viachm.github.io/claude-whisper/it/"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://viachm.github.io/claude-whisper/nl/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://viachm.github.io/claude-whisper/pl/"/>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://viachm.github.io/claude-whisper/cs/"/>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://viachm.github.io/claude-whisper/ro/"/>
+    <xhtml:link rel="alternate" hreflang="hu" href="https://viachm.github.io/claude-whisper/hu/"/>
+    <xhtml:link rel="alternate" hreflang="el" href="https://viachm.github.io/claude-whisper/el/"/>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://viachm.github.io/claude-whisper/sv/"/>
+    <xhtml:link rel="alternate" hreflang="da" href="https://viachm.github.io/claude-whisper/da/"/>
+    <xhtml:link rel="alternate" hreflang="nb" href="https://viachm.github.io/claude-whisper/nb/"/>
+    <xhtml:link rel="alternate" hreflang="fi" href="https://viachm.github.io/claude-whisper/fi/"/>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://viachm.github.io/claude-whisper/tr/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://viachm.github.io/claude-whisper/ar/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://viachm.github.io/claude-whisper/he/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://viachm.github.io/claude-whisper/fa/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://viachm.github.io/claude-whisper/hi/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://viachm.github.io/claude-whisper/bn/"/>
+    <xhtml:link rel="alternate" hreflang="id" href="https://viachm.github.io/claude-whisper/id/"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://viachm.github.io/claude-whisper/ms/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://viachm.github.io/claude-whisper/vi/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://viachm.github.io/claude-whisper/th/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://viachm.github.io/claude-whisper/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://viachm.github.io/claude-whisper/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://viachm.github.io/claude-whisper/zh-hans/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://viachm.github.io/claude-whisper/zh-hant/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://viachm.github.io/claude-whisper/"/>
   </url>
   <url><loc>https://viachm.github.io/claude-whisper/compare/</loc><lastmod>2026-11-11</lastmod></url>

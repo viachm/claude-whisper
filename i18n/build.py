@@ -459,6 +459,12 @@ def head_block(page, lang, langs, built):
             css.append("*, *::before, *::after { letter-spacing: 0 !important; }")
             css.append(f"h1, h2, h3 {{ line-height: {lh}; }} .hero h1 {{ line-height: {lh - .1:.2f}; }}")
             css.append(".kicker, .tag, .krow .or, .ba .lab, .key-row > span, .codebar { font-family: var(--sans); }")
+        # Keep headings from breaking mid-word: Japanese by phrase (Chrome/Edge),
+        # Korean between words, as Korean typesetting expects everywhere.
+        if lang["script"] == "ja":
+            css.append("h1, h2, h3 { word-break: auto-phrase; }")
+        if lang["script"] == "ko":
+            css.append("body { word-break: keep-all; overflow-wrap: anywhere; }")
     if lang.get("quotes"):
         o, c = lang["quotes"]
         css.append(f'.ba q {{ quotes: "{o}" "{c}"; }}')
