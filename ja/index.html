@@ -594,6 +594,10 @@ h1, h2, h3 { word-break: auto-phrase; }
       const d = document.currentScript.previousElementSibling;
       document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
       document.addEventListener("keydown", e => { if (e.key === "Escape" && d.open) { d.open = false; d.querySelector("summary").focus(); } });
+      // A language picked here wins over the browser language on the next visit to the root page.
+      d.querySelectorAll("a[hreflang]").forEach(a => a.addEventListener("click", () => {
+        try { localStorage.setItem("cw-lang", a.hreflang.toLowerCase()); } catch (_) {}
+      }));
     })();
     </script>
     <!-- /i18n:switcher -->

@@ -496,6 +496,27 @@ footer p { max-width: 44em; margin: 10px 0 0; }
 <meta property="og:locale:alternate" content="ko_KR">
 <meta property="og:locale:alternate" content="zh_CN">
 <meta property="og:locale:alternate" content="zh_TW">
+<script>
+(() => {
+  const L = {"en":"","uk":"uk/","de":"de/","fr":"fr/","es":"es/","pt-br":"pt-br/","it":"it/","nl":"nl/","pl":"pl/","cs":"cs/","ro":"ro/","hu":"hu/","el":"el/","sv":"sv/","da":"da/","nb":"nb/","fi":"fi/","tr":"tr/","ar":"ar/","he":"he/","fa":"fa/","hi":"hi/","bn":"bn/","id":"id/","ms":"ms/","vi":"vi/","th":"th/","ja":"ja/","ko":"ko/","zh-hans":"zh-hans/","zh-hant":"zh-hant/"};
+  let pick;
+  try { pick = localStorage.getItem("cw-lang"); } catch (_) {}
+  if (!pick) {
+    if (/bot|crawl|spider|slurp|preview|lighthouse/i.test(navigator.userAgent)) return;
+    for (const raw of navigator.languages || [navigator.language || ""]) {
+      const t = raw.toLowerCase(), b = t.split("-")[0];
+      const c = t in L ? t
+        : b === "zh" ? (/hant|tw|hk|mo/.test(t) ? "zh-hant" : "zh-hans")
+        : b === "pt" ? "pt-br"
+        : b === "no" || b === "nn" ? "nb"
+        : b === "iw" ? "he"
+        : b;
+      if (c in L) { pick = c; break; }
+    }
+  }
+  if (pick && L[pick]) location.replace(L[pick] + location.search + location.hash);
+})();
+</script>
 <style>
 .vh { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .lang { position: relative; flex: none; font-size: 15px; font-weight: 500; }
@@ -581,6 +602,10 @@ footer p { max-width: 44em; margin: 10px 0 0; }
       const d = document.currentScript.previousElementSibling;
       document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
       document.addEventListener("keydown", e => { if (e.key === "Escape" && d.open) { d.open = false; d.querySelector("summary").focus(); } });
+      // A language picked here wins over the browser language on the next visit to the root page.
+      d.querySelectorAll("a[hreflang]").forEach(a => a.addEventListener("click", () => {
+        try { localStorage.setItem("cw-lang", a.hreflang.toLowerCase()); } catch (_) {}
+      }));
     })();
     </script>
     <!-- /i18n:switcher -->

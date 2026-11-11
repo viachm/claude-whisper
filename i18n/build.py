@@ -106,6 +106,35 @@ SWITCHER_JS = """<script>
   const d = document.currentScript.previousElementSibling;
   document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && d.open) { d.open = false; d.querySelector("summary").focus(); } });
+  // A language picked here wins over the browser language on the next visit to the root page.
+  d.querySelectorAll("a[hreflang]").forEach(a => a.addEventListener("click", () => {
+    try { localStorage.setItem("cw-lang", a.hreflang.toLowerCase()); } catch (_) {}
+  }));
+})();
+</script>"""
+
+# Root page only: send a first-time visitor to their browser's language, once.
+# A choice made in the switcher (stored as cw-lang) overrides it, and English
+# (or no match) stays put. Crawlers announce English, so they are never moved.
+REDIRECT_JS = """<script>
+(() => {
+  const L = LANGS;
+  let pick;
+  try { pick = localStorage.getItem("cw-lang"); } catch (_) {}
+  if (!pick) {
+    if (/bot|crawl|spider|slurp|preview|lighthouse/i.test(navigator.userAgent)) return;
+    for (const raw of navigator.languages || [navigator.language || ""]) {
+      const t = raw.toLowerCase(), b = t.split("-")[0];
+      const c = t in L ? t
+        : b === "zh" ? (/hant|tw|hk|mo/.test(t) ? "zh-hant" : "zh-hans")
+        : b === "pt" ? "pt-br"
+        : b === "no" || b === "nn" ? "nb"
+        : b === "iw" ? "he"
+        : b;
+      if (c in L) { pick = c; break; }
+    }
+  }
+  if (pick && L[pick]) location.replace(L[pick] + location.search + location.hash);
 })();
 </script>"""
 
@@ -450,6 +479,9 @@ def head_block(page, lang, langs, built):
     for l in built:
         if l is not lang:
             out.append(f'<meta property="og:locale:alternate" content="{l["og_locale"]}">')
+    if not lang["folder"]:
+        folders = {l["code"].lower(): (l["folder"] + "/" if l["folder"] else "") for l in built}
+        out.append(REDIRECT_JS.replace("LANGS", json.dumps(folders, separators=(",", ":"))))
     css = [SWITCHER_CSS.replace("COLS", "1" if len(built) <= 10 else "2")]
     prof = PROFILES[lang["script"]]
     if prof:
