@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable, Identifiable {
-    case general, claude, permissions, history
+    case general, claude, permissions, history, about
 
     var id: Self { self }
 
@@ -15,6 +15,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "Claude"
         case .permissions: return "Permissions"
         case .history: return "History"
+        case .about: return "About"
         }
     }
 
@@ -24,6 +25,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "terminal"
         case .permissions: return "lock.shield"
         case .history: return "clock.arrow.circlepath"
+        case .about: return "info.circle"
         }
     }
 
@@ -34,6 +36,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return .orange
         case .permissions: return .blue
         case .history: return .purple
+        case .about: return .teal
         }
     }
 }
@@ -49,6 +52,7 @@ final class SettingsState: ObservableObject {
 struct SettingsActions {
     var restartSession: () -> Void
     var openLog: () -> Void
+    var checkForUpdates: () -> Void
 }
 
 /// The one Settings window, a SwiftUI view in a plain NSWindow, created on first use.
@@ -184,6 +188,7 @@ private struct SettingsView: View {
         case .claude: ClaudePane(prefs: prefs, state: state, actions: actions)
         case .permissions: PermissionsPane()
         case .history: HistoryPane(history: history)
+        case .about: AboutPane(checkForUpdates: actions.checkForUpdates)
         }
     }
 }
@@ -218,6 +223,47 @@ private struct SidebarRow: View {
 }
 
 // MARK: General
+
+/// The version, where the project lives, and the unofficial note.
+private struct AboutPane: View {
+    let checkForUpdates: () -> Void
+    private static let site = URL(string: "https://viachm.github.io/claude-whisper/")!
+    private static let repo = URL(string: "https://github.com/viachm/claude-whisper")!
+
+    private var version: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(short) (\(build))"
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                LabeledContent("Version") {
+                    HStack {
+                        Text(version).textSelection(.enabled)
+                        Button("Check for Updates…", action: checkForUpdates)
+                    }
+                }
+            }
+            Section {
+                LabeledContent("Website") { Link("viachm.github.io/claude-whisper", destination: Self.site) }
+                LabeledContent("Source code") { Link("github.com/viachm/claude-whisper", destination: Self.repo) }
+                LabeledContent("Report a problem") {
+                    Link("GitHub Issues", destination: Self.repo.appendingPathComponent("issues"))
+                }
+                LabeledContent("License") {
+                    Link("MIT", destination: Self.repo.appendingPathComponent("blob/main/LICENSE"))
+                }
+            } footer: {
+                Text("Free and open source. Unofficial: not made by, affiliated with or endorsed by Anthropic.")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
 
 /// A Settings section header, in the body text's size and colour so it reads as a heading rather
 /// than as one more grey caption.

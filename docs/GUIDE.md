@@ -113,6 +113,8 @@ capsule position and no Faster start yet.
   `~/.claude/keybindings.json`, so listening starts about 0.2 s sooner; Space then stops dictating
   inside Claude Code itself).
 - **History** (all 30 dictations in full) and, on macOS, **Permissions**.
+- **About**: the version with **Check for Updates…**, and links to the website, the source code,
+  issues and the license.
 
 ## How it works
 

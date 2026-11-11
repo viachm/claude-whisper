@@ -20,7 +20,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pendingRestart: DispatchWorkItem?
     private lazy var settings = SettingsWindowController(history: history, actions: SettingsActions(
         restartSession: { [weak self] in self?.restartSession() },
-        openLog: { [weak self] in self?.openLog() }))
+        openLog: { [weak self] in self?.openLog() },
+        checkForUpdates: { [weak self] in self?.checkForUpdates() }))
     private var subscriptions = Set<AnyCancellable>()
 
     private enum Phase { case idle, waitingForMic, listening, transcribing }
