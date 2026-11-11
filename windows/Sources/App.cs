@@ -16,6 +16,8 @@ sealed class App : ApplicationContext
     private readonly Overlay overlay = new();
     private readonly NotifyIcon tray;
     private readonly ToolStripMenuItem historyMenu = new("History");
+    private readonly Updater updater = new();
+    private readonly ToolStripMenuItem updateItem = new("Check for Updates…");
     private SettingsWindow? settings;
     private IDisposable? pendingRestart;
     private Icon? idleIcon, activeIcon;
@@ -50,6 +52,10 @@ sealed class App : ApplicationContext
         prefs.Changed += PreferenceChanged;
         session.OnStateChange += SessionChanged;
         session.Start();
+        Updater.CleanUp();
+        updater.Quit = ExitThread;
+        updater.Changed += () => updateItem.Text = updater.Available is { } r ? $"Update to {r.Version}…" : "Check for Updates…";
+        updater.SetAutomatic(prefs.CheckForUpdates, prefs.LastUpdateCheck);
         if (!File.Exists(prefs.ResolvedClaudePath)) Ui.After(1, OpenSettings);
     }
 
@@ -73,6 +79,9 @@ sealed class App : ApplicationContext
         menu.Items.Add(historyMenu);
         menu.Items.Add("Settings…", null, (_, _) => OpenSettings());
         menu.Items.Add("Restart Claude Session", null, (_, _) => RestartSession());
+        // Once a check found a newer release, the item offers it straight away.
+        updateItem.Click += (_, _) => { if (updater.Available != null) updater.Offer(); else _ = updater.Check(interactive: true); };
+        menu.Items.Add(updateItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit Claude Whisper", null, (_, _) => ExitThread());
         return menu;
@@ -219,6 +228,9 @@ sealed class App : ApplicationContext
                 break;
             case nameof(Preferences.ShowOverlay):
                 overlay.Hide();
+                break;
+            case nameof(Preferences.CheckForUpdates):
+                updater.SetAutomatic(prefs.CheckForUpdates, prefs.LastUpdateCheck);
                 break;
         }
     }

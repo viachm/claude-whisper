@@ -83,8 +83,61 @@ jobs:
       - name: Tests
         run: macos/test.sh
 
-      - name: Build (Apple silicon + Intel, ad-hoc signed)
+      # With the MACOS_CERT_* secrets set, the app is signed with that Developer ID; without them
+      # (a fork's pull request, or before the certificate exists) it is signed ad hoc.
+      - name: Import the Developer ID certificate
+        id: sign
+        env:
+          CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          if [ -z "$CERT_P12" ]; then
+            echo "No signing secrets: signing ad hoc"
+            echo "identity=-" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          printf '%s' "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" | awk -F'"' '/Developer ID Application/{print $2; exit}')
+          [ -n "$IDENTITY" ] || { echo "The certificate holds no Developer ID Application identity"; exit 1; }
+          echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
+
+      - name: Build (Apple silicon + Intel)
+        env:
+          SIGN_IDENTITY: ${{ steps.sign.outputs.identity }}
         run: macos/build.sh --universal
+
+      # Releases only: Apple checks the signed app and the ticket is stapled to it, so it opens
+      # without Gatekeeper's warning, even offline.
+      - name: Notarize
+        if: github.event_name == 'push' && steps.sign.outputs.identity != '-'
+        env:
+          NOTARY_KEY: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          printf '%s\n' "$NOTARY_KEY" > "$RUNNER_TEMP/notary.p8"
+          ditto -c -k --keepParent "macos/build/Claude Whisper.app" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --key "$RUNNER_TEMP/notary.p8" \
+            --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID" --wait --timeout 30m \
+            --output-format json | tee "$RUNNER_TEMP/notary.json"
+          rm -f "$RUNNER_TEMP/notary.p8"
+          STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$RUNNER_TEMP/notary.json")
+          [ "$STATUS" = Accepted ] || { echo "Notarization: $STATUS"; exit 1; }
+          xcrun stapler staple "macos/build/Claude Whisper.app"
+          spctl --assess --type execute -vv "macos/build/Claude Whisper.app"
+
+      - name: Remove the signing keychain
+        if: always() && steps.sign.outputs.identity != '-'
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
 
       - name: Zip
         run: ditto -c -k --keepParent "macos/build/Claude Whisper.app" Claude-Whisper-macOS.zip

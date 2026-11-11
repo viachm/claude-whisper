@@ -12,6 +12,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var refiner = Refiner(directory: session.workspace)
     private let hotkey = Hotkey()
     private let overlay = Overlay()
+    private let updater = Updater()
+    private let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
     private var statusItem: NSStatusItem!
     private let historyMenu = NSMenu(title: "History")
     private var inputMonitoringTimer: Timer?
@@ -51,6 +53,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         session.onStateChange = { [weak self] state in self?.sessionChanged(state) }
         session.start()
         prepareRefiner()
+        updater.onChange = { [weak self] in self?.refreshUpdateItem() }
+        updater.setAutomatic(prefs.checkForUpdates)
         // A first start (or one after an update reset the permissions) opens Settings, whose
         // banner leads to what still has to be allowed.
         if Permission.allCases.contains(where: { !$0.isGranted }) {
@@ -82,6 +86,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(withTitle: "History", action: nil, keyEquivalent: "").submenu = historyMenu
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(withTitle: "Restart Claude Session", action: #selector(restartSession), keyEquivalent: "r").target = self
+        updateItem.target = self
+        menu.addItem(updateItem)
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Claude Whisper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
@@ -188,6 +194,15 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openSettings() { settings.show() }
 
+    /// Once a check found a newer release, the item offers it straight away.
+    @objc private func checkForUpdates() {
+        if updater.available != nil { updater.offer() } else { updater.check(interactive: true) }
+    }
+
+    private func refreshUpdateItem() {
+        updateItem.title = updater.available?.version.map { "Update to \($0)…" } ?? "Check for Updates…"
+    }
+
     /// Coalesced, since applying several session settings at once would restart it once each.
     @objc private func restartSession() {
         pendingRestart?.cancel()
@@ -251,6 +266,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         watch(prefs.$cleanup) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$refineModel) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$extraArguments) { [weak self] in self?.restartSession() }
+        watch(prefs.$checkForUpdates) { [weak self] in
+            guard let self else { return }
+            self.updater.setAutomatic(self.prefs.checkForUpdates)
+        }
         watch(prefs.$showOverlay) { [weak self] in self?.overlay.hide() }
         // Show where the capsule will be from now on.
         watch(prefs.$capsulePosition) { [weak self] in self?.show(.message("Dictation shows here")) }

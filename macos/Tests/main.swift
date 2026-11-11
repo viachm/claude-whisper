@@ -1,6 +1,6 @@
 import Foundation
 
-// Tests for RefinerProtocol, CleanupMode, ImproveKey and SessionSettings. Plain swiftc (no Xcode project or package): run with ./test.sh.
+// Tests for RefinerProtocol, CleanupMode, ImproveKey, SessionSettings and Release. Plain swiftc (no Xcode project or package): run with ./test.sh.
 
 var failures = 0
 
@@ -169,6 +169,33 @@ do {
     check(voice?["enabled"] as? Bool == true && voice?["autoSubmit"] as? Bool == false, "hidden session has voice on and never submits")
     check(settings?["language"] as? String == "ukrainian", "hidden session gets the dictation language")
     check(decode(SessionSettings.json(language: ""))?["language"] == nil, "hidden session keeps Claude's own language when none is chosen")
+}
+
+// AppVersion and Release
+
+do {
+    let v = { (s: String) in AppVersion(s)! }
+    check(v("v0.1.10") > v("0.1.9"), "0.1.10 is newer than 0.1.9")
+    check(v("0.2") == v("0.2.0"), "a missing last number counts as 0")
+    check(!(v("0.1.9") < v("0.1.9")), "a version isn't newer than itself")
+    check(v("1.0.0-beta") == v("1.0.0"), "a suffix after - is ignored")
+    check(AppVersion("latest") == nil && AppVersion("") == nil && AppVersion("1..2") == nil, "non-versions are rejected")
+    check(v("v0.1.9").description == "0.1.9", "description drops the v")
+}
+
+do {
+    let json = """
+        {"tag_name":"v0.1.10","html_url":"https://github.com/viachm/claude-whisper/releases/tag/v0.1.10","assets":[
+          {"name":"Claude-Whisper-Windows.zip","browser_download_url":"https://example.com/w.zip","digest":null},
+          {"name":"Claude-Whisper-macOS.zip","browser_download_url":"https://example.com/m.zip",
+           "digest":"sha256:ABCDEF0123456789abcdef0123456789abcdef0123456789abcdef0123456789"}]}
+        """
+    let release = try? JSONDecoder().decode(Release.self, from: Data(json.utf8))
+    check(release?.version == AppVersion("0.1.10"), "release version comes from the tag")
+    let mac = release?.asset(named: Release.macAsset)
+    check(mac?.url.absoluteString == "https://example.com/m.zip", "the macOS zip is found by name")
+    check(Release.sha256(fromDigest: mac?.digest) == "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789", "digest gives lowercase hex")
+    check(Release.sha256(fromDigest: nil) == nil && Release.sha256(fromDigest: "sha512:00") == nil, "other digests are ignored")
 }
 
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
