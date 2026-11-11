@@ -16,7 +16,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
     private var statusItem: NSStatusItem!
     private let historyMenu = NSMenu(title: "History")
-    private var inputMonitoringTimer: Timer?
+    private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
     private lazy var settings = SettingsWindowController(history: history, actions: SettingsActions(
         restartSession: { [weak self] in self?.restartSession() },
@@ -226,21 +226,20 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Hotkey
 
-    /// Arms the hotkey with the current settings. Without Input Monitoring it checks again every
-    /// 2 s, so granting it in System Settings takes effect without a restart.
+    /// Arms the hotkey with the current settings. Without Accessibility it checks again every 2 s, so
+    /// granting it in System Settings takes effect without a restart.
     private func armHotkey() {
-        inputMonitoringTimer?.invalidate()
-        inputMonitoringTimer = nil
+        accessibilityTimer?.invalidate()
+        accessibilityTimer = nil
         defer { refreshHotkeyProblem() }
         // A shortcut field is recording: the old shortcut must not fire meanwhile.
         if prefs.isRecordingShortcut { return hotkey.disarm() }
         let config = Hotkey.Config(trigger: prefs.trigger, shortcut: prefs.shortcut, mode: prefs.mode,
                                    cancelKey: prefs.cancelKey, improveKey: prefs.improveKey)
         if hotkey.arm(config) { return }
-        Log.write("waiting for Input Monitoring permission (needed to see the dictation key)")
-        CGRequestListenEventAccess()
-        inputMonitoringTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            if CGPreflightListenEventAccess() { self?.armHotkey() }
+        Log.write("waiting for Accessibility permission (needed to see the dictation key)")
+        accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            if AXIsProcessTrusted() || CGPreflightListenEventAccess() { self?.armHotkey() }
         }
     }
 

@@ -68,21 +68,30 @@ final class Hotkey {
     private var tapSource: CFRunLoopSource?
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
+    /// For the log: whether the tap has delivered anything since it was armed.
+    fileprivate var sawEvent = false
 
     /// (Re)arms with `config`, dropping any dictation in progress. Returns false while macOS has
-    /// not granted Input Monitoring yet; a recorded shortcut works without it, the cancel key
-    /// does not.
+    /// not granted Accessibility yet; a recorded shortcut works without it, the cancel key does not.
     @discardableResult
     func arm(_ config: Config) -> Bool {
         disarm()
+        sawEvent = false
         self.config = config
         if config.trigger == .shortcut { registerShortcut(config.shortcut) }
-        // Without Input Monitoring the tap is created but never sees a key.
-        guard CGPreflightListenEventAccess() else { return false }
+        // An active tap needs Accessibility, which then also lets it see the keys (an app granted
+        // Accessibility counts as allowed for Input Monitoring). A listen-only tap needs Input
+        // Monitoring itself: the fallback for anyone who granted only that.
+        let canListen = CGPreflightListenEventAccess()
+        guard canListen || AXIsProcessTrusted() else { return false }
         let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
             | (1 << CGEventType.keyUp.rawValue)
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             let hotkey = Unmanaged<Hotkey>.fromOpaque(refcon!).takeUnretainedValue()
+            if !hotkey.sawEvent {
+                hotkey.sawEvent = true
+                Log.write("event tap: first key event seen (type \(type.rawValue))")
+            }
             let swallow = hotkey.shouldSwallow(type: type, event: event)
             hotkey.handle(type: type, event: event)
             return swallow ? nil : Unmanaged.passUnretained(event)
@@ -90,10 +99,15 @@ final class Hotkey {
         // An active tap can keep the cancel key from the app in front (needs Accessibility); a
         // listen-only one still works for everything else, so fall back to it.
         let userInfo = Unmanaged.passUnretained(self).toOpaque()
-        let port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+        var port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
                                      eventsOfInterest: CGEventMask(mask), callback: callback, userInfo: userInfo)
-            ?? CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
-                                 eventsOfInterest: CGEventMask(mask), callback: callback, userInfo: userInfo)
+        var kind = "active"
+        if port == nil && canListen {
+            port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
+                                     eventsOfInterest: CGEventMask(mask), callback: callback, userInfo: userInfo)
+            kind = "listen-only"
+        }
+        Log.write("event tap: \(port == nil ? "not created" : kind) (Input Monitoring \(canListen ? "on" : "off"), Accessibility \(AXIsProcessTrusted() ? "on" : "off"))")
         guard let port else { return false }
         tap = port
         tapSource = CFMachPortCreateRunLoopSource(nil, port, 0)

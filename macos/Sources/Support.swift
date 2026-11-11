@@ -117,24 +117,24 @@ enum Paster {
     }
 }
 
-/// The three permissions Claude Whisper needs, for the Settings window to show and link to.
+/// The two permissions Claude Whisper needs, for the Settings window to show and link to.
+/// Accessibility also covers seeing the keys: macOS lets an app it trusts there use an active event
+/// tap, so Input Monitoring is never asked for.
 enum Permission: String, CaseIterable, Identifiable {
-    case accessibility, inputMonitoring, microphone
+    case accessibility, microphone
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .accessibility: return "Accessibility"
-        case .inputMonitoring: return "Input Monitoring"
         case .microphone: return "Microphone"
         }
     }
 
     var purpose: String {
         switch self {
-        case .accessibility: return "Pastes the text into the app you are in."
-        case .inputMonitoring: return "Sees the dictation key and the cancel key."
+        case .accessibility: return "Sees the dictation key and pastes the text into the app you are in."
         case .microphone: return "Lets the hidden Claude session hear you."
         }
     }
@@ -142,32 +142,35 @@ enum Permission: String, CaseIterable, Identifiable {
     var isGranted: Bool {
         switch self {
         case .accessibility: return AXIsProcessTrusted()
-        case .inputMonitoring: return CGPreflightListenEventAccess()
         case .microphone: return AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
         }
     }
 
     /// Asks macOS once, which also adds Claude Whisper to the list in System Settings, then opens that
-    /// pane, since a refused permission can only be turned on there.
+    /// pane, since a refused permission can only be turned on there. Accessibility doesn't always
+    /// list the app (after an update changed its signature, say), so Finder opens beside it with the
+    /// app selected, ready to be dragged in.
     func openSettings() {
         switch self {
         case .accessibility:
             let prompt = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
             _ = AXIsProcessTrustedWithOptions([prompt: true] as CFDictionary)
-        case .inputMonitoring:
-            _ = CGRequestListenEventAccess()
         case .microphone:
             if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
                 return AVCaptureDevice.requestAccess(for: .audio) { _ in }
             }
         }
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?\(pane)")!)
+        if self == .accessibility {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+            }
+        }
     }
 
     private var pane: String {
         switch self {
         case .accessibility: return "Privacy_Accessibility"
-        case .inputMonitoring: return "Privacy_ListenEvent"
         case .microphone: return "Privacy_Microphone"
         }
     }

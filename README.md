@@ -77,7 +77,7 @@ working: run `claude`, type `/voice` and hold Space.
    unzip it and move **Claude Whisper.app** to Applications.
 2. Open it. It is signed with a Developer ID and notarized by Apple, so macOS only asks once
    whether to open an app downloaded from the internet.
-3. Allow **Accessibility** (to paste), **Input Monitoring** (to see the key) and **Microphone**.
+3. Allow **Accessibility** (to see the key and paste) and **Microphone**.
    Settings opens with a banner that links to each one.
 
 ### Windows 10 or 11

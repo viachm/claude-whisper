@@ -10,7 +10,7 @@ You should get an answer within a few days; a fix goes out as a new release.
 
 Claude Whisper needs broad permissions to do its job, so it is worth knowing what it does with them:
 
-- **Accessibility / Input Monitoring** (macOS) or a low-level keyboard hook (Windows): to see the
+- **Accessibility** (macOS) or a low-level keyboard hook (Windows): to see the
   dictation key and to paste. It reacts only to its own keys; it does not record what you type.
 - **Microphone**: used by the hidden Claude Code session for its voice dictation. Claude Whisper
   itself only reads the input level, to animate the capsule.

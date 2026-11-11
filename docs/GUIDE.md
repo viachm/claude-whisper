@@ -59,13 +59,12 @@ cd claude-whisper
 macos/build.sh --install      # builds, copies to ~/Applications and starts it
 ```
 
-**Permissions.** All three are needed; while one is missing, Settings opens with a banner whose
+**Permissions.** Both are needed; while one is missing, Settings opens with a banner whose
 **Manage…** button lists them, links to each System Settings pane and offers a relaunch.
 
 | Permission | Why |
 |---|---|
-| Accessibility | pasting into the app you are in |
-| Input Monitoring | seeing the dictation key |
+| Accessibility | seeing the dictation key and pasting into the app you are in (it also covers Input Monitoring, which is not asked for) |
 | Microphone | letting the hidden Claude Code session hear you |
 
 Because releases are signed with the same Developer ID, macOS keeps the permissions across
