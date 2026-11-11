@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Google tag (GA4 G-3645HJ2QJV through container GTM-TKL4FNSF). -->
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TKL4FNSF"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
+
+<title>Claude Whisper vs Windows Voice Typing (Win+H)</title>
+<meta name="description" content="Claude Whisper vs the voice typing built into Windows (Win+H) and Voice access: hold-to-talk vs toggle, cloud vs on-device, languages and privacy, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<link rel="canonical" href="https://viachm.github.io/claude-whisper/compare/windows-voice-typing.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Claude Whisper">
+<meta property="og:title" content="Claude Whisper vs Windows Voice Typing (Win+H)">
+<meta property="og:description" content="Claude Whisper vs the voice typing built into Windows (Win+H) and Voice access: hold-to-talk vs toggle, cloud vs on-device, languages and privacy, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<meta property="og:url" content="https://viachm.github.io/claude-whisper/compare/windows-voice-typing.html">
+<meta property="og:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="App icon: white voice bars on a dark square">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Claude Whisper vs Windows Voice Typing (Win+H)">
+<meta name="twitter:description" content="Claude Whisper vs the voice typing built into Windows (Win+H) and Voice access: hold-to-talk vs toggle, cloud vs on-device, languages and privacy, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<meta name="twitter:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
+
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f8f8f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f0f10" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="compare.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6.5 9.5 17 4 11.5"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../favicon-64.png" alt="" width="26" height="26"><span>Claude Whisper</span></a>
+    <nav class="nav" aria-label="Site">
+      <a href="../#how">How it works</a>
+      <a href="../#install">Install</a>
+      <a href="./" aria-current="page">Compare</a>
+      <a href="../#faq">FAQ</a>
+      <a class="gh" href="https://github.com/viachm/claude-whisper" rel="noopener"><svg width="17" height="17" aria-hidden="true"><use href="#i-gh"/></svg>GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="chero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="crumbs"><a href="./">Compare</a> / Windows Voice Typing</div>
+      <h1 id="hero-title">Claude Whisper <span class="vs">vs</span> Windows Voice Typing</h1>
+      <p class="lead">Windows has voice typing built in: press Win+H and talk. Claude Whisper is a free, open-source tray app that adds hold-to-talk on Right Ctrl and hands your speech to Claude Code’s voice dictation. Its Windows version is a first version, so this page is upfront about what it lacks.</p>
+      <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
+        </div>
+      <p class="fine">Written by the developer of Claude Whisper. Facts about Windows Voice Typing come from its own pages, read in November 2026; every one is listed under <a href="#src-title">Sources</a>.</p>
+    </div>
+  </section>
+
+  <section class="alt" aria-labelledby="verdict-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Quick verdict</div>
+        <h2 class="h2" id="verdict-title">Built in, or hold-to-talk on Claude Code</h2>
+      </div>
+      <p class="summary">Windows Voice Typing is already on your PC, has voice commands for editing, and on Copilot+ PCs cleans up grammar and fillers in English on the device. Claude Whisper on Windows is simpler still: hold Right Ctrl, speak, let go. It has no Improve on Windows yet, so its main draws are push-to-talk, the hands-free lock, History and Auto-send into Claude.</p>
+      <div class="duo">
+        <div class="card"><h3>Pick Claude Whisper if</h3><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want push-to-talk: hold a key, speak, let go.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You already use Claude Code on Windows.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want a history of recent dictations to copy again.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want a dictation sent straight into the Claude app (Auto-send).</span></li></ul></div>
+        <div class="card"><h3>Pick Windows Voice Typing if</h3><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want nothing to install and no extra account.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want voice commands such as “delete that”.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You have a Copilot+ PC and want Fluid dictation’s cleanup.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want full voice control of the PC (Voice access).</span></li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="table-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Side by side</div>
+        <h2 class="h2" id="table-title">Claude Whisper and Windows Voice Typing compared</h2>
+      </div>
+      <div class="tbl-wrap" tabindex="0" role="region" aria-labelledby="table-title">
+        <table class="cmp">
+          <thead><tr><th scope="col">&nbsp;</th><th scope="col" class="us">Claude Whisper</th><th scope="col">Windows Voice Typing</th></tr></thead>
+          <tbody><tr><th scope="row">Price</th><td class="us" data-label="Claude Whisper">Free app, MIT licensed. Runs on the Claude account you already use for Claude Code: no extra subscription, no API key</td><td data-label="Windows Voice Typing">Included with Windows</td></tr><tr><th scope="row">Setup</th><td class="us" data-label="Claude Whisper">Download a zip. Not notarized (macOS) or signed (Windows), so the first launch needs “Open Anyway” or “Run anyway”</td><td data-label="Windows Voice Typing">Built in</td></tr><tr><th scope="row">Platforms</th><td class="us" data-label="Claude Whisper">Windows 10/11 (x64 and ARM64), first version; also macOS 14+</td><td data-label="Windows Voice Typing">Windows 10 and 11. Voice access: Windows 11, version 22H2 and later</td></tr><tr><th scope="row">Where speech is processed</th><td class="us" data-label="Claude Whisper">Claude Code’s built-in voice dictation, signed in as you; your speech goes to Anthropic through Claude Code. The app’s only connections of its own are to GitHub, to check for updates when you ask</td><td data-label="Windows Voice Typing">Voice typing: Microsoft’s online speech recognition (Azure Speech services). Voice access: on device after a language download</td></tr><tr><th scope="row">Works offline</th><td class="us" data-label="Claude Whisper">No: transcription is done by Claude Code’s voice dictation</td><td data-label="Windows Voice Typing">Voice typing: no. Voice access: yes, after the one-time download</td></tr><tr><th scope="row">How you trigger it</th><td class="us" data-label="Claude Whisper">Hold Right Ctrl, speak, let go; Right Alt or a double-tap locks hands-free; Esc cancels; changeable</td><td data-label="Windows Voice Typing">Win+H starts listening (a toggle, not push-to-talk); say “Stop listening” or press the mic button. Only starts with the cursor in a text box</td></tr><tr><th scope="row">Cleanup</th><td class="us" data-label="Claude Whisper">None on Windows yet: Improve is macOS only, so text is pasted as Claude Code transcribed it</td><td data-label="Windows Voice Typing">Automatic punctuation, profanity filter. Fluid dictation on Copilot+ PCs (English) fixes grammar, punctuation and fillers on device</td></tr><tr><th scope="row">Voice commands</th><td class="us" data-label="Claude Whisper">No</td><td data-label="Windows Voice Typing">“Delete that”, “select that”, punctuation by name; Voice access adds full PC control</td></tr><tr><th scope="row">Languages</th><td class="us" data-label="Claude Whisper">Those Claude Code’s voice dictation supports; pick one in Settings</td><td data-label="Windows Voice Typing">46 language and region entries for voice typing; fewer for Voice access</td></tr><tr><th scope="row">Custom vocabulary</th><td class="us" data-label="Claude Whisper">No</td><td data-label="Windows Voice Typing">Voice access has “Add to vocabulary”</td></tr><tr><th scope="row">Open source</th><td class="us" data-label="Claude Whisper">Yes, MIT</td><td data-label="Windows Voice Typing">No, part of Windows</td></tr></tbody>
+        </table>
+      </div>
+            <p class="table-note">Prices as of November 2026, in the currency the vendor shows. Claude Whisper needs <a href="https://code.claude.com" rel="noopener">Claude Code</a> installed and signed in to a Claude account.</p>
+    </div>
+  </section>
+
+  <section class="alt" id="price" aria-labelledby="price-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Price</div>
+        <h2 class="h2" id="price-title">Both are free, with different strings</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper</h3><p>The app is free and MIT licensed. It runs on the Claude account you already use for Claude Code. You need Claude Code installed and signed in, with <code>/voice</code> working.</p></div>
+        <div class="card"><h3>Windows Voice Typing</h3><p>Included with Windows. Nothing to install.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Privacy</div>
+        <h2 class="h2" id="privacy-title">Microsoft, your PC, or Claude Code</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper</h3><p>Claude Code transcribes your speech under your Claude account, so the audio goes to Anthropic. Apart from update checks on GitHub when you ask, the app itself makes no network connections, and it keeps the last 30 dictations on your PC.</p></div>
+        <div class="card"><h3>Windows Voice Typing</h3><p>Voice typing sends voice data to Microsoft’s cloud “only to provide the service”; Microsoft says it does not store, sample or listen to recordings without your permission. Contributing voice clips is optional. Voice access runs on your PC after the language files download, and Fluid dictation uses an on-device model.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="platforms" aria-labelledby="platforms-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Platforms</div>
+        <h2 class="h2" id="platforms-title">Where each one runs</h2>
+      </div>
+      <div class="prose"><p>Voice typing is part of Windows 10 and 11. Voice access needs Windows 11 version 22H2 or later; Fluid dictation needs a Copilot+ PC and works in English.</p>
+        <p>Claude Whisper runs on Windows 10/11 on x64 and ARM64, as a single self-contained exe. It is not signed, so SmartScreen stops the first launch until you click “Run anyway”. The Windows app has no Improve, capsule position or Faster start yet. It also runs on macOS 14 or later.</p></div>
+    </div>
+  </section>
+
+  <section id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Features</div>
+        <h2 class="h2" id="features-title">Toggle and talk, or hold and paste</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper on Windows</h3><ul>
+          <li>Hold Right Ctrl, speak, let go: the text is pasted at your cursor. Right Alt or a double-tap locks hands-free.</li>
+          <li>History of the last 30 dictations in the tray menu.</li>
+          <li>Auto-send into the Claude app, and optionally consoles running Claude Code.</li>
+        </ul></div>
+        <div class="card"><h3>Windows Voice Typing</h3><ul>
+          <li>Win+H anywhere there is a text box; listens until you stop it.</li>
+          <li>Voice commands for editing and punctuation.</li>
+          <li>Fluid dictation on Copilot+ PCs; say “Undo that” to restore the original.</li>
+          <li>Voice access for controlling the whole PC by voice, offline.</li>
+        </ul></div>
+      </div>
+      <h3 style="font-size:20px;margin:32px 0 12px">Claude Whisper’s limits, plainly</h3>
+      <div class="prose"><ul><li>It needs <a href="https://code.claude.com" rel="noopener">Claude Code</a> installed and signed in to a Claude account, with <code>/voice</code> working. If you do not use Claude Code, it is not for you.</li><li>Your speech goes to Anthropic through Claude Code, under your account. It is not an offline or on-device tool.</li><li>Desktop only: macOS 14 or later and Windows 10/11. No iPhone or Android app.</li><li>The Windows app is a first version: no Improve, no capsule position and no Faster start yet.</li><li>The builds are not notarized or signed, so macOS and Windows warn on the first launch, and macOS asks for its permissions again after each update.</li><li>It is unofficial: not made by, affiliated with or endorsed by Anthropic.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="alt" id="when" aria-labelledby="when-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Fair is fair</div>
+        <h2 class="h2" id="when-title">When Windows Voice Typing is the better choice</h2>
+      </div>
+      <div class="card"><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want dictation with nothing to install, no unsigned app and no extra account.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want to edit by voice (“delete that”, “select that”) or control the whole PC by voice with Voice access.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You have a Copilot+ PC: Fluid dictation cleans up grammar, punctuation and fillers in English on the device, which Claude Whisper cannot do on Windows yet.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You need offline dictation: Voice access works without internet after its download.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You don’t use Claude Code.</span></li></ul></div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">FAQ</div>
+        <h2 class="h2" id="faq-title">Questions about Claude Whisper and Windows Voice Typing</h2>
+      </div>
+      <div class="faq"><details open><summary>Why use Claude Whisper if Windows already has voice typing?</summary><div class="a"><p>For push-to-talk on one key, a hands-free lock, a history of recent dictations, and Auto-send into Claude. If you don’t need those, Win+H is simpler.</p></div></details>
+        <details><summary>Does Claude Whisper clean up text on Windows?</summary><div class="a"><p>Not yet. Improve is macOS only; on Windows the text is pasted as Claude Code transcribed it. On a Copilot+ PC, Windows’ Fluid dictation does clean up English text.</p></div></details>
+        <details><summary>Does either work offline?</summary><div class="a"><p>Voice typing needs internet; Voice access works on device after a one-time language download. Claude Whisper always needs internet.</p></div></details>
+        <details><summary>Can I keep using Win+H alongside Claude Whisper?</summary><div class="a"><p>Yes. Claude Whisper uses Right Ctrl by default, which does not clash with Win+H.</p></div></details>
+        <details><summary>Is Claude Whisper made by Anthropic?</summary><div class="a"><p>No. It is an unofficial, independent project that works with Claude Code. It is not made by, affiliated with or endorsed by Anthropic.</p></div></details></div>
+    </div>
+  </section>
+
+  <section class="alt" aria-labelledby="try-title">
+    <div class="wrap">
+      <div class="card band">
+        <h2 id="try-title">Try Claude Whisper</h2>
+        <p>Free and open source. If Claude Code already works on your computer, setup takes a couple of minutes.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
+        </div>
+      </div>
+      <h2 class="kicker" style="margin:40px 0 14px">More comparisons</h2>
+      <ul class="others"><li><a href="./">All comparisons</a></li><li><a href="wispr-flow.html">Claude Whisper vs Wispr Flow</a></li><li><a href="superwhisper.html">Claude Whisper vs Superwhisper</a></li><li><a href="macwhisper.html">Claude Whisper vs MacWhisper</a></li><li><a href="willow.html">Claude Whisper vs Willow</a></li><li><a href="aqua-voice.html">Claude Whisper vs Aqua Voice</a></li><li><a href="apple-dictation.html">Claude Whisper vs Apple Dictation</a></li></ul>
+    </div>
+  </section>
+
+<section aria-labelledby="src-title">
+    <div class="wrap sources">
+      <h2 id="src-title">Sources</h2>
+      <p>Competitor pages were read on 10 November 2026. Prices are as shown there that day.</p>
+      <ol><li>Claude Whisper README: <a href="https://github.com/viachm/claude-whisper#readme" rel="noopener">https://github.com/viachm/claude-whisper#readme</a></li><li>Claude Whisper guide: <a href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md" rel="noopener">https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md</a></li><li>Use voice typing: <a href="https://support.microsoft.com/en-us/accessibility/windows/use-voice-typing-to-talk-instead-of-type-on-your-pc" rel="noopener">https://support.microsoft.com/en-us/accessibility/windows/use-voice-typing-to-talk-instead-of-type-on-your-pc</a></li><li>Speech, inking, typing and privacy: <a href="https://support.microsoft.com/en-us/windows/privacy/speech-voice-activation-inking-typing-and-privacy" rel="noopener">https://support.microsoft.com/en-us/windows/privacy/speech-voice-activation-inking-typing-and-privacy</a></li><li>How Microsoft protects privacy in speech recognition: <a href="https://support.microsoft.com/en-us/accounts-billing/security/how-does-microsoft-protect-my-privacy-while-improving-its-speech-recognition-technology" rel="noopener">https://support.microsoft.com/en-us/accounts-billing/security/how-does-microsoft-protect-my-privacy-while-improving-its-speech-recognition-technology</a></li><li>Voice access FAQ: <a href="https://support.microsoft.com/en-us/accessibility/windows/voice-access/voice-access-frequently-asked-questions-faqs" rel="noopener">https://support.microsoft.com/en-us/accessibility/windows/voice-access/voice-access-frequently-asked-questions-faqs</a></li><li>Get started with voice access: <a href="https://support.microsoft.com/en-us/accessibility/windows/voice-access/get-started-with-voice-access" rel="noopener">https://support.microsoft.com/en-us/accessibility/windows/voice-access/get-started-with-voice-access</a></li><li>Set up voice access: <a href="https://support.microsoft.com/en-us/accessibility/windows/voice-access/set-up-voice-access" rel="noopener">https://support.microsoft.com/en-us/accessibility/windows/voice-access/set-up-voice-access</a></li><li>Dictate text with voice access: <a href="https://support.microsoft.com/en-us/accessibility/windows/voice-access/dictate-text-with-voice" rel="noopener">https://support.microsoft.com/en-us/accessibility/windows/voice-access/dictate-text-with-voice</a></li></ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../"><img src="../favicon-64.png" alt="" width="26" height="26"><span>Claude Whisper</span></a>
+      <p>Unofficial: not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.</p>
+      <p>Other product names on this page belong to their owners and are used only to identify those products. Facts and prices were read from the sources listed on each page in November 2026 and may have changed since.</p>
+      <p>Free and open source, released under the <a href="https://github.com/viachm/claude-whisper/blob/main/LICENSE" rel="noopener">MIT License</a>.</p>
+    </div>
+    <div class="links">
+      <a href="https://github.com/viachm/claude-whisper" rel="noopener">GitHub</a>
+      <a href="https://github.com/viachm/claude-whisper/releases" rel="noopener">Releases</a>
+      <a href="https://github.com/viachm/claude-whisper/issues" rel="noopener">Issues</a>
+      <a href="https://github.com/viachm/claude-whisper/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="./">Compare</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Hairline under the header once the page scrolls.
+const top_ = document.getElementById("top");
+const onScroll = () => top_.classList.toggle("scrolled", scrollY > 8);
+addEventListener("scroll", onScroll, { passive: true }); onScroll();
+</script>
+</body>
+</html>

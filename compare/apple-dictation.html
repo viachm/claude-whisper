@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Google tag (GA4 G-3645HJ2QJV through container GTM-TKL4FNSF). -->
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TKL4FNSF"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
+
+<title>Claude Whisper vs Apple Dictation on Mac</title>
+<meta name="description" content="Claude Whisper vs the Dictation built into macOS: hold-to-talk vs toggle, on-device processing, languages, privacy and cleanup, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<link rel="canonical" href="https://viachm.github.io/claude-whisper/compare/apple-dictation.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Claude Whisper">
+<meta property="og:title" content="Claude Whisper vs Apple Dictation on Mac">
+<meta property="og:description" content="Claude Whisper vs the Dictation built into macOS: hold-to-talk vs toggle, on-device processing, languages, privacy and cleanup, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<meta property="og:url" content="https://viachm.github.io/claude-whisper/compare/apple-dictation.html">
+<meta property="og:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="App icon: white voice bars on a dark square">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Claude Whisper vs Apple Dictation on Mac">
+<meta name="twitter:description" content="Claude Whisper vs the Dictation built into macOS: hold-to-talk vs toggle, on-device processing, languages, privacy and cleanup, with sources. Claude Whisper is an unofficial, free app that works with Claude Code.">
+<meta name="twitter:image" content="https://viachm.github.io/claude-whisper/icon-512.png">
+
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f8f8f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f0f10" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="compare.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6.5 9.5 17 4 11.5"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../favicon-64.png" alt="" width="26" height="26"><span>Claude Whisper</span></a>
+    <nav class="nav" aria-label="Site">
+      <a href="../#how">How it works</a>
+      <a href="../#install">Install</a>
+      <a href="./" aria-current="page">Compare</a>
+      <a href="../#faq">FAQ</a>
+      <a class="gh" href="https://github.com/viachm/claude-whisper" rel="noopener"><svg width="17" height="17" aria-hidden="true"><use href="#i-gh"/></svg>GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="chero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="crumbs"><a href="./">Compare</a> / Apple Dictation</div>
+      <h1 id="hero-title">Claude Whisper <span class="vs">vs</span> Apple Dictation</h1>
+      <p class="lead">Every Mac already has Dictation: press a key, talk, and macOS types. Claude Whisper is a free, open-source menu bar app that adds hold-to-talk on Right Command and hands your speech to Claude Code’s voice dictation instead. Here is when the built-in one is enough.</p>
+      <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
+        </div>
+      <p class="fine">Written by the developer of Claude Whisper. Facts about Apple Dictation come from its own pages, read in November 2026; every one is listed under <a href="#src-title">Sources</a>.</p>
+    </div>
+  </section>
+
+  <section class="alt" aria-labelledby="verdict-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Quick verdict</div>
+        <h2 class="h2" id="verdict-title">Built in and on-device, or hold-to-talk with Claude cleanup</h2>
+      </div>
+      <p class="summary">For most people, Apple Dictation is the place to start: it is already there, many languages run on your Mac, and there is nothing to install or sign in to. Claude Whisper suits people who already use Claude Code and want press-and-hold dictation, a hands-free lock, a history of recent dictations, and optional cleanup of fillers and self-corrections.</p>
+      <div class="duo">
+        <div class="card"><h3>Pick Claude Whisper if</h3><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want push-to-talk: hold a key, speak, let go.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want fillers and self-corrections taken out (Improve).</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want a history of recent dictations to copy again.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You already use Claude Code.</span></li></ul></div>
+        <div class="card"><h3>Pick Apple Dictation if</h3><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want nothing to install and no extra account.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want speech processed on your Mac, in a supported language.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You also dictate on iPhone or iPad.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want spoken punctuation and emoji commands.</span></li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="table-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Side by side</div>
+        <h2 class="h2" id="table-title">Claude Whisper and Apple Dictation compared</h2>
+      </div>
+      <div class="tbl-wrap" tabindex="0" role="region" aria-labelledby="table-title">
+        <table class="cmp">
+          <thead><tr><th scope="col">&nbsp;</th><th scope="col" class="us">Claude Whisper</th><th scope="col">Apple Dictation</th></tr></thead>
+          <tbody><tr><th scope="row">Price</th><td class="us" data-label="Claude Whisper">Free app, MIT licensed. Runs on the Claude account you already use for Claude Code: no extra subscription, no API key</td><td data-label="Apple Dictation">Included with macOS</td></tr><tr><th scope="row">Setup</th><td class="us" data-label="Claude Whisper">Download a zip. Not notarized (macOS) or signed (Windows), so the first launch needs “Open Anyway” or “Run anyway”; needs Accessibility, Input Monitoring and Microphone</td><td data-label="Apple Dictation">Built into macOS; its options are in Keyboard settings. On-device languages need a speech-model download</td></tr><tr><th scope="row">Platforms</th><td class="us" data-label="Claude Whisper">macOS 14 Sonoma or later (Apple silicon or Intel); Windows 10/11 (x64 and ARM64), first version</td><td data-label="Apple Dictation">macOS; Dictation also exists on iPhone and iPad</td></tr><tr><th scope="row">Where speech is processed</th><td class="us" data-label="Claude Whisper">Claude Code’s built-in voice dictation, signed in as you; your speech goes to Anthropic through Claude Code. The app’s only connections of its own are to GitHub, to check for updates when you ask</td><td data-label="Apple Dictation">On your Mac for supported languages; otherwise sent to and processed by Apple. Keyboard settings show which</td></tr><tr><th scope="row">Works offline</th><td class="us" data-label="Claude Whisper">No: transcription is done by Claude Code’s voice dictation</td><td data-label="Apple Dictation">In languages processed on device; Keyboard settings show whether you need internet</td></tr><tr><th scope="row">How you trigger it</th><td class="us" data-label="Claude Whisper">Hold Right Command (Right Ctrl on Windows), speak, let go. Lock hands-free with Right Option / Right Alt or a double-tap. Esc cancels. Every key can be changed</td><td data-label="Apple Dictation">Press and release the Microphone key or a Dictation shortcut (a toggle, not push-to-talk); press and hold activates Siri. Stops after 30 seconds of silence</td></tr><tr><th scope="row">Cleanup</th><td class="us" data-label="Claude Whisper">Improve (macOS only, optional): removes fillers and self-corrections, fixes punctuation and the spelling of product names and technical terms. About a second extra. Not on Windows yet</td><td data-label="Apple Dictation">Automatic punctuation in supported languages; spoken punctuation, “new line”, emoji by name. No filler removal documented. On macOS 27 with Apple Intelligence (English, M3 or later, 12 GB+), an on-device model improves spelling, punctuation and capitalization</td></tr><tr><th scope="row">Fixing mistakes</th><td class="us" data-label="Claude Whisper">Dictate again, or copy an earlier one from History</td><td data-label="Apple Dictation">Ambiguous words are underlined in blue; click to pick an alternative</td></tr><tr><th scope="row">Languages</th><td class="us" data-label="Claude Whisper">Those Claude Code’s voice dictation supports; pick one in Settings</td><td data-label="Apple Dictation">63 language and region entries; 48 of them on-device</td></tr><tr><th scope="row">Custom vocabulary</th><td class="us" data-label="Claude Whisper">No; Improve restores the spelling of names and terms</td><td data-label="Apple Dictation">Only in Voice Control, which turns standard Dictation off</td></tr><tr><th scope="row">Open source</th><td class="us" data-label="Claude Whisper">Yes, MIT</td><td data-label="Apple Dictation">No, part of macOS</td></tr></tbody>
+        </table>
+      </div>
+            <p class="table-note">Prices as of November 2026, in the currency the vendor shows. Claude Whisper needs <a href="https://code.claude.com" rel="noopener">Claude Code</a> installed and signed in to a Claude account.</p>
+    </div>
+  </section>
+
+  <section class="alt" id="price" aria-labelledby="price-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Price</div>
+        <h2 class="h2" id="price-title">Both are free, with different strings</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper</h3><p>The app is free and MIT licensed. It runs on the Claude account you already use for Claude Code, and Improve uses your Claude subscription. You need Claude Code installed and signed in first.</p></div>
+        <div class="card"><h3>Apple Dictation</h3><p>Included with macOS at no extra cost. No separate sign-up beyond your Mac.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Privacy</div>
+        <h2 class="h2" id="privacy-title">On your Mac, at Apple, or through Claude Code</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper</h3><p>Claude Code transcribes your speech under your Claude account, so the audio goes to Anthropic. Apart from update checks on GitHub when you ask, the app itself makes no network connections, and it keeps the last 30 dictations on your computer.</p></div>
+        <div class="card"><h3>Apple Dictation</h3><p>For languages processed on device, what you say is not sent to Apple; Keyboard settings show which these are. Otherwise speech is sent to and processed by Apple. Apple says audio is not stored unless you opt in to Improve Siri and Dictation. Request data is tied to a rotating random identifier, not your Apple Account, and may be kept for up to two years.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" id="platforms" aria-labelledby="platforms-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Platforms</div>
+        <h2 class="h2" id="platforms-title">Where each one runs</h2>
+      </div>
+      <div class="prose"><p>Apple Dictation is part of macOS, and Dictation also exists on iPhone and iPad. On Apple silicon you can keep typing while you dictate, and switch languages mid-dictation.</p>
+        <p>Claude Whisper runs on macOS 14 or later, Apple silicon or Intel, and on Windows 10/11 as a first version. It needs three permissions on the Mac: Accessibility to paste, Input Monitoring to see the key, and Microphone.</p></div>
+    </div>
+  </section>
+
+  <section id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Features</div>
+        <h2 class="h2" id="features-title">Toggle and type, or hold and paste</h2>
+      </div>
+      <div class="cols">
+        <div class="card"><h3>Claude Whisper</h3><ul>
+          <li>Hold Right Command, speak, let go: the text is pasted at your cursor. Double-tap or Right Option to lock hands-free.</li>
+          <li>Improve: tap Shift while talking and Claude removes fillers and self-corrections, fixes punctuation and spelling of terms.</li>
+          <li>History of the last 30 dictations; “Paste and press Return” to send straight away.</li>
+        </ul></div>
+        <div class="card"><h3>Apple Dictation</h3><ul>
+          <li>Press the Microphone key or your shortcut to start and stop; dictate any length without a timeout.</li>
+          <li>Automatic punctuation, spoken punctuation and emoji commands.</li>
+          <li>Blue-underlined alternatives for words it was unsure of.</li>
+          <li>On macOS 27 with Apple Intelligence: better spelling and punctuation in English on M3 or later.</li>
+        </ul></div>
+      </div>
+      <h3 style="font-size:20px;margin:32px 0 12px">Claude Whisper’s limits, plainly</h3>
+      <div class="prose"><ul><li>It needs <a href="https://code.claude.com" rel="noopener">Claude Code</a> installed and signed in to a Claude account, with <code>/voice</code> working. If you do not use Claude Code, it is not for you.</li><li>Your speech goes to Anthropic through Claude Code, under your account. It is not an offline or on-device tool.</li><li>Desktop only: macOS 14 or later and Windows 10/11. No iPhone or Android app.</li><li>The Windows app is a first version: no Improve, no capsule position and no Faster start yet.</li><li>The builds are not notarized or signed, so macOS and Windows warn on the first launch, and macOS asks for its permissions again after each update.</li><li>It is unofficial: not made by, affiliated with or endorsed by Anthropic.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="alt" id="when" aria-labelledby="when-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Fair is fair</div>
+        <h2 class="h2" id="when-title">When Apple Dictation is the better choice</h2>
+      </div>
+      <div class="card"><ul class="ticks"><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want dictation with nothing to install, no unsigned app and no extra account.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You want your speech processed on your Mac: many languages run on device.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You dictate in a language Apple supports but are not sure Claude Code’s dictation does.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You also dictate on iPhone or iPad and want the same behaviour there.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You like spoken commands for punctuation and emoji, or picking alternatives for unclear words.</span></li><li><svg aria-hidden="true"><use href="#i-check"/></svg><span>You don’t use Claude Code.</span></li></ul></div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">FAQ</div>
+        <h2 class="h2" id="faq-title">Questions about Claude Whisper and Apple Dictation</h2>
+      </div>
+      <div class="faq"><details open><summary>Why use Claude Whisper if my Mac already has Dictation?</summary><div class="a"><p>Mainly for press-and-hold on one key, a hands-free lock, a history of recent dictations, and Improve, which removes fillers and self-corrections. If you don’t need those, Apple Dictation is simpler.</p></div></details>
+        <details><summary>Does Apple Dictation work offline?</summary><div class="a"><p>In languages processed on device, yes. Apple’s Keyboard settings show whether you need an internet connection. Claude Whisper always needs one.</p></div></details>
+        <details><summary>Can I keep using Apple Dictation alongside Claude Whisper?</summary><div class="a"><p>Yes. They use different keys: Apple’s Microphone key or Dictation shortcut, and Right Command for Claude Whisper.</p></div></details>
+        <details><summary>Which is more private?</summary><div class="a"><p>Apple Dictation in an on-device language keeps your speech on your Mac. Claude Whisper sends it to Anthropic through Claude Code, under your account.</p></div></details>
+        <details><summary>Is Claude Whisper made by Anthropic?</summary><div class="a"><p>No. It is an unofficial, independent project that works with Claude Code. It is not made by, affiliated with or endorsed by Anthropic.</p></div></details></div>
+    </div>
+  </section>
+
+  <section class="alt" aria-labelledby="try-title">
+    <div class="wrap">
+      <div class="card band">
+        <h2 id="try-title">Try Claude Whisper</h2>
+        <p>Free and open source. If Claude Code already works on your computer, setup takes a couple of minutes.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-macOS.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/viachm/claude-whisper/releases/latest/download/Claude-Whisper-Windows.zip" rel="noopener"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for Windows</a>
+        </div>
+      </div>
+      <h2 class="kicker" style="margin:40px 0 14px">More comparisons</h2>
+      <ul class="others"><li><a href="./">All comparisons</a></li><li><a href="wispr-flow.html">Claude Whisper vs Wispr Flow</a></li><li><a href="superwhisper.html">Claude Whisper vs Superwhisper</a></li><li><a href="macwhisper.html">Claude Whisper vs MacWhisper</a></li><li><a href="willow.html">Claude Whisper vs Willow</a></li><li><a href="aqua-voice.html">Claude Whisper vs Aqua Voice</a></li><li><a href="windows-voice-typing.html">Claude Whisper vs Windows Voice Typing</a></li></ul>
+    </div>
+  </section>
+
+<section aria-labelledby="src-title">
+    <div class="wrap sources">
+      <h2 id="src-title">Sources</h2>
+      <p>Competitor pages were read on 10 November 2026. Prices are as shown there that day.</p>
+      <ol><li>Claude Whisper README: <a href="https://github.com/viachm/claude-whisper#readme" rel="noopener">https://github.com/viachm/claude-whisper#readme</a></li><li>Claude Whisper guide: <a href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md" rel="noopener">https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md</a></li><li>Use Dictation on Mac (macOS 26): <a href="https://support.apple.com/guide/mac-help/use-dictation-mh40584/26/mac/26" rel="noopener">https://support.apple.com/guide/mac-help/use-dictation-mh40584/26/mac/26</a></li><li>Use Dictation on Mac (macOS 27): <a href="https://support.apple.com/guide/mac-help/use-dictation-mh40584/27/mac/27" rel="noopener">https://support.apple.com/guide/mac-help/use-dictation-mh40584/27/mac/27</a></li><li>Commands for dictating text: <a href="https://support.apple.com/guide/mac-help/commands-for-dictating-text-on-mac-mh40695/26/mac/26" rel="noopener">https://support.apple.com/guide/mac-help/commands-for-dictating-text-on-mac-mh40695/26/mac/26</a></li><li>If Dictation doesn’t work as expected: <a href="https://support.apple.com/guide/mac-help/if-dictation-on-mac-doesnt-work-as-expected-mchlc480652b/26/mac/26" rel="noopener">https://support.apple.com/guide/mac-help/if-dictation-on-mac-doesnt-work-as-expected-mchlc480652b/26/mac/26</a></li><li>Custom vocabulary with Voice Control: <a href="https://support.apple.com/guide/mac-help/use-a-custom-vocabulary-mchl3eb7b79a/26/mac/26" rel="noopener">https://support.apple.com/guide/mac-help/use-a-custom-vocabulary-mchl3eb7b79a/26/mac/26</a></li><li>macOS feature availability: <a href="https://www.apple.com/macos/feature-availability/" rel="noopener">https://www.apple.com/macos/feature-availability/</a></li><li>Ask Siri, Dictation and privacy: <a href="https://www.apple.com/legal/privacy/data/en/ask-siri-dictation/" rel="noopener">https://www.apple.com/legal/privacy/data/en/ask-siri-dictation/</a></li></ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../"><img src="../favicon-64.png" alt="" width="26" height="26"><span>Claude Whisper</span></a>
+      <p>Unofficial: not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.</p>
+      <p>Other product names on this page belong to their owners and are used only to identify those products. Facts and prices were read from the sources listed on each page in November 2026 and may have changed since.</p>
+      <p>Free and open source, released under the <a href="https://github.com/viachm/claude-whisper/blob/main/LICENSE" rel="noopener">MIT License</a>.</p>
+    </div>
+    <div class="links">
+      <a href="https://github.com/viachm/claude-whisper" rel="noopener">GitHub</a>
+      <a href="https://github.com/viachm/claude-whisper/releases" rel="noopener">Releases</a>
+      <a href="https://github.com/viachm/claude-whisper/issues" rel="noopener">Issues</a>
+      <a href="https://github.com/viachm/claude-whisper/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="./">Compare</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Hairline under the header once the page scrolls.
+const top_ = document.getElementById("top");
+const onScroll = () => top_.classList.toggle("scrolled", scrollY > 8);
+addEventListener("scroll", onScroll, { passive: true }); onScroll();
+</script>
+</body>
+</html>
