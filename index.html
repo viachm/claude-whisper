@@ -663,7 +663,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <li class="card"><h3>Claude Code transcribes</h3><p>A hidden Claude Code session, signed in as you, turns speech into text. Nothing is sent to Claude as a message.</p></li>
         <li class="card"><h3>It lands at your cursor</h3><p>The text is pasted into the app you were in, followed by a space, and your clipboard is put back.</p></li>
       </ol>
-      <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Restart Claude Session. For the internals, see <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">how it works in the guide</a>.</p>
+      <p class="more">The menu bar icon (tray on Windows) has History (the last 30 dictations, click one to copy it), Settings and Check for Updates. For the internals, see <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">how it works in the guide</a>.</p>
       <div class="figs">
         <figure class="demo"><img src="history.gif" width="900" height="530" loading="lazy" alt="The menu bar icon's History submenu lists the latest dictations; clicking one copies it"><figcaption>History: click a dictation to copy it again.</figcaption></figure>
         <figure class="demo"><img src="settings.gif" width="900" height="757" loading="lazy" alt="Scrolling through Settings › General: dictation key, Improve, Text and Feedback"><figcaption>Settings: keys, Improve, how text is delivered, sounds and the capsule.</figcaption></figure>
@@ -681,7 +681,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">right · hold</span></div>
-          <div><h3>Hold to talk</h3><p>Speak, let go, and the text is pasted at the cursor. With Settings › Text set to <strong>Paste and press Return</strong>, it is sent straight away too, handy in Claude.</p></div>
+          <div><h3>Hold to talk</h3><p>Speak, let go, and the text is pasted at the cursor. With Settings › Pasting set to <strong>Paste and press Return</strong>, it is sent straight away too, handy in Claude.</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">or double-tap ⌘</span></div>
@@ -807,7 +807,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         </details>
         <details>
           <summary>The capsule says “Claude didn’t start listening”.</summary>
-          <div class="a"><p>Check that <code>/voice</code> works in <code>claude</code> itself, then choose <strong>Restart Claude Session</strong> from the menu.</p></div>
+          <div class="a"><p>Check that <code>/voice</code> works in <code>claude</code> itself, then click <strong>Restart Session</strong> in Settings › Claude.</p></div>
         </details>
         <details>
           <summary>Is this made by Anthropic?</summary>

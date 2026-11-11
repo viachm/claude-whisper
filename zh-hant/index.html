@@ -654,7 +654,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
         <li class="card"><h3>Claude Code 轉成文字</h3><p>一個以你的身分登入的隱藏 Claude Code 工作階段，會把語音轉成文字。不會當成訊息傳給 Claude。</p></li>
         <li class="card"><h3>文字出現在游標處</h3><p>文字會貼到你剛剛使用的 App 裡，後面加一個空格，剪貼簿的內容也會還原。</p></li>
       </ol>
-      <p class="more">選單列圖示（Windows 上是系統匣圖示）裡有 History（記錄：最近 30 筆聽寫，點一下即可複製）、Settings（設定）和 Restart Claude Session（重新啟動 Claude 工作階段）。想了解內部原理，請參考<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">指南中的運作方式</a>。</p>
+      <p class="more">選單列圖示（Windows 上是系統匣圖示）裡有 History（記錄：最近 30 筆聽寫，點一下即可複製）、Settings（設定）和 Check for Updates（檢查更新）。想了解內部原理，請參考<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">指南中的運作方式</a>。</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="選單列圖示的 History 子選單列出最近的聽寫，點一下即可複製"><figcaption>History：點一下聽寫，就能再次複製。</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="捲動瀏覽 Settings › General：聽寫按鍵、Improve、Text 和 Feedback"><figcaption>Settings：按鍵、Improve、文字送出方式、音效和膠囊。</figcaption></figure>
@@ -672,7 +672,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">右邊 · 按住</span></div>
-          <div><h3>按住說話</h3><p>說完放開，文字就會貼到游標處。若把 Settings › Text 設為 <strong>Paste and press Return</strong>，還會立刻送出，在 Claude 裡特別好用。</p></div>
+          <div><h3>按住說話</h3><p>說完放開，文字就會貼到游標處。若把 Settings › Pasting 設為 <strong>Paste and press Return</strong>，還會立刻送出，在 Claude 裡特別好用。</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">或連按兩下 ⌘</span></div>
@@ -798,7 +798,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
         </details>
         <details>
           <summary>膠囊顯示「Claude didn’t start listening」。</summary>
-          <div class="a"><p>先確認 <code>/voice</code> 在 <code>claude</code> 本身能正常運作，再從選單選擇 <strong>Restart Claude Session</strong>。</p></div>
+          <div class="a"><p>先確認 <code>/voice</code> 在 <code>claude</code> 本身能正常運作，再到 Settings › Claude 點選 <strong>Restart Session</strong>。</p></div>
         </details>
         <details>
           <summary>這是 Anthropic 做的嗎？</summary>

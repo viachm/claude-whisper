@@ -650,7 +650,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <li class="card"><h3>Claude Code transcrit</h3><p>Une session Claude Code cachée, connectée à votre compte, transforme la parole en texte. Rien n’est envoyé à Claude sous forme de message.</p></li>
         <li class="card"><h3>Le texte arrive à votre curseur</h3><p>Le texte est collé dans l’app où vous étiez, suivi d’une espace, et votre presse-papiers est restauré.</p></li>
       </ol>
-      <p class="more">L’icône de la barre des menus (la zone de notification sous Windows) propose History (historique : les 30 dernières dictées, cliquez sur l’une d’elles pour la copier), Settings (réglages) et Restart Claude Session (redémarrer la session Claude). Pour les coulisses, voyez <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">le fonctionnement détaillé dans le guide</a>.</p>
+      <p class="more">L’icône de la barre des menus (la zone de notification sous Windows) propose History (historique : les 30 dernières dictées, cliquez sur l’une d’elles pour la copier), Settings (réglages) et Check for Updates (rechercher les mises à jour). Pour les coulisses, voyez <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">le fonctionnement détaillé dans le guide</a>.</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="Le sous-menu History de l’icône de la barre des menus liste les dernières dictées ; un clic en copie une"><figcaption>History : cliquez sur une dictée pour la copier à nouveau.</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="Défilement dans Settings › General : touche de dictée, Improve, Text et Feedback"><figcaption>Settings : touches, Improve, mode d’insertion du texte, sons et capsule.</figcaption></figure>
@@ -668,7 +668,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">droite · maintenir</span></div>
-          <div><h3>Maintenir pour parler</h3><p>Parlez, relâchez, et le texte est collé au curseur. Si Settings › Text est réglé sur <strong>Paste and press Return</strong>, il est aussi envoyé aussitôt, pratique dans Claude.</p></div>
+          <div><h3>Maintenir pour parler</h3><p>Parlez, relâchez, et le texte est collé au curseur. Si Settings › Pasting est réglé sur <strong>Paste and press Return</strong>, il est aussi envoyé aussitôt, pratique dans Claude.</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">ou double appui sur ⌘</span></div>
@@ -794,7 +794,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         </details>
         <details>
           <summary>La capsule affiche « Claude didn’t start listening ».</summary>
-          <div class="a"><p>Vérifiez que <code>/voice</code> fonctionne dans <code>claude</code> lui-même, puis choisissez <strong>Restart Claude Session</strong> dans le menu.</p></div>
+          <div class="a"><p>Vérifiez que <code>/voice</code> fonctionne dans <code>claude</code> lui-même, puis cliquez sur <strong>Restart Session</strong> dans Settings › Claude.</p></div>
         </details>
         <details>
           <summary>Est-ce un produit d’Anthropic ?</summary>

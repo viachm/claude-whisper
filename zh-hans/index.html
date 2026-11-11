@@ -653,7 +653,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
         <li class="card"><h3>Claude Code 转写</h3><p>一个以你的身份登录的隐藏 Claude Code 会话，把语音转成文字。不会作为消息发给 Claude。</p></li>
         <li class="card"><h3>文字出现在光标处</h3><p>文字会粘贴到你刚才所在的应用里，后面跟一个空格，剪贴板内容也会恢复原样。</p></li>
       </ol>
-      <p class="more">菜单栏图标（Windows 上是托盘图标）里有 History（历史记录：最近 30 条听写，点击一条即可复制）、Settings（设置）和 Restart Claude Session（重启 Claude 会话）。想了解内部原理，请看<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">指南中的工作原理</a>。</p>
+      <p class="more">菜单栏图标（Windows 上是托盘图标）里有 History（历史记录：最近 30 条听写，点击一条即可复制）、Settings（设置）和 Check for Updates（检查更新）。想了解内部原理，请看<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">指南中的工作原理</a>。</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="菜单栏图标的 History 子菜单列出最近的听写，点击一条即可复制"><figcaption>History：点击一条听写即可再次复制。</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="滚动浏览 Settings › General：听写按键、Improve、Text 和 Feedback"><figcaption>Settings：按键、Improve、文字的输入方式、声音和胶囊。</figcaption></figure>
@@ -671,7 +671,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">右侧 · 按住</span></div>
-          <div><h3>按住说话</h3><p>说完松开，文字就会粘贴到光标处。如果把 Settings › Text 设为 <strong>Paste and press Return</strong>，还会立即发送，在 Claude 里很方便。</p></div>
+          <div><h3>按住说话</h3><p>说完松开，文字就会粘贴到光标处。如果把 Settings › Pasting 设为 <strong>Paste and press Return</strong>，还会立即发送，在 Claude 里很方便。</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">或双击 ⌘</span></div>
@@ -797,7 +797,7 @@ h1, h2, h3 { line-height: 1.3; } .hero h1 { line-height: 1.20; }
         </details>
         <details>
           <summary>胶囊提示“Claude didn’t start listening”。</summary>
-          <div class="a"><p>先确认 <code>/voice</code> 在 <code>claude</code> 本身中能用，然后从菜单中选择 <strong>Restart Claude Session</strong>。</p></div>
+          <div class="a"><p>先确认 <code>/voice</code> 在 <code>claude</code> 本身中能用，然后在 Settings › Claude 中点击 <strong>Restart Session</strong>。</p></div>
         </details>
         <details>
           <summary>这是 Anthropic 做的吗？</summary>

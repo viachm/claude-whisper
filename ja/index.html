@@ -655,7 +655,7 @@ h1, h2, h3 { word-break: auto-phrase; }
         <li class="card"><h3>Claude Code が文字起こし</h3><p>あなたのアカウントでサインインした非表示の Claude Code セッションが、音声をテキストに変換します。Claude にメッセージとして送られることはありません。</p></li>
         <li class="card"><h3>カーソル位置に入力</h3><p>テキストは直前に使っていたアプリに、末尾のスペース付きで貼り付けられ、クリップボードの内容は元に戻ります。</p></li>
       </ol>
-      <p class="more">メニューバーのアイコン（Windows ではタスクトレイ）には、History（履歴：直近 30 件の音声入力。クリックでコピー）、Settings（設定）、Restart Claude Session（Claude セッションの再起動）があります。内部の仕組みは<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">ガイドの「仕組み」</a>をご覧ください。</p>
+      <p class="more">メニューバーのアイコン（Windows ではタスクトレイ）には、History（履歴：直近 30 件の音声入力。クリックでコピー）、Settings（設定）、Check for Updates（アップデートの確認）があります。内部の仕組みは<a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">ガイドの「仕組み」</a>をご覧ください。</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="メニューバーアイコンの History サブメニューに最近の音声入力が並び、クリックするとコピーされる"><figcaption>History：音声入力をクリックすると、もう一度コピーできます。</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="Settings › General をスクロールしたところ：音声入力キー、Improve、Text、Feedback"><figcaption>Settings：キー、Improve、テキストの入力方法、サウンド、カプセル。</figcaption></figure>
@@ -673,7 +673,7 @@ h1, h2, h3 { word-break: auto-phrase; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">右 · 長押し</span></div>
-          <div><h3>押したまま話す</h3><p>話して離すと、カーソル位置にテキストが貼り付けられます。Settings › Text を <strong>Paste and press Return</strong> にすると、そのまま送信まで行うので、Claude で便利です。</p></div>
+          <div><h3>押したまま話す</h3><p>話して離すと、カーソル位置にテキストが貼り付けられます。Settings › Pasting を <strong>Paste and press Return</strong> にすると、そのまま送信まで行うので、Claude で便利です。</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">または ⌘ をダブルタップ</span></div>
@@ -799,7 +799,7 @@ h1, h2, h3 { word-break: auto-phrase; }
         </details>
         <details>
           <summary>カプセルに「Claude didn’t start listening」と表示されます。</summary>
-          <div class="a"><p><code>claude</code> 自体で <code>/voice</code> が動くか確認してから、メニューの <strong>Restart Claude Session</strong> を選んでください。</p></div>
+          <div class="a"><p><code>claude</code> 自体で <code>/voice</code> が動くか確認してから、Settings › Claude の <strong>Restart Session</strong> をクリックしてください。</p></div>
         </details>
         <details>
           <summary>これは Anthropic 製ですか？</summary>

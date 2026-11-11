@@ -78,9 +78,10 @@ Values are HTML fragments, copied into the page as written.
   Right Ctrl, Right Alt, Shift, Esc, ⌘ ⌥ ⇧. Words around them ("hold", "tap",
   "double-tap", "right") are translated.
 - The app's own UI is English-only, so its labels stay in English: History,
-  Settings, Settings › Text, Settings › General, Settings › Claude, Improve, Text,
-  Feedback, Faster start, Restart Claude Session, Paste and press Return, Open at
-  login, the "Claude didn't start listening" message. You may add a translation in
+  Settings, Settings › Pasting, Settings › General, Settings › Claude, Improve,
+  Pasting, Sound and capsule, Faster start, Restart Session, Check for Updates,
+  About, Paste and press Return, Open at login, the "Claude didn't start
+  listening" message. You may add a translation in
   parentheses on the first mention, e.g. "Settings (налаштування)".
 - Names in macOS or Windows themselves (Accessibility, Microphone, Applications,
   More info, Run anyway, Windows Settings paths) may use the name the OS shows in

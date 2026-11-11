@@ -654,7 +654,7 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
         <li class="card"><h3>Claude Code가 받아쓰기</h3><p>내 계정으로 로그인된 숨겨진 Claude Code 세션이 음성을 텍스트로 바꿔요. Claude에 메시지로 보내지는 건 없어요.</p></li>
         <li class="card"><h3>커서 위치에 입력</h3><p>텍스트는 쓰던 앱에 공백 하나와 함께 붙여넣어지고, 클립보드 내용은 원래대로 돌아와요.</p></li>
       </ol>
-      <p class="more">메뉴 막대 아이콘(Windows에서는 트레이)에는 History(기록: 최근 받아쓰기 30개, 클릭하면 복사), Settings(설정), Restart Claude Session(Claude 세션 재시작)이 있어요. 내부 구조는 <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">가이드의 작동 방식</a>에서 확인하세요.</p>
+      <p class="more">메뉴 막대 아이콘(Windows에서는 트레이)에는 History(기록: 최근 받아쓰기 30개, 클릭하면 복사), Settings(설정), Check for Updates(업데이트 확인) 메뉴가 있어요. 내부 구조는 <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">가이드의 작동 방식</a>에서 확인하세요.</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="메뉴 막대 아이콘의 History 하위 메뉴에 최근 받아쓰기가 나열되고, 하나를 클릭하면 복사됨"><figcaption>History: 받아쓰기를 클릭하면 다시 복사돼요.</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="Settings › General을 스크롤하는 모습: 받아쓰기 키, Improve, Text, Feedback"><figcaption>Settings: 키, Improve, 텍스트 입력 방식, 소리, 캡슐.</figcaption></figure>
@@ -672,7 +672,7 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">오른쪽 · 길게 누르기</span></div>
-          <div><h3>누른 채 말하기</h3><p>말하고 손을 떼면 커서 위치에 텍스트가 붙여넣어져요. Settings › Text를 <strong>Paste and press Return</strong>으로 설정하면 바로 전송까지 돼서 Claude에서 편해요.</p></div>
+          <div><h3>누른 채 말하기</h3><p>말하고 손을 떼면 커서 위치에 텍스트가 붙여넣어져요. Settings › Pasting을 <strong>Paste and press Return</strong>으로 설정하면 바로 전송까지 돼서 Claude에서 편해요.</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">또는 ⌘ 두 번 탭</span></div>
@@ -798,7 +798,7 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
         </details>
         <details>
           <summary>캡슐에 “Claude didn’t start listening”이라고 나와요.</summary>
-          <div class="a"><p><code>claude</code> 자체에서 <code>/voice</code>가 작동하는지 확인한 뒤, 메뉴에서 <strong>Restart Claude Session</strong>을 선택하세요.</p></div>
+          <div class="a"><p><code>claude</code> 자체에서 <code>/voice</code>가 작동하는지 확인한 뒤, Settings › Claude에서 <strong>Restart Session</strong>을 클릭하세요.</p></div>
         </details>
         <details>
           <summary>Anthropic이 만든 건가요?</summary>

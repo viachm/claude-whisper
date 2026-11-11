@@ -650,7 +650,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <li class="card"><h3>Claude Code transkriberar</h3><p>En dold Claude Code-session, inloggad som du, gör om tal till text. Inget skickas till Claude som ett meddelande.</p></li>
         <li class="card"><h3>Texten hamnar vid markören</h3><p>Texten klistras in i appen du var i, följd av ett mellanslag, och urklippet återställs.</p></li>
       </ol>
-      <p class="more">Menyradssymbolen (i systemfältet på Windows) har History (historik: de senaste 30 dikteringarna, klicka på en för att kopiera den), Settings (inställningar) och Restart Claude Session (starta om Claude-sessionen). Vill du veta hur det funkar inuti, läs <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">hur det fungerar i guiden</a>.</p>
+      <p class="more">Menyradssymbolen (i systemfältet på Windows) har History (historik: de senaste 30 dikteringarna, klicka på en för att kopiera den), Settings (inställningar) och Check for Updates (sök efter uppdateringar). Vill du veta hur det funkar inuti, läs <a data-app-href="readmeHow" href="https://github.com/viachm/claude-whisper/blob/main/docs/GUIDE.md#how-it-works">hur det fungerar i guiden</a>.</p>
       <div class="figs">
         <figure class="demo"><img src="../history.gif" width="900" height="530" loading="lazy" alt="Menyradssymbolens undermeny History listar de senaste dikteringarna; ett klick kopierar den valda"><figcaption>History: klicka på en diktering för att kopiera den igen.</figcaption></figure>
         <figure class="demo"><img src="../settings.gif" width="900" height="757" loading="lazy" alt="Bläddring i Settings › General: dikteringstangent, Improve, Text och Feedback"><figcaption>Settings: tangenter, Improve, hur texten levereras, ljud och kapseln.</figcaption></figure>
@@ -668,7 +668,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
       <div class="card keylist">
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌘</span><span class="l">command</span></kbd><span class="or">höger · håll ner</span></div>
-          <div><h3>Håll ner och prata</h3><p>Prata, släpp, så klistras texten in vid markören. Om Settings › Text är inställt på <strong>Paste and press Return</strong> skickas den direkt också, smidigt i Claude.</p></div>
+          <div><h3>Håll ner och prata</h3><p>Prata, släpp, så klistras texten in vid markören. Om Settings › Pasting är inställt på <strong>Paste and press Return</strong> skickas den direkt också, smidigt i Claude.</p></div>
         </div>
         <div class="krow">
           <div class="keys"><kbd class="key wide"><span class="g">⌥</span><span class="l">option</span></kbd><span class="or">eller dubbeltryck ⌘</span></div>
@@ -794,7 +794,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         </details>
         <details>
           <summary>Kapseln säger ”Claude didn’t start listening”.</summary>
-          <div class="a"><p>Kontrollera att <code>/voice</code> fungerar i själva <code>claude</code>, och välj sedan <strong>Restart Claude Session</strong> i menyn.</p></div>
+          <div class="a"><p>Kontrollera att <code>/voice</code> fungerar i själva <code>claude</code>, och klicka sedan på <strong>Restart Session</strong> i Settings › Claude.</p></div>
         </details>
         <details>
           <summary>Är det här gjort av Anthropic?</summary>
