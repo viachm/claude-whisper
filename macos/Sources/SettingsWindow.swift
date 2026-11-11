@@ -839,7 +839,7 @@ private struct PermissionsPane: View {
                     }
                 }
             } footer: {
-                Text("macOS ties these to the app's signature, so they survive rebuilds signed with the same certificate. Input Monitoring takes effect within two seconds of granting it.")
+                Text("macOS ties these to the app's signature, so they survive updates signed with the same certificate. Accessibility takes effect within two seconds of granting it. Input Monitoring isn't needed: Accessibility covers it.")
                     .foregroundStyle(.secondary)
             }
         }

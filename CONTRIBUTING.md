@@ -21,8 +21,8 @@ macos/build.sh --universal  # Apple silicon + Intel, as the release is built
 macos/test.sh               # runs the tests
 ```
 
-A build signed with your Apple Development certificate keeps the Accessibility, Input Monitoring
-and Microphone permissions across rebuilds; an ad-hoc signed one asks again each time.
+A build signed with your Apple Development certificate keeps the Accessibility and Microphone
+permissions across rebuilds; an ad-hoc signed one asks again each time.
 
 **Windows** (`windows/`): C# / .NET 8, WinForms, no packages; needs the
 [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). It compiles on any OS:
