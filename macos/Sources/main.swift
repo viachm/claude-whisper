@@ -40,6 +40,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Log.write("Claude Whisper launched")
+        // Read before setUpMenu stores its first key: someone updating from a version without
+        // "launchedBefore" has started the app before.
+        let firstLaunch = !UserDefaults.standard.bool(forKey: "launchedBefore")
+            && UserDefaults.standard.object(forKey: "placedAtRightEnd") == nil
+        UserDefaults.standard.set(true, forKey: "launchedBefore")
         setUpMenu()
         requestPermissions()
 
@@ -55,9 +60,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         session.start()
         prepareRefiner()
         updater.onChange = { [weak self] in self?.refreshUpdateItem() }
-        // A first start (or one after an update reset the permissions) opens Settings, whose
-        // banner leads to what still has to be allowed.
-        if Permission.allCases.contains(where: { !$0.isGranted }) {
+        // The very first start opens Settings, so a menu bar app with no window doesn't look like it
+        // did nothing; so does any start while a permission is missing, whose banner leads to it.
+        if firstLaunch || Permission.allCases.contains(where: { !$0.isGranted }) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.settings.show() }
         }
     }

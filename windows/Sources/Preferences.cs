@@ -91,6 +91,7 @@ sealed class Preferences
     private bool showOverlay = true;
     private string claudePath = "";
     private string language = "";
+    private bool launchedBefore = false;
 
     public TriggerKey Trigger { get => trigger; set => Set(ref trigger, value); }
     public KeyCombo Shortcut { get => shortcut; set => Set(ref shortcut, value); }
@@ -112,6 +113,9 @@ sealed class Preferences
     public string ClaudePath { get => claudePath; set => Set(ref claudePath, value); }
     /// Claude Code's `language` setting for this session only; empty leaves Claude's own setting.
     public string Language { get => language; set => Set(ref language, value); }
+    /// False until the first start has opened Settings, so a tray app with no window doesn't look
+    /// like it did nothing.
+    public bool LaunchedBefore { get => launchedBefore; set => Set(ref launchedBefore, value); }
 
     /// True while a shortcut field is recording, so the live hotkey does not fire meanwhile.
     [JsonIgnore]
