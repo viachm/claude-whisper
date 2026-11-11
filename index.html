@@ -17,8 +17,7 @@
   RENAMING THE APP
   The page body takes the product name, the repo and the file names from the
   APP object in the <script> at the end of <body>: change it there and every
-  visible occurrence follows (headings, buttons, links, the zip names and the
-  `xattr` command).
+  visible occurrence follows (headings, buttons, links and the zip names).
 
   The tags in this block are read by link previews and search crawlers, which
   do not run JavaScript, so they carry the name as plain text. Update them in
@@ -555,12 +554,7 @@ footer p { max-width: 44em; margin: 10px 0 0; }
         <div class="card">
           <h3>macOS <small>14 Sonoma or later · Apple silicon or Intel</small></h3>
           <div class="istep"><div class="n">1</div><p>Download <code data-app="zip"></code>, unzip it and move <strong data-app="bundle"></strong> to Applications.</p></div>
-          <div class="istep"><div class="n">2</div>
-            <div>
-              <p>The app is not notarized, so the first launch is blocked. Click <strong>Open Anyway</strong> in System Settings › Privacy &amp; Security, or run:</p>
-              <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button">Copy</button></div><pre class="code"><code data-app="xattr"></code></pre></div>
-            </div>
-          </div>
+          <div class="istep"><div class="n">2</div><p>Open it. It is signed with a Developer ID and notarized by Apple, so macOS only asks once whether to open an app downloaded from the internet.</p></div>
           <div class="istep"><div class="n">3</div><p>Allow <strong>Accessibility</strong> (to paste), <strong>Input Monitoring</strong> (to see the key) and <strong>Microphone</strong>. Settings opens with a banner that links to each one.</p></div>
           <a class="btn btn-primary" data-app-href="download" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>Download for macOS</a>
         </div>
@@ -613,8 +607,8 @@ footer p { max-width: 44em; margin: 10px 0 0; }
           <div class="a"><p>The ones Claude Code’s voice dictation supports. Pick the dictation language in Settings › Claude.</p></div>
         </details>
         <details>
-          <summary>Why does macOS ask for the permissions again after an update?</summary>
-          <div class="a"><p>Release builds are ad-hoc signed rather than notarized, which is also why the first launch needs <strong>Open Anyway</strong>. A build signed with your own Apple Development certificate keeps the permissions; <a data-app-href="readmeInstall" href="#">CONTRIBUTING.md</a> shows how to build it.</p></div>
+          <summary>Is the app signed?</summary>
+          <div class="a"><p>The macOS app is, from version 0.1.11: it is signed with a Developer ID and notarized by Apple, so it opens without warnings and keeps its permissions across updates. Updating from an older version asks for the permissions once more. The Windows app is not signed yet, so SmartScreen asks once (<strong>More info</strong>, then <strong>Run anyway</strong>).</p></div>
         </details>
         <details>
           <summary>The key does nothing. What now?</summary>
@@ -684,7 +678,6 @@ const TEXT = {
   zipWin: APP.zipWin,
   bundle: APP.bundle,
   exe: APP.exe,
-  xattr: 'xattr -dr com.apple.quarantine "/Applications/' + APP.bundle + '"',
 };
 
 document.querySelectorAll("[data-app]").forEach(el => { el.textContent = TEXT[el.dataset.app]; });
