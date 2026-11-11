@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "No. It is an unofficial, independent project, not made by, affiliated with or endorsed by Anthropic.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Unofficial: not made by, affiliated with or endorsed by Anthropic. “Claude” and “Claude Code” are Anthropic’s names, used only to say what the app works with.",
   "footer.free-and-open-source-released.761668": "Free and open source, released under the <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">MIT License</a>.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Made by <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Releases",
   "footer.issues.30ce4c": "Issues",

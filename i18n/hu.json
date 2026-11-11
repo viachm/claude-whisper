@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "Nem. Ez egy nem hivatalos, független projekt: nem az Anthropic készítette, nem kapcsolódik az Anthropichoz, és az Anthropic nem is támogatja.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Nem hivatalos: nem az Anthropic készítette, nem kapcsolódik az Anthropichoz, és az Anthropic nem is támogatja. A „Claude” és a „Claude Code” az Anthropic nevei, itt csak azt jelzik, mivel működik az app.",
   "footer.free-and-open-source-released.761668": "Ingyenes és nyílt forráskódú, <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">MIT-licenc</a> alatt.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Készítette: <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Kiadások",
   "footer.issues.30ce4c": "Hibajegyek",

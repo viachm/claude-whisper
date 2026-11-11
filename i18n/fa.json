@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "نه. این یک پروژهٔ غیررسمی و مستقل است؛ نه ساختهٔ Anthropic است، نه وابسته به آن و نه مورد تأیید آن.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "غیررسمی: نه ساختهٔ Anthropic است، نه وابسته به آن و نه مورد تأیید آن. «Claude» و «Claude Code» نام‌های متعلق به Anthropic هستند و اینجا فقط برای بیان اینکه برنامه با چه چیزی کار می‌کند به کار رفته‌اند.",
   "footer.free-and-open-source-released.761668": "رایگان و متن‌باز، منتشرشده تحت <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">مجوز MIT</a>.",
+  "footer.made-by-viacheslav-mukha.b878bd": "ساخته‌شده توسط <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "نسخه‌ها",
   "footer.issues.30ce4c": "مشکلات",

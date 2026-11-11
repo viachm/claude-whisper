@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "不是。這是一個非官方的獨立專案，不是由 Anthropic 製作，與 Anthropic 沒有關聯，也未經 Anthropic 認可。",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "非官方專案：不是由 Anthropic 製作，與 Anthropic 沒有關聯，也未經 Anthropic 認可。「Claude」和「Claude Code」是 Anthropic 的名稱，這裡僅用來說明本 App 搭配什麼使用。",
   "footer.free-and-open-source-released.761668": "免費且開放原始碼，以 <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">MIT 授權條款</a>發布。",
+  "footer.made-by-viacheslav-mukha.b878bd": "作者：<a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "版本",
   "footer.issues.30ce4c": "問題回報",

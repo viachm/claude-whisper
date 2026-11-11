@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "Hayır. Bu, resmî olmayan, bağımsız bir projedir; Anthropic tarafından yapılmamıştır, Anthropic ile bağlantılı değildir ve Anthropic tarafından onaylanmamıştır.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Resmî değildir: Anthropic tarafından yapılmamıştır, Anthropic ile bağlantılı değildir ve Anthropic tarafından onaylanmamıştır. “Claude” ve “Claude Code” Anthropic’e ait adlardır ve burada yalnızca uygulamanın neyle çalıştığını belirtmek için kullanılmıştır.",
   "footer.free-and-open-source-released.761668": "Ücretsiz ve açık kaynak, <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">MIT Lisansı</a> ile yayımlanmıştır.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Geliştiren: <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Sürümler",
   "footer.issues.30ce4c": "Sorunlar",

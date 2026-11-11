@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "Όχι. Είναι ένα ανεπίσημο, ανεξάρτητο έργο, που δεν το έχει φτιάξει η Anthropic, δεν συνδέεται με αυτήν και δεν έχει την έγκρισή της.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Ανεπίσημο: δεν το έχει φτιάξει η Anthropic, δεν συνδέεται με αυτήν και δεν έχει την έγκρισή της. Τα «Claude» και «Claude Code» είναι ονόματα της Anthropic και χρησιμοποιούνται μόνο για να πούμε με τι δουλεύει η εφαρμογή.",
   "footer.free-and-open-source-released.761668": "Δωρεάν και ανοιχτού κώδικα, με <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">άδεια MIT</a>.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Δημιουργός: <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Εκδόσεις",
   "footer.issues.30ce4c": "Ζητήματα",

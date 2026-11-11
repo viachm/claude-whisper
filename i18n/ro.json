@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "Nu. E un proiect neoficial și independent, care nu e făcut de Anthropic, nu e afiliat cu Anthropic și nu e susținut de Anthropic.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Neoficial: nu e făcut de Anthropic, nu e afiliat cu Anthropic și nu e susținut de Anthropic. „Claude” și „Claude Code” sunt nume ale Anthropic, folosite doar ca să spunem cu ce funcționează aplicația.",
   "footer.free-and-open-source-released.761668": "Gratuit și open source, publicat sub <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">licența MIT</a>.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Creat de <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Versiuni",
   "footer.issues.30ce4c": "Probleme",

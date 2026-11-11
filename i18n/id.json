@@ -106,6 +106,7 @@
   "faq.no-it-is-an-unofficial.d93a43": "Bukan. Ini proyek independen yang tidak resmi: tidak dibuat oleh Anthropic, tidak berafiliasi dengan Anthropic, dan tidak didukung oleh Anthropic.",
   "footer.unofficial-not-made-by-affiliated.b0a5de": "Tidak resmi: tidak dibuat oleh, tidak berafiliasi dengan, dan tidak didukung oleh Anthropic. “Claude” dan “Claude Code” adalah nama milik Anthropic, dan di sini hanya dipakai untuk menjelaskan dengan apa aplikasi ini bekerja.",
   "footer.free-and-open-source-released.761668": "Gratis dan open source, dirilis di bawah <a data-app-href=\"license\" href=\"https://github.com/viachm/claude-whisper/blob/main/LICENSE\">Lisensi MIT</a>.",
+  "footer.made-by-viacheslav-mukha.b878bd": "Dibuat oleh <a href=\"https://www.linkedin.com/in/viacheslav-mukha-40529ba3/\" rel=\"noopener\">Viacheslav Mukha</a>.",
   "footer.github.5442e2": "GitHub",
   "footer.releases.8fa41d": "Rilis",
   "footer.issues.30ce4c": "Masalah",
