@@ -79,7 +79,7 @@ sealed class App : ApplicationContext
         menu.Items.Add("Settings…", null, (_, _) => OpenSettings());
         menu.Items.Add("Restart Claude Session", null, (_, _) => RestartSession());
         // Once a check found a newer release, the item offers it straight away.
-        updateItem.Click += (_, _) => { if (updater.Available != null) updater.Offer(); else _ = updater.Check(); };
+        updateItem.Click += (_, _) => CheckForUpdates();
         menu.Items.Add(updateItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit Claude Whisper", null, (_, _) => ExitThread());
@@ -180,9 +180,15 @@ sealed class App : ApplicationContext
 
     private void OpenSettings() => OpenSettings(SettingsWindow.Tab.General);
 
+    /// Once a check found a newer release, it is offered straight away.
+    private void CheckForUpdates()
+    {
+        if (updater.Available != null) updater.Offer(); else _ = updater.Check();
+    }
+
     private void OpenSettings(SettingsWindow.Tab tab)
     {
-        settings ??= new SettingsWindow(history, RestartSession, OpenLog);
+        settings ??= new SettingsWindow(history, RestartSession, OpenLog, CheckForUpdates);
         settings.ShowSessionState(session.Current);
         settings.Open(tab);
     }

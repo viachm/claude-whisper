@@ -4,7 +4,7 @@ namespace ClaudeWhisper;
 /// and language, and the full History. Plain WinForms controls bound by hand to Preferences.
 sealed class SettingsWindow : Form
 {
-    public enum Tab { General, Claude, History }
+    public enum Tab { General, Claude, History, About }
 
     private readonly Preferences prefs = Preferences.Shared;
     private readonly History history;
@@ -28,7 +28,7 @@ sealed class SettingsWindow : Form
     private readonly ListBox historyList = new() { Dock = DockStyle.Fill, HorizontalScrollbar = true };
     private bool loading;
 
-    public SettingsWindow(History history, Action restartSession, Action openLog)
+    public SettingsWindow(History history, Action restartSession, Action openLog, Action checkForUpdates)
     {
         this.history = history;
         Text = "Claude Whisper Settings";
@@ -44,6 +44,7 @@ sealed class SettingsWindow : Form
         tabs.TabPages.Add(GeneralPage());
         tabs.TabPages.Add(ClaudePage(restartSession, openLog));
         tabs.TabPages.Add(HistoryPage());
+        tabs.TabPages.Add(AboutPage(checkForUpdates));
         Controls.Add(tabs);
 
         history.Changed += FillHistory;
@@ -194,6 +195,38 @@ sealed class SettingsWindow : Form
 
         page.Controls.Add(grid);
         return page;
+    }
+
+    /// The version, where the project lives, and the unofficial note.
+    private static TabPage AboutPage(Action checkForUpdates)
+    {
+        var page = new TabPage("About");
+        var grid = Grid();
+        var check = new Button { Text = "Check for Updates…", AutoSize = true };
+        check.Click += (_, _) => checkForUpdates();
+        Row(grid, "Version", Flow(new Label { Text = Updater.Current.ToString(), AutoSize = true, Padding = new Padding(0, 6, 8, 0) }, check));
+        Row(grid, "Website", Link("viachm.github.io/claude-whisper", "https://viachm.github.io/claude-whisper/"));
+        Row(grid, "Source code", Link("github.com/viachm/claude-whisper", "https://github.com/viachm/claude-whisper"));
+        Row(grid, "Issues", Link("Report a problem", "https://github.com/viachm/claude-whisper/issues"));
+        Row(grid, "License", Link("MIT", "https://github.com/viachm/claude-whisper/blob/main/LICENSE"));
+        Row(grid, "", new Label
+        {
+            Text = "Free and open source. Unofficial: not made by, affiliated with or endorsed by Anthropic.",
+            AutoSize = true, MaximumSize = new Size(360, 0), ForeColor = SystemColors.GrayText,
+        });
+        page.Controls.Add(grid);
+        return page;
+    }
+
+    private static LinkLabel Link(string text, string url)
+    {
+        var link = new LinkLabel { Text = text, AutoSize = true };
+        link.LinkClicked += (_, _) =>
+        {
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); }
+            catch (Exception e) { Log.Write($"could not open {url}: {e.Message}"); }
+        };
+        return link;
     }
 
     private TabPage HistoryPage()
