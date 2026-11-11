@@ -100,13 +100,14 @@ capsule position and no Faster start yet.
     shortcut (macOS); Right Ctrl, Right Alt or a recorded shortcut (Windows). Hold to talk or tap
     to start and stop; the cancel key (Esc on Windows). On macOS a keyboard picture shows which key
     dictates and which locks (point at a key for what it does).
-  - **Improve** (macOS): never, when you tap the improve key (default), or always (then the key
-    skips it); the improve key (any single modifier, Shift by default); Haiku or Sonnet.
-  - **Text**: paste (default), paste and press Return, or copy only (macOS); restore the
+  - **Pasting**: paste (default), paste and press Return, or copy only (macOS); restore the
     clipboard. Windows has **Auto-send** into the Claude app and, optionally, consoles running
     Claude Code (both off by default).
-  - **Feedback**: sounds (five sets, with a volume slider), the capsule (macOS: and where it
-    shows: bottom, top, left or right), open at login.
+  - **Sound and capsule**: sounds (five sets, with a volume slider), the capsule (macOS: and where
+    it shows: bottom, top, left or right).
+  - **Improve** (macOS): never, when you tap the improve key (default), or always (then the key
+    skips it); the improve key (any single modifier, Shift by default); Haiku or Sonnet.
+  - **Startup**: open at login.
 - **Claude**: dictation language, `claude` path, session status, the log. macOS also has extra
   arguments and **Faster start** (makes Option+K Claude Code's voice key in
   `~/.claude/keybindings.json`, so listening starts about 0.2 s sooner; Space then stops dictating

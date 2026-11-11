@@ -219,6 +219,14 @@ private struct SidebarRow: View {
 
 // MARK: General
 
+/// A Settings section header, in the body text's size and colour so it reads as a heading rather
+/// than as one more grey caption.
+private struct SectionTitle: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View { Text(text).font(.body.weight(.medium)).foregroundStyle(.primary) }
+}
+
 private struct GeneralPane: View {
     @ObservedObject var prefs: Preferences
     @ObservedObject var state: SettingsState
@@ -243,32 +251,9 @@ private struct GeneralPane: View {
                 }
                 LabeledContent("Cancel key") { KeyField(combo: $prefs.cancelKey, prefs: prefs, isShortcut: false) }
             } header: {
-                Text("Dictation key")
+                SectionTitle("Dictation key")
             } footer: {
                 if let problem = state.hotkeyProblem { Text(problem).foregroundStyle(.red) }
-            }
-
-            Section {
-                Picker("Improve with Claude", selection: $prefs.cleanup) {
-                    ForEach(CleanupMode.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.radioGroup)
-                ImproveKeyField(prefs: prefs)
-                    .disabled(prefs.cleanup == .off)
-                Picker("Model", selection: $prefs.refineModel) {
-                    ForEach(RefineModel.allCases) { Text($0.title).tag($0) }
-                }
-                .disabled(prefs.cleanup == .off)
-            } header: {
-                Text("Improve")
-            } footer: {
-                Text("""
-                    Claude removes filler words and self-corrections ("option 2, no, option 1" becomes "option 1") and \
-                    fixes punctuation, keeping your words and language. Tap the improve key while dictating to switch \
-                    it on for that dictation: a sparkle shows on the capsule. It uses your Claude subscription and adds \
-                    about a second; if Claude doesn't answer within 10 seconds, the text is pasted as it was transcribed.
-                    """)
-                .foregroundStyle(.secondary)
             }
 
             Section {
@@ -279,7 +264,7 @@ private struct GeneralPane: View {
                 Toggle("Put the previous clipboard back after pasting", isOn: $prefs.restoreClipboard)
                     .disabled(prefs.output == .copy)
             } header: {
-                Text("Text")
+                SectionTitle("Pasting")
             } footer: {
                 Text("""
                     With Return, a dictation you held the key for is sent straight away, in Claude or any other \
@@ -288,7 +273,7 @@ private struct GeneralPane: View {
                 .foregroundStyle(.secondary)
             }
 
-            Section("Feedback") {
+            Section {
                 Toggle("Play sounds", isOn: $prefs.playSounds)
                 HStack {
                     Picker("Sound", selection: $prefs.soundSet) {
@@ -320,6 +305,31 @@ private struct GeneralPane: View {
                 }
                 .pickerStyle(.segmented)
                 .disabled(!prefs.showOverlay)
+            } header: {
+                SectionTitle("Sound and capsule")
+            }
+
+            Section {
+                Picker("Improve with Claude", selection: $prefs.cleanup) {
+                    ForEach(CleanupMode.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.radioGroup)
+                ImproveKeyField(prefs: prefs)
+                    .disabled(prefs.cleanup == .off)
+                Picker("Model", selection: $prefs.refineModel) {
+                    ForEach(RefineModel.allCases) { Text($0.title).tag($0) }
+                }
+                .disabled(prefs.cleanup == .off)
+            } header: {
+                SectionTitle("Improve")
+            } footer: {
+                Text("""
+                    Claude removes filler words and self-corrections ("option 2, no, option 1" becomes "option 1") and \
+                    fixes punctuation, keeping your words and language. Tap the improve key while dictating to switch \
+                    it on for that dictation: a sparkle shows on the capsule. It uses your Claude subscription and adds \
+                    about a second; if Claude doesn't answer within 10 seconds, the text is pasted as it was transcribed.
+                    """)
+                .foregroundStyle(.secondary)
             }
 
             Section {
@@ -333,8 +343,9 @@ private struct GeneralPane: View {
                     }
                 }
                 if let loginError { Text(loginError).foregroundStyle(.red) }
+            } header: {
+                SectionTitle("Startup")
             }
-
         }
         .formStyle(.grouped)
         .onAppear { loginStatus = SMAppService.mainApp.status }
@@ -657,7 +668,7 @@ private struct ClaudePane: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Hidden Claude Code session") {
+            Section {
                 LabeledContent("Status") {
                     HStack(spacing: 6) {
                         Circle().fill(statusColor).frame(width: 8, height: 8)
@@ -669,6 +680,8 @@ private struct ClaudePane: View {
                     Button("Open Log", action: actions.openLog)
                     Button("Restart Session", action: actions.restartSession)
                 }
+            } header: {
+                SectionTitle("Hidden Claude Code session")
             }
 
             Section {
@@ -703,7 +716,7 @@ private struct ClaudePane: View {
                     .disabled(path == prefs.claudePath && arguments == prefs.extraArguments)
                 }
             } header: {
-                Text("Claude Code")
+                SectionTitle("Claude Code")
             } footer: {
                 Text("Extra arguments go after Claude Whisper's own --settings. Anything that ends the interactive prompt, such as --print, breaks dictation.")
                     .foregroundStyle(.secondary)
