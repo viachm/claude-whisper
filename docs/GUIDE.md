@@ -75,6 +75,11 @@ macos/build.sh --install      # builds, copies to ~/Applications and starts it
 Release builds are ad-hoc signed, so macOS asks for the permissions again after each
 update; a build signed with your Apple Development certificate keeps them.
 
+**Updating.** **Check for Updates…** in the menu asks GitHub for the latest release and, once you
+confirm, downloads it, checks it, replaces the app and opens the new version. Settings › General
+can check once a day instead (off by default); the menu then reads **Update to X…** when one is
+out. The same works on Windows from the tray menu.
+
 ### Windows
 
 **Download** `Claude-Whisper-Windows.zip` (`-arm64` for ARM PCs) from the
@@ -108,6 +113,7 @@ capsule position and no Faster start yet.
     Claude Code (both off by default).
   - **Feedback**: sounds (five sets, with a volume slider), the capsule (macOS: and where it
     shows: bottom, top, left or right), open at login.
+  - **Updates**: check GitHub for a newer release once a day (off by default).
 - **Claude**: dictation language, `claude` path, session status, the log. macOS also has extra
   arguments and **Faster start** (makes Option+K Claude Code's voice key in
   `~/.claude/keybindings.json`, so listening starts about 0.2 s sooner; Space then stops dictating

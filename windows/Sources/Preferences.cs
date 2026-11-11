@@ -91,6 +91,8 @@ sealed class Preferences
     private bool showOverlay = true;
     private string claudePath = "";
     private string language = "";
+    private bool checkForUpdates = false;
+    private DateTime lastUpdateCheck = DateTime.MinValue;
 
     public TriggerKey Trigger { get => trigger; set => Set(ref trigger, value); }
     public KeyCombo Shortcut { get => shortcut; set => Set(ref shortcut, value); }
@@ -112,6 +114,11 @@ sealed class Preferences
     public string ClaudePath { get => claudePath; set => Set(ref claudePath, value); }
     /// Claude Code's `language` setting for this session only; empty leaves Claude's own setting.
     public string Language { get => language; set => Set(ref language, value); }
+    /// Off by default: the app makes no network requests of its own unless this is on or
+    /// "Check for Updates…" is clicked.
+    public bool CheckForUpdates { get => checkForUpdates; set => Set(ref checkForUpdates, value); }
+    /// When GitHub was last asked, in UTC, so a restart doesn't check again within the day.
+    public DateTime LastUpdateCheck { get => lastUpdateCheck; set => Set(ref lastUpdateCheck, value); }
 
     /// True while a shortcut field is recording, so the live hotkey does not fire meanwhile.
     [JsonIgnore]

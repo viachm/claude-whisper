@@ -22,6 +22,7 @@ sealed class SettingsWindow : Form
     private readonly TrackBar volume = new() { Minimum = 0, Maximum = 100, TickFrequency = 25, Width = 160, AutoSize = false, Height = 28 };
     private readonly CheckBox overlay = new() { Text = "Show the capsule while dictating", AutoSize = true };
     private readonly CheckBox login = new() { Text = "Open at login", AutoSize = true };
+    private readonly CheckBox updates = new() { Text = $"Check for updates once a day (you have {Updater.Current})", AutoSize = true };
     private readonly TextBox claudePath = new() { Width = 360 };
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly Label sessionState = new() { AutoSize = true };
@@ -150,6 +151,8 @@ sealed class SettingsWindow : Form
         Row(grid, "Feedback", Column(Flow(sounds, soundSet, volume), overlay));
         login.CheckedChanged += (_, _) => { if (!loading) Startup.Set(login.Checked); };
         Row(grid, "Startup", login);
+        updates.CheckedChanged += (_, _) => { if (!loading) prefs.CheckForUpdates = updates.Checked; };
+        Row(grid, "Updates", updates);
 
         page.Controls.Add(grid);
         return page;
@@ -238,6 +241,7 @@ sealed class SettingsWindow : Form
             soundSet.Enabled = volume.Enabled = prefs.PlaySounds;
             overlay.Checked = prefs.ShowOverlay;
             login.Checked = Startup.IsEnabled;
+            updates.Checked = prefs.CheckForUpdates;
             claudePath.Text = prefs.ClaudePath;
             claudePath.PlaceholderText = Preferences.DefaultClaudePath;
             language.SelectedIndex = Math.Max(0, Array.IndexOf(Preferences.Languages, prefs.Language) + 1);
