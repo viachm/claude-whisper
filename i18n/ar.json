@@ -99,7 +99,7 @@
   "faq.is-the-app-signed.00ef45": "هل التطبيق موقّع؟",
   "faq.the-macos-app-is-from.d2fec9": "تطبيق macOS موقّع منذ الإصدار 0.1.11: فهو موقّع بشهادة Developer ID وموثّق من Apple، لذلك يُفتح دون تحذيرات ويحتفظ بأذوناته بعد التحديثات. أما التحديث من إصدار أقدم فيطلب الأذونات مرة أخرى. تطبيق Windows غير موقّع بعد، لذلك يسأل SmartScreen مرة واحدة (<strong>More info</strong>، ثم <strong>Run anyway</strong>).",
   "faq.the-key-does-nothing-what.457d91": "المفتاح لا يفعل شيئًا. ما الحل؟",
-  "faq.on-macos-check-the-three.225f78": "على macOS، تحقق من الأذونات الثلاثة، ثم أغلق التطبيق وأعد فتحه. وإذا كان تطبيق آخر أو قاعدة Karabiner يستخدمان المفتاح نفسه، فأغلق ذلك التطبيق أو انقل القاعدة، أو اختر مفتاح إملاء آخر من Settings.",
+  "faq.on-macos-check-both-permissions.ec3b6e": "على macOS، تحقق من الإذنين، Accessibility (تسهيلات الاستخدام) وMicrophone (الميكروفون)، ثم أغلق التطبيق وأعد فتحه. وإذا كان تطبيق آخر أو قاعدة Karabiner يستخدمان المفتاح نفسه، فأغلق ذلك التطبيق أو انقل القاعدة، أو اختر مفتاح إملاء آخر من Settings.",
   "faq.the-capsule-says-claude-didnt.dfdcea": "تظهر في الكبسولة رسالة «Claude didn’t start listening».",
   "faq.check-that-voice-works-in.c0e76f": "تأكد من أن <code>/voice</code> يعمل داخل <code>claude</code> نفسه، ثم اختر <strong>Restart Claude Session</strong> من القائمة.",
   "faq.is-this-made-by-anthropic.a8adf0": "هل هذا التطبيق من إنتاج Anthropic؟",

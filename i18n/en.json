@@ -99,7 +99,7 @@
   "faq.is-the-app-signed.00ef45": "Is the app signed?",
   "faq.the-macos-app-is-from.d2fec9": "The macOS app is, from version 0.1.11: it is signed with a Developer ID and notarized by Apple, so it opens without warnings and keeps its permissions across updates. Updating from an older version asks for the permissions once more. The Windows app is not signed yet, so SmartScreen asks once (<strong>More info</strong>, then <strong>Run anyway</strong>).",
   "faq.the-key-does-nothing-what.457d91": "The key does nothing. What now?",
-  "faq.on-macos-check-the-three.225f78": "On macOS, check the three permissions, then quit and reopen the app. Another app or a Karabiner rule on the same key has to be quit or moved, or you can pick a different dictation key in Settings.",
+  "faq.on-macos-check-both-permissions.ec3b6e": "On macOS, check both permissions, Accessibility and Microphone, then quit and reopen the app. Another app or a Karabiner rule on the same key has to be quit or moved, or you can pick a different dictation key in Settings.",
   "faq.the-capsule-says-claude-didnt.dfdcea": "The capsule says “Claude didn’t start listening”.",
   "faq.check-that-voice-works-in.c0e76f": "Check that <code>/voice</code> works in <code>claude</code> itself, then choose <strong>Restart Claude Session</strong> from the menu.",
   "faq.is-this-made-by-anthropic.a8adf0": "Is this made by Anthropic?",

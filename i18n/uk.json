@@ -99,7 +99,7 @@
   "faq.is-the-app-signed.00ef45": "Програма підписана?",
   "faq.the-macos-app-is-from.d2fec9": "Програма для macOS підписана з версії 0.1.11: вона має підпис Developer ID і нотаризацію Apple, тож відкривається без попереджень і зберігає дозволи після оновлень. Після оновлення зі старішої версії дозволи доведеться надати ще раз. Програма для Windows поки не підписана, тому SmartScreen один раз перепитає (<strong>More info</strong>, потім <strong>Run anyway</strong>).",
   "faq.the-key-does-nothing-what.457d91": "Клавіша нічого не робить. Що тепер?",
-  "faq.on-macos-check-the-three.225f78": "На macOS перевірте три дозволи, потім закрийте й знову відкрийте програму. Якщо ту саму клавішу використовує інша програма чи правило Karabiner, закрийте програму або перенесіть правило, або виберіть іншу клавішу диктування в Settings.",
+  "faq.on-macos-check-both-permissions.ec3b6e": "На macOS перевірте обидва дозволи, Accessibility (Універсальний доступ) і Microphone (Мікрофон), потім закрийте й знову відкрийте програму. Якщо ту саму клавішу використовує інша програма чи правило Karabiner, закрийте програму або перенесіть правило, або виберіть іншу клавішу диктування в Settings.",
   "faq.the-capsule-says-claude-didnt.dfdcea": "Капсула пише «Claude didn’t start listening».",
   "faq.check-that-voice-works-in.c0e76f": "Перевірте, чи працює <code>/voice</code> у самому <code>claude</code>, а потім виберіть у меню <strong>Restart Claude Session</strong>.",
   "faq.is-this-made-by-anthropic.a8adf0": "Це продукт Anthropic?",
