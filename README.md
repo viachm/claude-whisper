@@ -16,6 +16,7 @@
 
 <p align="center">
   <a href="https://github.com/viachm/claude-whisper/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/viachm/claude-whisper?label=release&color=2b7489"></a>
+  <a href="https://github.com/viachm/claude-whisper/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/viachm/claude-whisper/total?label=downloads&color=2b7489"></a>
   <a href="https://github.com/viachm/claude-whisper/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/viachm/claude-whisper/build.yml?branch=main&label=build"></a>
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-000?logo=apple&logoColor=white">
   <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0id2hpdGUiPjxyZWN0IHdpZHRoPSI3LjUiIGhlaWdodD0iNy41Ii8%2BPHJlY3QgeD0iOC41IiB3aWR0aD0iNy41IiBoZWlnaHQ9IjcuNSIvPjxyZWN0IHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48cmVjdCB4PSI4LjUiIHk9IjguNSIgd2lkdGg9IjcuNSIgaGVpZ2h0PSI3LjUiLz48L3N2Zz4=">
