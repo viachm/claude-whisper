@@ -5,33 +5,19 @@ import Security
 /// Checks GitHub for a newer release and installs it when asked: downloads the macOS zip, checks
 /// its SHA-256 and code signature, then swaps the app bundle once this process has quit and opens
 /// the new one. These are the only network requests the app makes itself, all to GitHub, and only
-/// when "Check for Updates…" is clicked or automatic checks are on in Settings.
+/// when "Check for Updates…" is clicked.
 final class Updater {
     /// Shown in the menu: "Update to 0.1.10…" once a check found one.
     private(set) var available: Release?
     var onChange: (() -> Void)?
     private var busy = false
-    private var timer: Timer?
 
     static var current: AppVersion {
         AppVersion(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") ?? AppVersion("0")!
     }
 
-    /// Automatic checks: one now (unless one ran in the last day) and then once a day.
-    func setAutomatic(_ on: Bool) {
-        timer?.invalidate()
-        timer = nil
-        guard on else { return }
-        let last = UserDefaults.standard.object(forKey: "lastUpdateCheck") as? Date ?? .distantPast
-        if Date().timeIntervalSince(last) > 20 * 3600 { check(interactive: false) }
-        timer = Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
-            self?.check(interactive: false)
-        }
-    }
-
-    /// From the menu: says so when there is nothing new or the check failed. An automatic check
-    /// only changes the menu item, so nothing pops up while you are dictating.
-    func check(interactive: Bool) {
+    /// From the menu: says so when there is nothing new or the check failed.
+    func check() {
         guard !busy else { return }
         busy = true
         var request = URLRequest(url: Release.latestURL, timeoutInterval: 20)
@@ -44,14 +30,13 @@ final class Updater {
                 busy = false
                 guard let release, let latest = release.version else {
                     Log.write("update check failed: \(error?.localizedDescription ?? "HTTP \(status)")")
-                    if interactive { alert("Couldn't check for updates", "GitHub didn't answer. Try again later, or see the releases page.", release: nil) }
+                    alert("Couldn't check for updates", "GitHub didn't answer. Try again later, or see the releases page.", release: nil)
                     return
                 }
-                UserDefaults.standard.set(Date(), forKey: "lastUpdateCheck")
                 Log.write("update check: latest \(latest), running \(Self.current)")
                 available = latest > Self.current ? release : nil
                 onChange?()
-                if interactive { offer() }
+                offer()
             }
         }.resume()
     }

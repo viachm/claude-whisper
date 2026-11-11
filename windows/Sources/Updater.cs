@@ -10,8 +10,7 @@ namespace ClaudeWhisper;
 /// Checks GitHub for a newer release and installs it when asked: downloads the Windows zip for
 /// this architecture, checks its SHA-256, puts the new .exe in place of this one (a running .exe
 /// can be renamed, not overwritten) and starts it. These are the only network requests the app
-/// makes itself, all to GitHub, and only when "Check for Updates…" is clicked or automatic checks
-/// are on in Settings.
+/// makes itself, all to GitHub, and only when "Check for Updates…" is clicked.
 sealed class Updater
 {
     private const string LatestUrl = "https://api.github.com/repos/viachm/claude-whisper/releases/latest";
@@ -26,7 +25,6 @@ sealed class Updater
     /// How the app quits for the restart; set to the tray app's own exit so it cleans up.
     public Action Quit = Application.Exit;
     private bool busy;
-    private IDisposable? timer;
 
     public static Version Current
     {
@@ -53,25 +51,8 @@ sealed class Updater
         try { File.Delete(Environment.ProcessPath + ".old"); } catch { }
     }
 
-    /// Automatic checks: one now (unless one ran in the last day) and then once a day.
-    public void SetAutomatic(bool on, DateTime lastCheck)
-    {
-        timer?.Dispose();
-        timer = null;
-        if (!on) return;
-        if (DateTime.UtcNow - lastCheck > TimeSpan.FromHours(20)) _ = Check(interactive: false);
-        ScheduleNext();
-    }
-
-    private void ScheduleNext() => timer = Ui.After(TimeSpan.FromHours(24), () =>
-    {
-        _ = Check(interactive: false);
-        ScheduleNext();
-    });
-
-    /// From the menu: says so when there is nothing new or the check failed. An automatic check
-    /// only changes the menu item, so nothing pops up while you are dictating.
-    public async Task Check(bool interactive)
+    /// From the menu: says so when there is nothing new or the check failed.
+    public async Task Check()
     {
         if (busy) return;
         busy = true;
@@ -92,14 +73,13 @@ sealed class Updater
         if (release == null)
         {
             Log.Write($"update check failed: {problem}");
-            if (interactive) Tell("Couldn't check for updates", "GitHub didn't answer. Try again later, or see the releases page.", ReleasesPage);
+            Tell("Couldn't check for updates", "GitHub didn't answer. Try again later, or see the releases page.", ReleasesPage);
             return;
         }
-        Preferences.Shared.LastUpdateCheck = DateTime.UtcNow;
         Log.Write($"update check: latest {release.Version}, running {Current}");
         Available = release.Version > Current ? release : null;
         Changed?.Invoke();
-        if (interactive) Offer();
+        Offer();
     }
 
     /// The parts of GitHub's "latest release" answer the updater needs, or null.

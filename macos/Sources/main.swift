@@ -54,7 +54,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         session.start()
         prepareRefiner()
         updater.onChange = { [weak self] in self?.refreshUpdateItem() }
-        updater.setAutomatic(prefs.checkForUpdates)
         // A first start (or one after an update reset the permissions) opens Settings, whose
         // banner leads to what still has to be allowed.
         if Permission.allCases.contains(where: { !$0.isGranted }) {
@@ -196,7 +195,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Once a check found a newer release, the item offers it straight away.
     @objc private func checkForUpdates() {
-        if updater.available != nil { updater.offer() } else { updater.check(interactive: true) }
+        if updater.available != nil { updater.offer() } else { updater.check() }
     }
 
     private func refreshUpdateItem() {
@@ -266,10 +265,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         watch(prefs.$cleanup) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$refineModel) { [weak self] in self?.prepareRefiner() }
         watch(prefs.$extraArguments) { [weak self] in self?.restartSession() }
-        watch(prefs.$checkForUpdates) { [weak self] in
-            guard let self else { return }
-            self.updater.setAutomatic(self.prefs.checkForUpdates)
-        }
         watch(prefs.$showOverlay) { [weak self] in self?.overlay.hide() }
         // Show where the capsule will be from now on.
         watch(prefs.$capsulePosition) { [weak self] in self?.show(.message("Dictation shows here")) }
