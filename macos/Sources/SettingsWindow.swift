@@ -976,7 +976,6 @@ private struct NotesPane: View {
     @AppStorage("noteTakerImprove") private var improve = true
     @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
     @AppStorage(NoteContext.textKey) private var context = ""
-    @AppStorage(NoteContext.folderKey) private var folder = ""
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -1000,8 +999,7 @@ private struct NotesPane: View {
             Form {
                 if supported {
                     NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
-                                      retention: $retention, context: $context, folder: $folder, locales: locales,
-                                      chooseFolder: chooseFolder)
+                                      retention: $retention, context: $context, locales: locales)
                 } else {
                     Section { Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary) }
                 }
@@ -1070,17 +1068,6 @@ private struct NotesPane: View {
         }
     }
 
-    private func chooseFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Choose"
-        panel.message = "Claude can read files in this folder for background on your calls."
-        if !folder.isEmpty { panel.directoryURL = URL(fileURLWithPath: folder) }
-        if panel.runModal() == .OK, let url = panel.url { folder = url.path }
-    }
-
     private static func subtitle(_ note: Note) -> String {
         let f = DateFormatter()
         f.dateFormat = Calendar.current.isDateInToday(note.started) ? "'Today', HH:mm" : "d MMM yyyy, HH:mm"
@@ -1099,9 +1086,7 @@ private struct NoteTakerSettings: View {
     @Binding var improve: Bool
     @Binding var retention: NoteRetention
     @Binding var context: String
-    @Binding var folder: String
     let locales: [String]
-    let chooseFolder: () -> Void
 
     var body: some View {
         Section {
@@ -1149,26 +1134,16 @@ private struct NoteTakerSettings: View {
                     .frame(height: 64)
                     .scrollContentBackground(.hidden)
                 if context.isEmpty {
-                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
+                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend). Project docs: ~/Documents/xyz")
                         .foregroundStyle(.tertiary)
                         .padding(.leading, 5)
                         .allowsHitTesting(false)
                 }
             }
-            LabeledContent("Folder Claude may read") {
-                HStack {
-                    Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    if !folder.isEmpty { Button("Clear") { folder = "" } }
-                    Button("Choose…") { chooseFolder() }
-                }
-            }
         } header: {
             SectionTitle("Context for Claude")
         } footer: {
-            Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
+            Text("Sent with every summary and question. Write a folder's path here (in quotes if it has spaces) and Claude can read files in it, read-only and nowhere else, to look up the project, people and terms.")
                 .foregroundStyle(.secondary)
         }
     }

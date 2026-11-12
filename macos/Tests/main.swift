@@ -296,16 +296,22 @@ do {
     note.pauses = [NotePause(start: 10, duration: 30)]
     check(note.duration == 70, "the length leaves pauses out")
     check(note.audioTime(5) == 5 && note.audioTime(25) == 10 && note.audioTime(60) == 30, "audio time leaves out the pauses before it")
-    let none = NoteContext(text: "", folder: nil)
+    let none = NoteContext(text: "")
     check(NoteSummaryProtocol.arguments(model: .opus, context: none).contains("opus"), "the chosen model is used")
     let plain = NoteAskProtocol.arguments(model: .sonnet, context: none)
     check(plain.contains("--tools") && plain[plain.firstIndex(of: "--tools")! + 1] == "" && !plain.contains("--add-dir"), "without a folder Claude has no tools")
-    let folder = NoteContext(text: "I work on XYZ.", folder: FileManager.default.temporaryDirectory.path)
-    let reading = NoteAskProtocol.arguments(model: .sonnet, context: folder)
-    check(reading[reading.firstIndex(of: "--tools")! + 1] == "Read,Grep,Glob" && reading.contains("--add-dir") && reading.contains("dontAsk"), "with a folder Claude can only read it")
+    let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.resolvingSymlinksInPath().path
+    let spaced = tmp + "/cw test \(UUID().uuidString)"
+    try? FileManager.default.createDirectory(atPath: spaced, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(atPath: spaced) }
+    let withPaths = NoteContext(text: "I work on XYZ in \(tmp). Notes in \"\(spaced)\", and/or /no/such/folder; also ~ and /.")
+    check(withPaths.folders == [tmp, spaced], "folders named in the context are found, quoted ones with spaces too")
+    let reading = NoteAskProtocol.arguments(model: .sonnet, context: withPaths)
+    check(reading[reading.firstIndex(of: "--tools")! + 1] == "Read,Grep,Glob" && reading.filter { $0 == "--add-dir" }.count == 2 && reading.contains("dontAsk"), "with folders Claude can only read them")
     let prompt = reading[reading.firstIndex(of: "--system-prompt")! + 1]
-    check(prompt.contains("<context>\nI work on XYZ.\n</context>") && prompt.contains(FileManager.default.temporaryDirectory.path), "the context and the folder go into the prompt")
-    check(NoteContext(text: "", folder: "/no/such/folder").readableFolder == nil, "a missing folder gives no file access")
+    check(prompt.contains("<context>\nI work on XYZ") && prompt.contains("You can read files under \(tmp), \(spaced)"), "the context and the folders go into the prompt")
+    check(NoteContext(text: "~ / ~/ \(NSHomeDirectory()) /Users").folders.isEmpty, "the home folder, its parents and / never count")
+    check(!NoteImproveProtocol.arguments(model: .sonnet, context: withPaths).contains("--add-dir"), "the clean-up reads no files")
 }
 
 // Note Taker: Claude's title, summary and answers
