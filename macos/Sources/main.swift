@@ -21,6 +21,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let noteStore = NoteStore()
     /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
     private var noteWindowBox: AnyObject?
+    /// The red dot on the menu bar icon while Note Taker records.
+    private var recordingDot: NSView?
     private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
     private lazy var settings = SettingsWindowController(history: history, notes: noteStore, actions: SettingsActions(
@@ -170,6 +172,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let window = noteWindowBox as? NoteTakerWindow { return window }
         let window = NoteTakerWindow(taker: NoteTaker(store: noteStore, workspace: session.workspace))
         noteWindowBox = window
+        let taker = window.taker
+        watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
         return window
     }
 
@@ -286,6 +291,34 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         image.isTemplate = true
         image.accessibilityDescription = "Claude Whisper"
         statusItem.button?.image = image
+    }
+
+    /// A dot in the icon's top-right corner while a note records: red, or grey while paused. The
+    /// icon is a template image (one colour), so the dot is its own view on top of it.
+    private func showRecordingDot(_ recording: Bool, paused: Bool) {
+        guard let button = statusItem.button else { return }
+        guard recording else {
+            recordingDot?.removeFromSuperview()
+            recordingDot = nil
+            button.setAccessibilityLabel(nil)
+            return
+        }
+        let dot = recordingDot ?? {
+            let size: CGFloat = 7
+            let view = NSView(frame: NSRect(x: button.bounds.maxX - size - 2, y: 2, width: size, height: size))
+            view.autoresizingMask = [.minXMargin]
+            view.wantsLayer = true
+            view.layer?.cornerRadius = size / 2
+            view.layer?.borderWidth = 1
+            button.addSubview(view)
+            recordingDot = view
+            return view
+        }()
+        // The button is flipped, so y 2 is near the top.
+        if !button.isFlipped { dot.frame.origin.y = button.bounds.maxY - dot.frame.height - 2 }
+        dot.layer?.backgroundColor = (paused ? NSColor.systemGray : NSColor.systemRed).cgColor
+        dot.layer?.borderColor = NSColor.windowBackgroundColor.withAlphaComponent(0.8).cgColor
+        button.setAccessibilityLabel(paused ? "Claude Whisper, note paused" : "Claude Whisper, recording a note")
     }
 
     private func sessionChanged(_ state: ClaudeSession.State) {
