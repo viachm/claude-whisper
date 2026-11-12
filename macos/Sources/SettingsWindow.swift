@@ -1082,6 +1082,8 @@ private struct NotesPane: View {
                         Button("Copy") { copyToClipboard(note.summaryText.map { $0 + "\n\n---\n\n" + note.plainText() } ?? note.plainText()) }
                             .help("Copy the summary and the transcript")
                         if supported { Button("Open") { open(note.id) } }
+                        Button { deleting = note } label: { Image(systemName: "trash") }
+                            .help("Delete this note and its audio")
                     }
                     .padding(.vertical, 4)
                     .contentShape(Rectangle())
