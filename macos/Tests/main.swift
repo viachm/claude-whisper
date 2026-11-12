@@ -274,7 +274,16 @@ do {
     note.pauses = [NotePause(start: 10, duration: 30)]
     check(note.duration == 70, "the length leaves pauses out")
     check(note.audioTime(5) == 5 && note.audioTime(25) == 10 && note.audioTime(60) == 30, "audio time leaves out the pauses before it")
-    check(NoteSummaryProtocol.arguments(model: .opus).contains("opus"), "the chosen model is used")
+    let none = NoteContext(text: "", folder: nil)
+    check(NoteSummaryProtocol.arguments(model: .opus, context: none).contains("opus"), "the chosen model is used")
+    let plain = NoteAskProtocol.arguments(model: .sonnet, context: none)
+    check(plain.contains("--tools") && plain[plain.firstIndex(of: "--tools")! + 1] == "" && !plain.contains("--add-dir"), "without a folder Claude has no tools")
+    let folder = NoteContext(text: "I work on XYZ.", folder: FileManager.default.temporaryDirectory.path)
+    let reading = NoteAskProtocol.arguments(model: .sonnet, context: folder)
+    check(reading[reading.firstIndex(of: "--tools")! + 1] == "Read,Grep,Glob" && reading.contains("--add-dir") && reading.contains("dontAsk"), "with a folder Claude can only read it")
+    let prompt = reading[reading.firstIndex(of: "--system-prompt")! + 1]
+    check(prompt.contains("<context>\nI work on XYZ.\n</context>") && prompt.contains(FileManager.default.temporaryDirectory.path), "the context and the folder go into the prompt")
+    check(NoteContext(text: "", folder: "/no/such/folder").readableFolder == nil, "a missing folder gives no file access")
 }
 
 // Note Taker: Claude's title, summary and answers

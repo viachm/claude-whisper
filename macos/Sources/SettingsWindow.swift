@@ -133,7 +133,7 @@ private struct SettingsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(width: 720, height: 580)
+        .frame(width: 720, height: 640)
         .onAppear(perform: refreshPermissions)
         .onReceive(permissionTimer) { _ in refreshPermissions() }
         .sheet(isPresented: $managing) { PermissionsSheet(done: { managing = false }) }
@@ -970,6 +970,8 @@ private struct NotesPane: View {
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
     @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
+    @AppStorage(NoteContext.textKey) private var context = ""
+    @AppStorage(NoteContext.folderKey) private var folder = ""
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -1021,6 +1023,35 @@ private struct NotesPane: View {
                         .labelsHidden()
                         .fixedSize()
                     }
+                    Text("Context for Claude").padding(.top, 4)
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $context)
+                            .font(.body)
+                            .frame(height: 64)
+                            .scrollContentBackground(.hidden)
+                            .padding(4)
+                            .background(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.15)))
+                        if context.isEmpty {
+                            Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
+                                .foregroundStyle(.tertiary)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 4)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    HStack {
+                        Text("Folder Claude may read")
+                        Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        if !folder.isEmpty { Button("Clear") { folder = "" } }
+                        Button("Choose…") { chooseFolder() }
+                    }
+                    Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -1081,6 +1112,17 @@ private struct NotesPane: View {
                 deleting = nil
             }
         }
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose"
+        panel.message = "Claude can read files in this folder for background on your calls."
+        if !folder.isEmpty { panel.directoryURL = URL(fileURLWithPath: folder) }
+        if panel.runModal() == .OK, let url = panel.url { folder = url.path }
     }
 
     private static func subtitle(_ note: Note) -> String {
