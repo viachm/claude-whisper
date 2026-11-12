@@ -3,22 +3,23 @@ import SwiftUI
 
 /// Note Taker: transcribes a call as a dialog, your microphone as "Me" and everything the Mac
 /// plays as "Them", on-device with Apple's speech recogniser (not Claude: Claude Code's voice
-/// mode only listens while a key is held, and only to the microphone). Each recording is saved
-/// as it goes; the window shows the live one or a saved one.
+/// mode only listens while a key is held, and only to the microphone). Claude, through the
+/// user's Claude Code login, titles and summarizes a note when it stops and answers questions
+/// about it. Each recording is saved as it goes; the window shows the live one or a saved one.
 @available(macOS 26.0, *)
 @MainActor
 final class NoteTaker: ObservableObject {
     @Published private(set) var note: Note?
     @Published private(set) var pending: [Speaker: NoteSegment] = [:]
     @Published private(set) var isRecording = false
-    /// A problem or a slow step to show at the top of the window, such as a model download.
+    /// A problem or a slow step to show in the window, such as a model download.
     @Published private(set) var status: String?
-    @Published var locale: String {
-        didSet { UserDefaults.standard.set(locale, forKey: "noteTakerLocale") }
-    }
-    @Published private(set) var locales: [String] = []
+    /// Notes Claude is titling and summarizing right now.
+    @Published private(set) var summarizing: Set<UUID> = []
+    @Published private(set) var asking = false
 
     let store: NoteStore
+    private let workspace: URL
     private var mic: MicCapture?
     private var system: SystemAudioCapture?
     private var streams: [Speaker: SpeechStream] = [:]
@@ -27,22 +28,28 @@ final class NoteTaker: ObservableObject {
     private var offsets: [Speaker: Double] = [:]
     private var run = 0
 
-    init(store: NoteStore) {
+    static let localeKey = "noteTakerLocale"
+    static var locale: String { UserDefaults.standard.string(forKey: localeKey) ?? "en-US" }
+
+    init(store: NoteStore, workspace: URL) {
         self.store = store
-        locale = UserDefaults.standard.string(forKey: "noteTakerLocale") ?? "en-US"
-        Task { locales = await SpeechStream.supportedLocales() }
+        self.workspace = workspace
     }
 
     var turns: [NoteTurn] { Note.turns(note?.segments ?? [], pending: Array(pending.values)) }
 
-    var text: String { note?.plainText(pending: Array(pending.values)) ?? "" }
+    var transcriptText: String { note?.plainText(pending: Array(pending.values)) ?? "" }
+
+    var isSummarizing: Bool { note.map { summarizing.contains($0.id) } ?? false }
+
+    // MARK: Recording
 
     func start() {
         guard !isRecording else { return }
         run += 1
         let run = run
-        let note = Note(started: Date(), locale: locale)
-        self.note = note
+        let locale = Self.locale
+        note = Note(started: Date(), locale: locale)
         pending = [:]
         offsets = [:]
         status = nil
@@ -103,7 +110,8 @@ final class NoteTaker: ObservableObject {
         }
     }
 
-    /// Stops listening; the last words still being recognised are added when they are final.
+    /// Stops listening; the last words still being recognised are added when they are final,
+    /// then Claude titles and summarizes the note.
     func stop() {
         guard isRecording else { return }
         isRecording = false
@@ -118,11 +126,12 @@ final class NoteTaker: ObservableObject {
             for stream in streams.values { await stream.finish() }
             // Let the final results queued on the main actor land first.
             try? await Task.sleep(for: .milliseconds(200))
-            guard run == self.run else { return }
+            guard run == self.run, let note else { return }
             pending = [:]
-            note?.ended = Date()
+            self.note?.ended = Date()
             save()
-            Log.write("note taker: stopped, \(note?.segments.count ?? 0) lines")
+            Log.write("note taker: stopped, \(note.segments.count) lines")
+            if !note.segments.isEmpty { summarize() }
         }
     }
 
@@ -135,8 +144,96 @@ final class NoteTaker: ObservableObject {
         status = nil
     }
 
+    // MARK: Editing
+
+    func rename(_ name: String) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard note != nil, (name.isEmpty ? nil : name) != note?.name else { return }
+        // Clearing the field goes back to Claude's title.
+        note?.name = name.isEmpty || name == note?.title ? nil : name
+        save()
+    }
+
+    func setThoughts(_ text: String) {
+        guard note != nil, text != (note?.thoughts ?? "") else { return }
+        note?.thoughts = text.isEmpty ? nil : text
+        save()
+    }
+
+    func deleteNote() {
+        guard let id = note?.id else { return }
+        stop()
+        run += 1
+        store.delete(id)
+        note = nil
+        pending = [:]
+    }
+
+    // MARK: Claude
+
+    /// Asks Claude for a title and a summary of the note shown.
+    func summarize() {
+        guard let note, !note.segments.isEmpty, !summarizing.contains(note.id) else { return }
+        let id = note.id
+        summarizing.insert(id)
+        let started = Date()
+        NoteClaude.run(arguments: NoteSummaryProtocol.arguments(),
+                       input: NoteSummaryProtocol.input(transcript: note.transcript), directory: workspace) { [weak self] output in
+            guard let self else { return }
+            summarizing.remove(id)
+            switch output.map(NoteSummaryProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
+            case .success(let result):
+                Log.write("note taker: summary in \(Int(Date().timeIntervalSince(started))) s")
+                update(id) {
+                    $0.title = result.title
+                    $0.summary = result.summary
+                }
+            case .failure(let error):
+                Log.write("note taker: summary failed: \(error.reason)")
+                if self.note?.id == id { status = "Couldn't write the summary: \(error.reason)" }
+            }
+        }
+    }
+
+    /// Asks Claude a question about the note shown, such as "What did I miss?".
+    func ask(_ question: String) {
+        let question = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let note, !question.isEmpty, !asking else { return }
+        let id = note.id
+        // Lines still being recognised count too: "what did I miss" is about right now.
+        let transcript = Note.turns(note.segments, pending: Array(pending.values))
+            .map { "\($0.speaker.label): \([$0.text, $0.pending].filter { !$0.isEmpty }.joined(separator: " "))" }
+            .joined(separator: "\n")
+        asking = true
+        NoteClaude.run(arguments: NoteAskProtocol.arguments(),
+                       input: NoteAskProtocol.input(transcript: transcript, notes: note.thoughts, question: question),
+                       directory: workspace, timeout: 90) { [weak self] output in
+            guard let self else { return }
+            asking = false
+            let answer: String
+            switch output.map(NoteAskProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
+            case .success(let text): answer = text
+            case .failure(let error):
+                Log.write("note taker: question failed: \(error.reason)")
+                answer = "Couldn't get an answer: \(error.reason)"
+            }
+            update(id) { $0.answers = ($0.answers ?? []) + [NoteAnswer(question: question, answer: answer)] }
+        }
+    }
+
+    /// Changes a note whether or not it is still the one shown.
+    private func update(_ id: UUID, _ change: (inout Note) -> Void) {
+        if note?.id == id {
+            change(&note!)
+            save()
+        } else if var saved = store.notes.first(where: { $0.id == id }) {
+            change(&saved)
+            try? store.save(saved)
+        }
+    }
+
     private func save() {
-        guard let note, !note.segments.isEmpty else { return }
+        guard let note, !note.segments.isEmpty || note.name != nil || note.thoughts != nil else { return }
         do {
             try store.save(note)
         } catch {
@@ -168,20 +265,25 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
             let width = (area.width / 3).rounded()
             panel.setFrame(NSRect(x: area.maxX - width, y: area.minY, width: width, height: area.height), display: true)
         }
+        NSApp.activate()
+        panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
     }
 
     private func makePanel() -> NSPanel {
         let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 480, height: 800),
-                            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                            styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView],
                             backing: .buffered, defer: false)
         panel.title = "Note Taker"
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
+        panel.isMovableByWindowBackground = true
         panel.level = .floating
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.minSize = NSSize(width: 320, height: 300)
-        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker))
+        panel.minSize = NSSize(width: 360, height: 420)
+        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
         return panel
     }
@@ -191,107 +293,420 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     }
 }
 
+// MARK: Views
+
+@available(macOS 26.0, *)
+private enum NoteTab: String, CaseIterable {
+    case thoughts = "My thoughts", transcript = "Transcript", summary = "Summary"
+}
+
 @available(macOS 26.0, *)
 struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
+    let close: () -> Void
+    @State private var tab = NoteTab.transcript
+    @State private var titleDraft = ""
+    @State private var thoughtsDraft = ""
+    @State private var question = ""
+    @State private var searching = false
+    @State private var search = ""
+    @State private var showAnswers = false
     @State private var copied = false
+    @State private var confirmDelete = false
+    @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
+    @FocusState private var titleFocused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        VStack(alignment: .leading, spacing: 0) {
+            topBar
+            heading
+            tabs
+            Divider()
+            Group {
+                switch tab {
+                case .thoughts: thoughtsTab
+                case .transcript: transcriptTab
+                case .summary: summaryTab
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            if showAnswers, let answers = taker.note?.answers, !answers.isEmpty || taker.asking {
+                AnswersCard(answers: answers, asking: taker.asking) { showAnswers = false }
+            }
+            bottomBar
+        }
+        .frame(minWidth: 360, minHeight: 420)
+        .onAppear(perform: loadDrafts)
+        .onChange(of: taker.note?.id) { loadDrafts() }
+        .onChange(of: taker.note?.displayTitle) { if !titleFocused { titleDraft = taker.note?.displayTitle ?? "" } }
+        .onChange(of: titleFocused) { if !titleFocused { taker.rename(titleDraft) } }
+        .onChange(of: thoughtsDraft) { taker.setThoughts(thoughtsDraft) }
+        .onChange(of: taker.asking) { if taker.asking { showAnswers = true } }
+        .confirmationDialog("Delete this note?", isPresented: $confirmDelete) {
+            Button("Delete Note", role: .destructive) {
+                taker.deleteNote()
+                close()
+            }
+        }
+    }
+
+    private func loadDrafts() {
+        titleDraft = taker.note?.displayTitle ?? ""
+        thoughtsDraft = taker.note?.thoughts ?? ""
+        search = ""
+        searching = false
+        showAnswers = false
+    }
+
+    // MARK: Top
+
+    /// Room for the traffic lights, with the note's menu on the right.
+    private var topBar: some View {
+        HStack {
+            Spacer()
+            Menu {
+                Button("Copy Transcript") { copyToClipboard(taker.transcriptText) }
+                    .disabled(taker.turns.isEmpty)
+                Button("Copy Summary") { taker.note?.summaryText.map(copyToClipboard) }
+                    .disabled(taker.note?.summary == nil)
+                Button(taker.note?.summary == nil ? "Write Summary" : "Rewrite Summary") { taker.summarize() }
+                    .disabled(taker.isRecording || taker.isSummarizing || taker.note?.segments.isEmpty != false)
+                Divider()
+                Button("Show Notes Folder") { NSWorkspace.shared.open(taker.store.directory) }
+                Divider()
+                Button("Delete Note…", role: .destructive) { confirmDelete = true }
+                    .disabled(taker.note == nil)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .frame(width: 28, height: 22)
+            }
+            .menuStyle(.button)
+            .buttonStyle(.bordered)
+            .menuIndicator(.hidden)
+            .fixedSize()
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 38)
+    }
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("New note", text: $titleDraft)
+                .textFieldStyle(.plain)
+                .font(.system(size: 30, weight: .regular, design: .serif))
+                .focused($titleFocused)
+                .onSubmit { titleFocused = false }
+            HStack(spacing: 6) {
+                if let note = taker.note {
+                    Chip(text: Self.day(note.started), icon: nil)
+                    if let duration = note.duration { Chip(text: Self.elapsed(duration), icon: "clock") }
+                    Chip(text: Locale.current.localizedString(forIdentifier: note.locale) ?? note.locale, icon: "globe")
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 14)
+    }
+
+    private var tabs: some View {
+        HStack(spacing: 22) {
+            ForEach(NoteTab.allCases, id: \.self) { item in
+                Button { tab = item } label: {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 5) {
+                            switch item {
+                            case .thoughts: EmptyView()
+                            case .transcript:
+                                Image(systemName: "waveform")
+                                    .foregroundStyle(taker.isRecording ? Color.green : Color.secondary)
+                                    .symbolEffect(.variableColor.iterative, isActive: taker.isRecording)
+                            case .summary:
+                                Image(systemName: "sparkle")
+                                    .symbolEffect(.pulse, isActive: taker.isSummarizing)
+                            }
+                            Text(item.rawValue)
+                                .fontWeight(tab == item ? .semibold : .regular)
+                                .foregroundStyle(tab == item ? .primary : .secondary)
+                        }
+                        Rectangle()
+                            .fill(tab == item ? Color.primary : .clear)
+                            .frame(height: 2)
+                    }
+                    .fixedSize()
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: Tabs
+
+    private var thoughtsTab: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $thoughtsDraft)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .padding(.horizontal, 19)
+                .padding(.vertical, 14)
+            if thoughtsDraft.isEmpty {
+                Text("Your own notes. Claude reads them too when you ask it something.")
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .allowsHitTesting(false)
+            }
+        }
+        .disabled(taker.note == nil)
+    }
+
+    private var transcriptTab: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            transcriptToolbar
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
             if let status = taker.status {
                 Text(status)
                     .font(.callout)
                     .foregroundStyle(.orange)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
             }
-            Divider()
             transcript
         }
-        .frame(minWidth: 320, minHeight: 300)
     }
 
-    private var header: some View {
-        HStack(spacing: 10) {
-            if taker.isRecording {
-                Circle().fill(.red).frame(width: 9, height: 9)
-                if let started = taker.note?.started {
+    private var transcriptToolbar: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                Image(systemName: "clock").foregroundStyle(.secondary)
+                if taker.isRecording, let started = taker.note?.started {
                     TimelineView(.periodic(from: started, by: 1)) { context in
                         Text(Self.elapsed(context.date.timeIntervalSince(started)))
-                            .monospacedDigit()
                     }
+                } else {
+                    Text(Self.elapsed(taker.note?.duration ?? 0))
                 }
-            } else if let note = taker.note {
-                Text(Self.title(note)).foregroundStyle(.secondary)
-            }
-            Spacer()
-            if !taker.isRecording {
-                Picker("", selection: $taker.locale) {
-                    ForEach(taker.locales.isEmpty ? [taker.locale] : taker.locales, id: \.self) { code in
-                        Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
-                    }
+                if searching {
+                    TextField("Search", text: $search)
+                        .textFieldStyle(.plain)
+                } else {
+                    Spacer()
                 }
-                .labelsHidden()
-                .fixedSize()
-                .help("Language of the call")
+                Button { searching.toggle(); if !searching { search = "" } } label: {
+                    Image(systemName: searching ? "xmark.circle.fill" : "magnifyingglass")
+                }
+                .help(searching ? "Stop searching" : "Search the transcript")
+                Button {
+                    copyToClipboard(taker.transcriptText)
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copied = false }
+                } label: {
+                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                }
+                .disabled(taker.turns.isEmpty)
+                .help("Copy the whole transcript")
             }
-            Button {
-                copyToClipboard(taker.text)
-                copied = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copied = false }
-            } label: {
-                Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
-            }
-            .disabled(taker.turns.isEmpty)
-            .help("Copy the whole conversation")
-            if taker.isRecording {
-                Button("Stop") { taker.stop() }
-            } else {
-                Button("New") { taker.start() }
-                    .help("Start a new note")
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .font(.callout.weight(.medium))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            if !hintDismissed {
+                Divider()
+                HStack(alignment: .top) {
+                    Text("When you stop, Claude gives the note a title and writes a summary. Your microphone is “Me”, the call audio is “Them”; use headphones so your microphone doesn't hear them too.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button { hintDismissed = true } label: { Image(systemName: "xmark") }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primary.opacity(0.05)))
+    }
+
+    private var visibleTurns: [NoteTurn] {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return taker.turns }
+        return taker.turns.filter { ($0.text + " " + $0.pending).localizedCaseInsensitiveContains(query) }
     }
 
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 14) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     if taker.turns.isEmpty {
-                        Text(taker.isRecording
-                             ? "Listening. Your microphone is “Me”, the call audio is “Them”."
-                             : "Nothing was said.")
+                        Text(taker.isRecording ? "Listening…" : "Nothing was said.")
+                            .italic()
                             .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 30)
+                    } else if visibleTurns.isEmpty {
+                        Text("No matches").foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.top, 30)
                     }
-                    ForEach(taker.turns) { turn in
+                    ForEach(visibleTurns) { turn in
                         TurnView(turn: turn)
                     }
                     Color.clear.frame(height: 1).id("end")
                 }
-                .padding(14)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
             }
             .onChange(of: taker.turns) {
+                guard search.isEmpty else { return }
                 withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("end", anchor: .bottom) }
             }
         }
     }
 
-    private static func elapsed(_ seconds: TimeInterval) -> String {
+    @ViewBuilder private var summaryTab: some View {
+        if taker.isSummarizing {
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Claude is writing the summary…").foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 50)
+        } else if let summary = taker.note?.summary {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    MarkdownView(text: summary)
+                    HStack {
+                        Button { taker.note?.summaryText.map(copyToClipboard) } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
+                        Button { taker.summarize() } label: {
+                            Label("Rewrite", systemImage: "arrow.clockwise")
+                        }
+                        .disabled(taker.isRecording)
+                    }
+                    .controlSize(.small)
+                    .padding(.top, 6)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            VStack(spacing: 12) {
+                Text(taker.isRecording ? "Claude writes the summary when you stop." : "No summary yet.")
+                    .foregroundStyle(.secondary)
+                if !taker.isRecording, taker.note?.segments.isEmpty == false {
+                    Button("Write Summary") { taker.summarize() }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 50)
+        }
+    }
+
+    // MARK: Bottom
+
+    private var bottomBar: some View {
+        VStack(spacing: 10) {
+            if taker.isRecording {
+                Text("Always get consent before transcribing others.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack(spacing: 10) {
+                Button {
+                    if taker.isRecording { taker.stop() } else { taker.start() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if taker.isRecording {
+                            RoundedRectangle(cornerRadius: 2).fill(Color.green).frame(width: 12, height: 12)
+                            Text("Stop")
+                        } else {
+                            Circle().fill(Color.red).frame(width: 11, height: 11)
+                            Text("New note")
+                        }
+                    }
+                    .font(.body.weight(.medium))
+                    .padding(.horizontal, 16)
+                    .frame(height: 40)
+                    .background(Capsule().strokeBorder(Color.primary.opacity(0.15)))
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                askField
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .padding(.bottom, 16)
+    }
+
+    private var askField: some View {
+        HStack(spacing: 8) {
+            TextField("Ask anything about this call", text: $question)
+                .textFieldStyle(.plain)
+                .onSubmit {
+                    taker.ask(question)
+                    question = ""
+                }
+            if taker.asking {
+                ProgressView().controlSize(.small)
+            } else if question.isEmpty {
+                if let answers = taker.note?.answers, !answers.isEmpty, !showAnswers {
+                    Button { showAnswers = true } label: { Image(systemName: "bubble.left.and.text.bubble.right") }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .help("Show answers")
+                }
+                Button(NoteAskProtocol.whatDidIMiss) { taker.ask(NoteAskProtocol.whatDidIMiss) }
+                    .buttonStyle(.plain)
+                    .font(.callout.weight(.medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.primary.opacity(0.07)))
+                    .disabled(taker.turns.isEmpty)
+            }
+        }
+        .padding(.leading, 16)
+        .padding(.trailing, 6)
+        .frame(height: 40)
+        .background(Capsule().strokeBorder(Color.primary.opacity(0.15)))
+    }
+
+    // MARK: Formatting
+
+    static func elapsed(_ seconds: TimeInterval) -> String {
         let s = Int(max(0, seconds))
         return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60)
                          : String(format: "%d:%02d", s / 60, s % 60)
     }
 
-    private static func title(_ note: Note) -> String {
+    static func day(_ date: Date) -> String {
         let f = DateFormatter()
-        f.dateFormat = Calendar.current.isDateInToday(note.started) ? "'Today' HH:mm" : "d MMM HH:mm"
-        var text = f.string(from: note.started)
-        if let duration = note.duration { text += " · \(elapsed(duration))" }
-        return text
+        f.dateFormat = Calendar.current.isDateInToday(date) ? "'Today', HH:mm" : "d MMM yyyy, HH:mm"
+        return f.string(from: date)
+    }
+}
+
+@available(macOS 26.0, *)
+private struct Chip: View {
+    let text: String
+    let icon: String?
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if let icon { Image(systemName: icon) }
+            Text(text)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.12)))
     }
 }
 
@@ -309,5 +724,93 @@ private struct TurnView: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+/// Questions asked about the call and Claude's answers, above the ask field.
+@available(macOS 26.0, *)
+private struct AnswersCard: View {
+    let answers: [NoteAnswer]
+    let asking: Bool
+    let close: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Ask Claude").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Button(action: close) { Image(systemName: "xmark") }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        ForEach(answers) { item in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(item.question).font(.callout.weight(.semibold))
+                                MarkdownView(text: item.answer)
+                                Button { copyToClipboard(item.answer) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                                    .buttonStyle(.plain)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        if asking {
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.small)
+                                Text("Claude is reading the call…").foregroundStyle(.secondary)
+                            }
+                        }
+                        Color.clear.frame(height: 1).id("end")
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .onAppear { proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: answers.count) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+                .onChange(of: asking) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+            }
+        }
+        .frame(maxHeight: 280)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.05)))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+}
+
+/// The Markdown Claude writes for summaries and answers: "###" headings, "-" bullets and inline
+/// bold, italics and code. SwiftUI's Text renders only the inline part by itself.
+@available(macOS 26.0, *)
+struct MarkdownView: View {
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { _, raw in
+                let line = raw.trimmingCharacters(in: .whitespaces)
+                if line.hasPrefix("#") {
+                    Text(Self.inline(line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)))
+                        .font(.headline)
+                        .padding(.top, 8)
+                } else if line.hasPrefix("- ") || line.hasPrefix("* ") {
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        Text("•").foregroundStyle(.secondary)
+                        Text(Self.inline(String(line.dropFirst(2))))
+                    }
+                } else if !line.isEmpty {
+                    Text(Self.inline(line))
+                }
+            }
+        }
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private static func inline(_ line: String) -> AttributedString {
+        (try? AttributedString(markdown: line, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(line)
     }
 }

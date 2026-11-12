@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable, Identifiable {
-    case general, claude, permissions, history, about
+    case general, claude, permissions, history, notes, about
 
     var id: Self { self }
 
@@ -15,6 +15,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "Claude"
         case .permissions: return "Permissions"
         case .history: return "History"
+        case .notes: return "Notes"
         case .about: return "About"
         }
     }
@@ -25,6 +26,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "terminal"
         case .permissions: return "lock.shield"
         case .history: return "clock.arrow.circlepath"
+        case .notes: return "note.text"
         case .about: return "info.circle"
         }
     }
@@ -36,6 +38,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return .orange
         case .permissions: return .blue
         case .history: return .purple
+        case .notes: return .yellow
         case .about: return .teal
         }
     }
@@ -50,6 +53,7 @@ final class SettingsState: ObservableObject {
 }
 
 struct SettingsActions {
+    var openNote: (UUID) -> Void
     var restartSession: () -> Void
     var openLog: () -> Void
     var checkForUpdates: () -> Void
@@ -59,18 +63,20 @@ struct SettingsActions {
 final class SettingsWindowController {
     let state = SettingsState()
     private let history: History
+    private let notes: NoteStore
     private let actions: SettingsActions
     private var window: NSWindow?
 
-    init(history: History, actions: SettingsActions) {
+    init(history: History, notes: NoteStore, actions: SettingsActions) {
         self.history = history
+        self.notes = notes
         self.actions = actions
     }
 
     func show(tab: SettingsTab? = nil) {
         if let tab { state.tab = tab }
         if window == nil {
-            let view = SettingsView(prefs: .shared, history: history, state: state, actions: actions)
+            let view = SettingsView(prefs: .shared, history: history, notes: notes, state: state, actions: actions)
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "Claude Whisper Settings"
             // A plain title bar: drawing the sidebar under a transparent one left artefacts at the top.
@@ -104,6 +110,7 @@ final class SettingsWindowController {
 private struct SettingsView: View {
     @ObservedObject var prefs: Preferences
     let history: History
+    let notes: NoteStore
     @ObservedObject var state: SettingsState
     let actions: SettingsActions
     @State private var missing: [Permission] = []
@@ -188,6 +195,7 @@ private struct SettingsView: View {
         case .claude: ClaudePane(prefs: prefs, state: state, actions: actions)
         case .permissions: PermissionsPane()
         case .history: HistoryPane(history: history)
+        case .notes: NotesPane(store: notes, open: actions.openNote)
         case .about: AboutPane(checkForUpdates: actions.checkForUpdates)
         }
     }
@@ -950,6 +958,115 @@ private struct HistoryPane: View {
         .confirmationDialog("Clear all \(history.entries.count) dictations?", isPresented: $confirmClear) {
             Button("Clear History", role: .destructive) { history.clear() }
         }
+    }
+}
+
+// MARK: Notes
+
+private struct NotesPane: View {
+    @ObservedObject var store: NoteStore
+    let open: (UUID) -> Void
+    @AppStorage("noteTakerLocale") private var locale = "en-US"
+    @State private var locales: [String] = []
+    @State private var search = ""
+    @State private var deleting: Note?
+
+    private var supported: Bool {
+        if #available(macOS 26.0, *) { return true } else { return false }
+    }
+
+    private var visible: [Note] {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return store.notes }
+        return store.notes.filter { note in
+            [note.displayTitle ?? "", note.summary ?? "", note.thoughts ?? "", note.transcript]
+                .contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 8) {
+                if supported {
+                    HStack {
+                        Text("Language of calls")
+                        Spacer()
+                        Picker("", selection: $locale) {
+                            ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
+                                Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
+                            }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary)
+                }
+                TextField("Search notes", text: $search)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.top, 6)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            if store.notes.isEmpty {
+                Spacer()
+                Text("Your notes will show up here.").foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                Spacer()
+            } else {
+                List(visible) { note in
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(note.displayTitle ?? (note.snippet.isEmpty ? "Untitled note" : note.snippet))
+                                .fontWeight(.medium)
+                            Text(Self.subtitle(note)).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 0)
+                        Button("Copy") { copyToClipboard(note.summaryText.map { $0 + "\n\n---\n\n" + note.plainText() } ?? note.plainText()) }
+                            .help("Copy the summary and the transcript")
+                        if supported { Button("Open") { open(note.id) } }
+                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { if supported { open(note.id) } }
+                    .contextMenu {
+                        Button("Delete…", role: .destructive) { deleting = note }
+                    }
+                }
+            }
+            Divider()
+            HStack {
+                Text("Kept on this Mac, newest first.").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Show in Finder") {
+                    try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+                    NSWorkspace.shared.open(store.directory)
+                }
+            }
+            .padding(12)
+        }
+        .onAppear { store.reload() }
+        .task {
+            if #available(macOS 26.0, *) { locales = await SpeechStream.supportedLocales() }
+        }
+        .confirmationDialog("Delete “\(deleting?.displayTitle ?? "this note")”?", isPresented: Binding(
+            get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            Button("Delete Note", role: .destructive) {
+                if let deleting { store.delete(deleting.id) }
+                deleting = nil
+            }
+        }
+    }
+
+    private static func subtitle(_ note: Note) -> String {
+        let f = DateFormatter()
+        f.dateFormat = Calendar.current.isDateInToday(note.started) ? "'Today', HH:mm" : "d MMM yyyy, HH:mm"
+        var parts = [f.string(from: note.started)]
+        if let duration = note.duration { parts.append("\(max(1, Int(duration / 60))) min") }
+        if note.summary != nil { parts.append("summary") }
+        return parts.joined(separator: " · ")
     }
 }
 

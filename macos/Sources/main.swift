@@ -23,7 +23,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var noteWindowBox: AnyObject?
     private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
-    private lazy var settings = SettingsWindowController(history: history, actions: SettingsActions(
+    private lazy var settings = SettingsWindowController(history: history, notes: noteStore, actions: SettingsActions(
+        openNote: { [weak self] id in MainActor.assumeIsolated { self?.openNote(id: id) } },
         restartSession: { [weak self] in self?.restartSession() },
         openLog: { [weak self] in self?.openLog() },
         checkForUpdates: { [weak self] in self?.checkForUpdates() }))
@@ -109,6 +110,15 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(updateItem)
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Claude Whisper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
+        // older ones have none, so neither do these there.
+        if #available(macOS 26.0, *) {
+            let symbols = ["Start Note Taker": "record.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+                           "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
+            for item in menu.items {
+                if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
+            }
+        }
         statusItem.menu = menu
         NSApp.mainMenu = mainMenu()
     }
@@ -153,7 +163,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @available(macOS 26.0, *)
     @MainActor private var noteWindow: NoteTakerWindow {
         if let window = noteWindowBox as? NoteTakerWindow { return window }
-        let window = NoteTakerWindow(taker: NoteTaker(store: noteStore))
+        let window = NoteTakerWindow(taker: NoteTaker(store: noteStore, workspace: session.workspace))
         noteWindowBox = window
         return window
     }
@@ -187,7 +197,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             time.dateFormat = Calendar.current.isDateInToday(note.started) ? "HH:mm" : "d MMM HH:mm"
             var title = time.string(from: note.started)
             if let duration = note.duration { title += " · \(max(1, Int(duration / 60))) min" }
-            if !note.snippet.isEmpty { title += "  \(note.snippet)" }
+            if let name = note.displayTitle ?? (note.snippet.isEmpty ? nil : note.snippet) { title += "  \(name)" }
             let item = notesMenu.addItem(withTitle: title, action: #selector(openNote(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = note.id
@@ -197,8 +207,12 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @MainActor @objc private func openNote(_ item: NSMenuItem) {
-        guard #available(macOS 26.0, *), let id = item.representedObject as? UUID,
-              let note = noteStore.notes.first(where: { $0.id == id }) else { return }
+        guard let id = item.representedObject as? UUID else { return }
+        openNote(id: id)
+    }
+
+    @MainActor private func openNote(id: UUID) {
+        guard #available(macOS 26.0, *), let note = noteStore.notes.first(where: { $0.id == id }) else { return }
         noteWindow.taker.open(note)
         noteWindow.show()
     }

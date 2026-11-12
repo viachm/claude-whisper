@@ -226,5 +226,35 @@ do {
     check(decoded == note, "a note survives saving and loading")
 }
 
+// Note Taker: Claude's title, summary and answers
+
+do {
+    let ok = #"{"type":"result","is_error":false,"result":"<title>\"Release plan.\"</title>\n<summary>\nWe split the release.\n\n### Decisions\n- Ship Tuesday\n</summary>"}"#
+    if case .success(let r) = NoteSummaryProtocol.parse(ok) {
+        check(r.title == "Release plan", "summary title loses quotes and the trailing period")
+        check(r.summary.hasPrefix("We split the release.") && r.summary.hasSuffix("- Ship Tuesday"), "summary is the text inside its tags")
+    } else {
+        check(false, "a tagged answer parses")
+    }
+    if case .failure(let error) = NoteSummaryProtocol.parse(#"{"type":"result","is_error":true,"result":"Not logged in"}"#) {
+        check(error.reason == "Not logged in", "a Claude error is reported")
+    } else {
+        check(false, "a Claude error is reported")
+    }
+    check((try? NoteSummaryProtocol.parse(#"{"result":"no tags"}"#).get()) == nil, "an answer without tags is not used")
+    check(NoteAskProtocol.parse(#"{"is_error":false,"result":"  You missed nothing. "}"#) == .success("You missed nothing."), "an answer is the trimmed result")
+    check(NoteAskProtocol.input(transcript: "Me: hi", notes: "  ", question: "Q").contains("<notes>") == false, "empty notes are left out of a question")
+    var note = Note(started: Date(), locale: "en-US")
+    note.title = "Claude's"
+    check(note.displayTitle == "Claude's", "Claude's title is shown")
+    note.name = "Mine"
+    check(note.displayTitle == "Mine" && note.summaryText == nil, "the user's title wins")
+    note.summary = "Text"
+    check(note.summaryText == "# Mine\n\nText", "the copied summary has the title as its heading")
+    let old = #"{"id":"6F1B1E2A-0000-4000-8000-000000000000","started":"2026-11-12T10:00:00Z","locale":"en-US","segments":[]}"#
+    let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601
+    check((try? d.decode(Note.self, from: Data(old.utf8)))?.summary == nil, "notes saved before titles and summaries still load")
+}
+
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
 exit(failures == 0 ? 0 : 1)

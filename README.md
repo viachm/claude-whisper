@@ -62,9 +62,11 @@ The menu bar icon keeps your last 30 dictations. Click one to copy it.
 
 **Start Note Taker** in the menu opens a panel on the right third of the screen and writes the call
 down as a dialog while it happens: your microphone as **Me**, everything your Mac plays as **Them**.
-**Copy** takes the whole conversation; every note is saved and listed under **Notes** in the menu.
-Transcription runs on your Mac with Apple's speech recogniser (not Claude), in the language you pick
-in the panel. Use headphones, or your microphone hears the other side too.
+When you stop, Claude gives the note a title and writes a summary; while it runs, ask Claude about
+the call ("What did I miss?"). There is room for your own notes too. Every note is saved and listed
+under **Notes** in the menu and in Settings. Transcription runs on your Mac with Apple's speech
+recogniser (not Claude), in the language picked in Settings › Notes. Use headphones, or your
+microphone hears the other side too.
 
 ### Make it yours
 
