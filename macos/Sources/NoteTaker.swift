@@ -89,8 +89,8 @@ final class NoteTaker: ObservableObject {
 
     private func begin(run: Int, locale: Locale) async throws {
         for speaker in [Speaker.me, .them] {
-            let stream = SpeechStream(locale: locale) { [weak self] text, start, final in
-                Task { @MainActor in self?.received(speaker, run: run, text: text, start: start, final: final) }
+            let stream = SpeechStream(locale: locale) { [weak self] text, start, end, final in
+                Task { @MainActor in self?.received(speaker, run: run, text: text, start: start, end: end, final: final) }
             }
             try await stream.prepare { status = "Downloading the speech model for \(locale.identifier(.bcp47))…" }
             try await stream.start()
@@ -167,11 +167,14 @@ final class NoteTaker: ObservableObject {
         save()
     }
 
-    private func received(_ speaker: Speaker, run: Int, text: String, start: Double, final: Bool) {
+    private func received(_ speaker: Speaker, run: Int, text: String, start: Double, end: Double, final: Bool) {
         guard run == self.run, note != nil else { return }
-        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A lone "." or "," from a cough or a click is not a line.
+        if text.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)).isEmpty { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
-        let segment = NoteSegment(speaker: speaker, start: start + offset, text: text)
+        let segment = NoteSegment(speaker: speaker, start: start + offset,
+                                  end: end.isFinite && end >= start ? end + offset : nil, text: text)
         if final {
             pending[speaker] = nil
             guard !text.isEmpty else { return }
@@ -400,6 +403,7 @@ struct NoteTakerView: View {
             }
             bottomBar
         }
+        .font(.system(size: 14))
         .frame(minWidth: 360, minHeight: 420)
         .onAppear(perform: loadDrafts)
         .onChange(of: taker.note?.id) { loadDrafts() }
@@ -456,7 +460,7 @@ struct NoteTakerView: View {
         VStack(alignment: .leading, spacing: 10) {
             TextField("New note", text: $titleDraft)
                 .textFieldStyle(.plain)
-                .font(.system(size: 30, weight: .regular, design: .serif))
+                .font(.system(size: 24, weight: .regular, design: .serif))
                 .focused($titleFocused)
                 .onSubmit { titleFocused = false }
             HStack(spacing: 6) {
@@ -557,14 +561,14 @@ struct NoteTakerView: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .monospacedDigit()
-            .font(.callout.weight(.medium))
+            .font(.system(size: 13, weight: .medium))
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             if !hintDismissed {
                 Divider()
                 HStack(alignment: .top) {
                     Text("When you stop, Claude gives the note a title and writes a summary. Your microphone is “Me”, the call audio is “Them”; use headphones so your microphone doesn't hear them too.")
-                        .font(.caption)
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button { hintDismissed = true } label: { Image(systemName: "xmark") }
@@ -590,7 +594,7 @@ struct NoteTakerView: View {
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 14) {
                     if taker.turns.isEmpty && !taker.isPaused {
                         Text(taker.isRecording ? "Listening…" : "Nothing was said.")
                             .italic()
@@ -630,6 +634,7 @@ struct NoteTakerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     MarkdownView(text: summary)
+                        .font(.system(size: Self.textSize))
                     HStack {
                         Button { taker.note?.summaryText.map(copyToClipboard) } label: {
                             Label("Copy", systemImage: "doc.on.doc")
@@ -665,7 +670,7 @@ struct NoteTakerView: View {
         VStack(spacing: 10) {
             if taker.isRecording {
                 Text("Always get consent before transcribing others.")
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 10) {
@@ -687,14 +692,14 @@ struct NoteTakerView: View {
                 } label: {
                     HStack(spacing: 8) {
                         if taker.isRecording {
-                            RoundedRectangle(cornerRadius: 2).fill(Color.green).frame(width: 12, height: 12)
+                            RoundedRectangle(cornerRadius: 2).fill(Color.red).frame(width: 12, height: 12)
                             Text("Stop")
                         } else {
                             Circle().fill(Color.red).frame(width: 11, height: 11)
                             Text("New note")
                         }
                     }
-                    .font(.body.weight(.medium))
+                    .font(.system(size: 14, weight: .medium))
                     .padding(.horizontal, 16)
                     .frame(height: 40)
                     .background(Capsule().strokeBorder(Color.primary.opacity(0.15)))
@@ -723,7 +728,7 @@ struct NoteTakerView: View {
                 }
                 .pickerStyle(.inline)
             } label: {
-                Text(model.name).font(.caption)
+                Text(model.name).font(.system(size: 12))
             }
             .menuStyle(.button)
             .buttonStyle(.plain)
@@ -741,7 +746,7 @@ struct NoteTakerView: View {
                 }
                 Button(NoteAskProtocol.whatDidIMiss) { taker.ask(NoteAskProtocol.whatDidIMiss) }
                     .buttonStyle(.plain)
-                    .font(.callout.weight(.medium))
+                    .font(.system(size: 13, weight: .medium))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(Capsule().fill(Color.primary.opacity(0.07)))
@@ -755,6 +760,9 @@ struct NoteTakerView: View {
     }
 
     // MARK: Formatting
+
+    /// The size of transcript, summary and answer text: a little larger than the system's 13 pt.
+    static let textSize: CGFloat = 15
 
     static func elapsed(_ seconds: TimeInterval) -> String {
         let s = Int(max(0, seconds))
@@ -779,7 +787,7 @@ private struct Chip: View {
             if let icon { Image(systemName: icon) }
             Text(text)
         }
-        .font(.caption)
+        .font(.system(size: 12))
         .foregroundStyle(.secondary)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
@@ -792,12 +800,20 @@ private struct TurnView: View {
     let turn: NoteTurn
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(turn.speaker.label)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(turn.speaker == .me ? Color.accentColor : Color.orange)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text(turn.speaker.label)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(turn.speaker == .me ? Color.accentColor : Color.orange)
+                Text(NoteTakerView.elapsed(turn.start))
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+                    .foregroundStyle(.tertiary)
+            }
             (Text(turn.text) + Text(turn.text.isEmpty || turn.pending.isEmpty ? "" : " ")
                 + Text(turn.pending).foregroundColor(.secondary))
+                .font(.system(size: NoteTakerView.textSize))
+                .lineSpacing(2)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -827,11 +843,14 @@ private struct AnswersCard: View {
     let answers: [NoteAnswer]
     let asking: Bool
     let close: () -> Void
+    /// The answers' natural height: the card is as tall as they are, up to `maxHeight`, then scrolls.
+    @State private var contentHeight: CGFloat = 0
+    private let maxHeight: CGFloat = 340
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Ask Claude").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text("Ask Claude").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
                 Button(action: close) { Image(systemName: "xmark") }
                     .buttonStyle(.plain)
@@ -844,11 +863,11 @@ private struct AnswersCard: View {
                     VStack(alignment: .leading, spacing: 14) {
                         ForEach(answers) { item in
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(item.question).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                                MarkdownView(text: item.answer).font(.callout)
+                                Text(item.question).font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
+                                MarkdownView(text: item.answer).font(.system(size: NoteTakerView.textSize))
                                 Button { copyToClipboard(item.answer) } label: { Label("Copy", systemImage: "doc.on.doc") }
                                     .buttonStyle(.plain)
-                                    .font(.caption)
+                                    .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -860,15 +879,21 @@ private struct AnswersCard: View {
                         }
                         Color.clear.frame(height: 1).id("end")
                     }
-                    .padding(14)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(GeometryReader { geometry in
+                        Color.clear.onAppear { contentHeight = geometry.size.height }
+                            .onChange(of: geometry.size.height) { contentHeight = geometry.size.height }
+                    })
                 }
+                .frame(height: min(max(contentHeight, 40), maxHeight))
                 .onAppear { proxy.scrollTo("end", anchor: .bottom) }
                 .onChange(of: answers.count) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
                 .onChange(of: asking) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
             }
         }
-        .frame(maxHeight: 280)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.05)))
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -887,7 +912,7 @@ struct MarkdownView: View {
                 let line = raw.trimmingCharacters(in: .whitespaces)
                 if line.hasPrefix("#") {
                     Text(Self.inline(line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)))
-                        .font(.headline)
+                        .font(.system(size: NoteTakerView.textSize + 1, weight: .semibold))
                         .padding(.top, 8)
                 } else if line.hasPrefix("- ") || line.hasPrefix("* ") {
                     HStack(alignment: .firstTextBaseline, spacing: 7) {

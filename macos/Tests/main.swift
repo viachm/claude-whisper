@@ -208,20 +208,26 @@ do {
         NoteSegment(speaker: .them, start: 6, text: "Yes."),
     ]
     let turns = Note.turns(segments)
-    check(turns.map(\.speaker) == [.me, .them], "turns follow time order and join a speaker's consecutive lines")
-    check(turns.first?.text == "Hi all. Shall we start?", "a turn joins its lines with a space")
+    check(turns.map(\.speaker) == [.me, .them, .them], "records follow time order; a speaker's lines 1.5 s apart join, 2 s apart don't")
+    let quick = [NoteSegment(speaker: .me, start: 0, end: 1, text: "Hi all."), NoteSegment(speaker: .me, start: 1.8, end: 3, text: "Shall we start?")]
+    check(Note.turns(quick).map(\.text) == ["Hi all. Shall we start?"], "a line after a short breath joins the record with a space")
+    let later = [NoteSegment(speaker: .me, start: 0, end: 1, text: "Hi all."), NoteSegment(speaker: .me, start: 4, end: 5, text: "Anyone?")]
+    check(Note.turns(later).count == 2, "a line after a longer silence starts a new record")
+    let long = String(repeating: "word ", count: 60)
+    let chain = [NoteSegment(speaker: .them, start: 0, end: 10, text: long), NoteSegment(speaker: .them, start: 10.5, end: 20, text: long)]
+    check(Note.turns(chain).count == 2, "a long monologue is split into records")
     let live = Note.turns(segments, pending: [NoteSegment(speaker: .me, start: 8, text: "Great")])
-    check(live.count == 3 && live.last?.pending == "Great" && live.last?.text == "", "text still being recognised gets its own turn after the others")
-    let joined = Note.turns(segments, pending: [NoteSegment(speaker: .them, start: 7, text: "And")])
-    check(joined.count == 2 && joined.last?.text == "Sounds good. Yes." && joined.last?.pending == "And", "pending text joins the speaker's last turn")
+    check(live.last?.pending == "Great" && live.last?.text == "", "text still being recognised gets its own record after the others")
+    let joined = Note.turns(quick, pending: [NoteSegment(speaker: .me, start: 3.5, text: "And")])
+    check(joined.count == 1 && joined.last?.pending == "And", "pending text right after joins the speaker's record")
     check(Note.turns([NoteSegment(speaker: .me, start: 0, text: "")]).isEmpty, "empty lines are left out")
 
     var note = Note(started: Date(timeIntervalSince1970: 0), locale: "en-US", segments: segments)
     note.ended = Date(timeIntervalSince1970: 600)
     let text = note.plainText()
-    check(text.hasPrefix("Note Taker, ") && text.hasSuffix("Me: Hi all. Shall we start?\n\nThem: Sounds good. Yes."), "plain text is a heading and one paragraph per turn")
+    check(text.hasPrefix("Note Taker, ") && text.hasSuffix("Me: Hi all. Shall we start?\n\nThem: Sounds good.\n\nThem: Yes."), "plain text is a heading and one paragraph per record")
     check(note.duration == 600, "duration runs from start to end")
-    check(note.snippet == "Hi all. Shall we start?", "snippet is the first turn")
+    check(note.snippet == "Hi all. Shall we start?", "snippet is the first record")
     let decoded = try? JSONDecoder().decode(Note.self, from: JSONEncoder().encode(note))
     check(decoded == note, "a note survives saving and loading")
 }

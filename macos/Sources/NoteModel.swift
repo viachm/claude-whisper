@@ -14,6 +14,8 @@ struct NoteSegment: Codable, Equatable, Identifiable {
     var speaker: Speaker
     /// Seconds from the start of the note.
     var start: Double
+    /// Where the speech ended, in the same seconds (missing in notes saved before it was kept).
+    var end: Double?
     var text: String
 }
 
@@ -43,6 +45,8 @@ struct NoteTurn: Equatable, Identifiable {
     var id: UUID
     var speaker: Speaker
     var start: Double
+    /// When its last line ended, to tell a short breath from the end of what someone was saying.
+    var end: Double
     /// Finished text.
     var text: String
     /// Text still being recognised, shown after `text` until the transcriber settles on it.
@@ -77,7 +81,13 @@ struct Note: Codable, Equatable, Identifiable {
 
     var displayTitle: String? { name ?? title }
 
-    /// The conversation as turns, in time order, with lines still being recognised merged in.
+    /// A line joins the speaker's previous record only when it follows within this many seconds
+    /// (a breath mid-thought) and the record stays shorter than `maxRecord` characters.
+    static let joinGap: Double = 1.5
+    static let maxRecord = 320
+
+    /// The conversation as records in time order, with lines still being recognised merged in.
+    /// Someone who stops and starts again, or talks on for long, gets a new record.
     static func turns(_ segments: [NoteSegment], pending: [NoteSegment] = []) -> [NoteTurn] {
         let all = (segments.map { ($0, false) } + pending.map { ($0, true) })
             .filter { !$0.0.text.isEmpty }
@@ -87,7 +97,10 @@ struct Note: Codable, Equatable, Identifiable {
             .map { $0.element }
         var turns: [NoteTurn] = []
         for (segment, isPending) in all {
-            if let last = turns.last, last.speaker == segment.speaker {
+            if let last = turns.last, last.speaker == segment.speaker,
+               segment.start - last.end <= joinGap,
+               last.text.count + last.pending.count + segment.text.count <= maxRecord {
+                turns[turns.count - 1].end = max(last.end, segment.end ?? segment.start)
                 if isPending {
                     turns[turns.count - 1].pending = join(last.pending, segment.text)
                 } else {
@@ -95,7 +108,7 @@ struct Note: Codable, Equatable, Identifiable {
                 }
             } else {
                 turns.append(NoteTurn(id: segment.id, speaker: segment.speaker, start: segment.start,
-                                      text: isPending ? "" : segment.text, pending: isPending ? segment.text : ""))
+                                      end: segment.end ?? segment.start, text: isPending ? "" : segment.text, pending: isPending ? segment.text : ""))
             }
         }
         return turns

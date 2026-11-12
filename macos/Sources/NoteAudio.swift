@@ -129,8 +129,8 @@ final class SystemAudioCapture {
 /// volatile guesses that are later replaced by a final result for the same stretch of audio.
 @available(macOS 26.0, *)
 final class SpeechStream: @unchecked Sendable {
-    /// Text, start in seconds from the first buffer, and whether it is final.
-    typealias Handler = (String, Double, Bool) -> Void
+    /// Text, start and end in seconds of audio given, and whether it is final.
+    typealias Handler = (String, Double, Double, Bool) -> Void
 
     private let transcriber: SpeechTranscriber
     private let analyzer: SpeechAnalyzer
@@ -169,7 +169,8 @@ final class SpeechStream: @unchecked Sendable {
         results = Task { [transcriber, onResult] in
             do {
                 for try await result in transcriber.results {
-                    onResult(String(result.text.characters), result.range.start.seconds, result.isFinal)
+                    onResult(String(result.text.characters), result.range.start.seconds,
+                             result.range.end.seconds, result.isFinal)
                 }
             } catch {
                 Log.write("note taker: transcription stopped: \(error)")
