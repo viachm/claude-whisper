@@ -50,6 +50,8 @@ final class SettingsState: ObservableObject {
     @Published var tab = SettingsTab.general
     @Published var session = ClaudeSession.State.stopped
     @Published var hotkeyProblem: String?
+    /// Set by "All Notes…" in the menu: Notes scrolls to its history and puts the cursor in search.
+    @Published var searchNotes = false
 }
 
 struct SettingsActions {
@@ -84,6 +86,7 @@ final class SettingsWindowController {
             window.isReleasedWhenClosed = false
             // Opened from another desktop (Space), it comes to the current one instead of staying put.
             window.collectionBehavior = [.moveToActiveSpace]
+            HandCursor.install(on: window)
             self.window = window
         }
         // SwiftUI sizes the window lazily; lay it out first so it is centred by its real size.
@@ -195,7 +198,7 @@ private struct SettingsView: View {
         case .claude: ClaudePane(prefs: prefs, state: state, actions: actions)
         case .permissions: PermissionsPane()
         case .history: HistoryPane(history: history)
-        case .notes: NotesPane(store: notes, open: actions.openNote)
+        case .notes: NotesPane(store: notes, state: state, open: actions.openNote)
         case .about: AboutPane(checkForUpdates: actions.checkForUpdates)
         }
     }
@@ -965,6 +968,7 @@ private struct HistoryPane: View {
 
 private struct NotesPane: View {
     @ObservedObject var store: NoteStore
+    @ObservedObject var state: SettingsState
     let open: (UUID) -> Void
     @AppStorage("noteTakerLocale") private var locale = "en-US"
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
@@ -976,6 +980,7 @@ private struct NotesPane: View {
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
+    @FocusState private var searchFocused: Bool
 
     private var supported: Bool {
         if #available(macOS 26.0, *) { return true } else { return false }
@@ -991,120 +996,19 @@ private struct NotesPane: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
-                if supported {
-                    HStack {
-                        Text("Language of calls")
-                        Spacer()
-                        Picker("", selection: $locale) {
-                            ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
-                                Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
-                            }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                    }
-                    HStack {
-                        Text("Claude model for summaries and questions")
-                        Spacer()
-                        Picker("", selection: $model) {
-                            ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                    }
-                    Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
-                    Toggle("After a call, Claude cleans up the transcript and tells speakers apart", isOn: $improve)
-                    HStack {
-                        Text("Delete notes older than")
-                        Spacer()
-                        Picker("", selection: $retention) {
-                            ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                    }
-                    Text("Context for Claude").padding(.top, 4)
-                    ZStack(alignment: .topLeading) {
-                        TextEditor(text: $context)
-                            .font(.body)
-                            .frame(height: 64)
-                            .scrollContentBackground(.hidden)
-                            .padding(4)
-                            .background(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.15)))
-                        if context.isEmpty {
-                            Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
-                                .foregroundStyle(.tertiary)
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 4)
-                                .allowsHitTesting(false)
-                        }
-                    }
-                    HStack {
-                        Text("Folder Claude may read")
-                        Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        if !folder.isEmpty { Button("Clear") { folder = "" } }
-                        Button("Choose…") { chooseFolder() }
-                    }
-                    Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary)
-                }
-                TextField("Search notes", text: $search)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.top, 6)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            if store.notes.isEmpty {
-                Spacer()
-                Text("Your notes will show up here.").foregroundStyle(.secondary).frame(maxWidth: .infinity)
-                Spacer()
-            } else {
-                List(visible) { note in
-                    HStack(alignment: .top, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(note.displayTitle ?? (note.snippet.isEmpty ? "Untitled note" : note.snippet))
-                                .fontWeight(.medium)
-                            Text(Self.subtitle(note)).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer(minLength: 0)
-                        Button("Copy") { copyToClipboard(note.summaryText.map { $0 + "\n\n---\n\n" + note.plainText() } ?? note.plainText()) }
-                            .help("Copy the summary and the transcript")
-                        if supported { Button("Open") { open(note.id) } }
-                        Button { deleting = note } label: { Image(systemName: "trash") }
-                            .help("Delete this note and its audio")
-                    }
-                    .padding(.vertical, 4)
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { if supported { open(note.id) } }
-                    .contextMenu {
-                        Button("Delete…", role: .destructive) { deleting = note }
-                    }
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    settingsSection
+                    Section(header: historyHeader) { historyRows }
                 }
             }
-            Divider()
-            HStack {
-                Text("Kept on this Mac, newest first.").font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                Button("Show in Finder") {
-                    try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
-                    NSWorkspace.shared.open(store.directory)
-                }
+            .onAppear {
+                store.reload()
+                focusSearchIfAsked(proxy)
             }
-            .padding(12)
+            .onChange(of: state.searchNotes) { focusSearchIfAsked(proxy) }
         }
-        .onAppear { store.reload() }
         .onChange(of: retention) { store.prune(retention) }
         .task {
             if #available(macOS 26.0, *) { locales = await SpeechStream.supportedLocales() }
@@ -1114,6 +1018,69 @@ private struct NotesPane: View {
             Button("Delete Note", role: .destructive) {
                 if let deleting { store.delete(deleting.id) }
                 deleting = nil
+            }
+        }
+    }
+
+    /// "All Notes…" in the menu: jump to the history and put the cursor in search.
+    private func focusSearchIfAsked(_ proxy: ScrollViewProxy) {
+        guard state.searchNotes else { return }
+        state.searchNotes = false
+        DispatchQueue.main.async {
+            proxy.scrollTo("history", anchor: .top)
+            searchFocused = true
+        }
+    }
+
+    @ViewBuilder private var settingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if supported {
+                NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
+                                  retention: $retention, context: $context, folder: $folder, locales: locales,
+                                  chooseFolder: chooseFolder)
+            } else {
+                Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 20)
+    }
+
+    private var historyHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Notes History").font(.headline)
+                Text(store.notes.isEmpty ? "" : "\(store.notes.count)").foregroundStyle(.secondary)
+                Spacer()
+                Button("Open Notes Folder") {
+                    try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+                    NSWorkspace.shared.open(store.directory)
+                }
+            }
+            TextField("Search notes", text: $search)
+                .textFieldStyle(.roundedBorder)
+                .focused($searchFocused)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .overlay(alignment: .bottom) { Divider() }
+        .id("history")
+    }
+
+    @ViewBuilder private var historyRows: some View {
+        if store.notes.isEmpty {
+            Text("Your notes will show up here.").foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity).padding(.vertical, 40)
+        } else if visible.isEmpty {
+            Text("No notes match “\(search)”.").foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity).padding(.vertical, 40)
+        } else {
+            ForEach(visible) { note in
+                NoteHistoryRow(note: note, subtitle: Self.subtitle(note), canOpen: supported,
+                               open: { open(note.id) }, delete: { deleting = note })
+                Divider().padding(.leading, 20)
             }
         }
     }
@@ -1136,6 +1103,126 @@ private struct NotesPane: View {
         if let duration = note.duration { parts.append("\(max(1, Int(duration / 60))) min") }
         if note.summary != nil { parts.append("summary") }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// The Note Taker options at the top of Settings › Notes.
+private struct NoteTakerSettings: View {
+    @Binding var locale: String
+    @Binding var model: NoteModel
+    @Binding var keepAudio: Bool
+    @Binding var improve: Bool
+    @Binding var retention: NoteRetention
+    @Binding var context: String
+    @Binding var folder: String
+    let locales: [String]
+    let chooseFolder: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Language of calls")
+                Spacer()
+                Picker("", selection: $locale) {
+                    ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
+                        Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            HStack {
+                Text("Claude model for summaries and questions")
+                Spacer()
+                Picker("", selection: $model) {
+                    ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
+            Toggle("After a call, Claude cleans up the transcript and tells speakers apart", isOn: $improve)
+            HStack {
+                Text("Delete notes older than")
+                Spacer()
+                Picker("", selection: $retention) {
+                    ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            contextEditor
+            Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder private var contextEditor: some View {
+        Text("Context for Claude").padding(.top, 4)
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $context)
+                .font(.body)
+                .frame(height: 64)
+                .scrollContentBackground(.hidden)
+                .padding(4)
+                .background(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.15)))
+            if context.isEmpty {
+                Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .allowsHitTesting(false)
+            }
+        }
+        HStack {
+            Text("Folder Claude may read")
+            Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer()
+            if !folder.isEmpty { Button("Clear") { folder = "" } }
+            Button("Choose…") { chooseFolder() }
+        }
+        Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+
+/// One note in Settings › Notes › history: open it to read, listen or copy.
+private struct NoteHistoryRow: View {
+    let note: Note
+    let subtitle: String
+    let canOpen: Bool
+    let open: () -> Void
+    let delete: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(note.displayTitle ?? (note.snippet.isEmpty ? "Untitled note" : note.snippet))
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            if canOpen { Button("Open", action: open) }
+            Button(action: delete) { Image(systemName: "trash") }
+                .help("Delete this note and its audio")
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(hovering ? Color.primary.opacity(0.05) : .clear)
+        .contentShape(Rectangle())
+        .onHover { hovering = $0 }
+        .onTapGesture(count: 2) { if canOpen { open() } }
+        .contextMenu {
+            if canOpen { Button("Open", action: open) }
+            Button("Delete…", role: .destructive, action: delete)
+        }
     }
 }
 

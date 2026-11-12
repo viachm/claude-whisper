@@ -454,6 +454,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.minSize = NSSize(width: 360, height: 420)
         panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
+        HandCursor.install(on: panel)
         return panel
     }
 

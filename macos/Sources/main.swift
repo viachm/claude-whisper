@@ -218,7 +218,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.representedObject = note.id
         }
         notesMenu.addItem(.separator())
-        notesMenu.addItem(withTitle: "Open Notes Folder", action: #selector(openNotesFolder), keyEquivalent: "").target = self
+        notesMenu.addItem(withTitle: "All Notes…", action: #selector(showAllNotes), keyEquivalent: "").target = self
     }
 
     @MainActor @objc private func openNote(_ item: NSMenuItem) {
@@ -232,9 +232,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         noteWindow.show()
     }
 
-    @objc private func openNotesFolder() {
-        try? FileManager.default.createDirectory(at: noteStore.directory, withIntermediateDirectories: true)
-        NSWorkspace.shared.open(noteStore.directory)
+    /// Settings › Notes, scrolled to the history with the cursor in its search field.
+    @objc private func showAllNotes() {
+        settings.state.searchNotes = true
+        settings.show(tab: .notes)
     }
     @objc private func clearHistory() { history.clear() }
 
