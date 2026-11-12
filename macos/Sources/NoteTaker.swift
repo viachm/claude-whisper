@@ -226,12 +226,6 @@ final class NoteTaker: ObservableObject {
         save()
     }
 
-    func setThoughts(_ text: String) {
-        guard note != nil, text != (note?.thoughts ?? "") else { return }
-        note?.thoughts = text.isEmpty ? nil : text
-        save()
-    }
-
     func deleteNote() {
         guard let id = note?.id else { return }
         stop()
@@ -278,7 +272,7 @@ final class NoteTaker: ObservableObject {
             .joined(separator: "\n")
         asking = true
         NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
-                       input: NoteAskProtocol.input(transcript: transcript, notes: note.thoughts, question: question),
+                       input: NoteAskProtocol.input(transcript: transcript, question: question),
                        directory: workspace, timeout: 90) { [weak self] output in
             guard let self else { return }
             asking = false
@@ -305,7 +299,7 @@ final class NoteTaker: ObservableObject {
     }
 
     private func save() {
-        guard let note, !note.segments.isEmpty || note.name != nil || note.thoughts != nil else { return }
+        guard let note, !note.segments.isEmpty || note.name != nil else { return }
         do {
             try store.save(note)
         } catch {
@@ -369,7 +363,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
 
 @available(macOS 26.0, *)
 private enum NoteTab: String, CaseIterable {
-    case thoughts = "My thoughts", transcript = "Transcript", summary = "Summary"
+    case transcript = "Transcript", summary = "Summary"
 }
 
 @available(macOS 26.0, *)
@@ -378,7 +372,6 @@ struct NoteTakerView: View {
     let close: () -> Void
     @State private var tab = NoteTab.transcript
     @State private var titleDraft = ""
-    @State private var thoughtsDraft = ""
     @State private var question = ""
     @State private var searching = false
     @State private var search = ""
@@ -397,7 +390,6 @@ struct NoteTakerView: View {
             Divider()
             Group {
                 switch tab {
-                case .thoughts: thoughtsTab
                 case .transcript: transcriptTab
                 case .summary: summaryTab
                 }
@@ -413,7 +405,6 @@ struct NoteTakerView: View {
         .onChange(of: taker.note?.id) { loadDrafts() }
         .onChange(of: taker.note?.displayTitle) { if !titleFocused { titleDraft = taker.note?.displayTitle ?? "" } }
         .onChange(of: titleFocused) { if !titleFocused { taker.rename(titleDraft) } }
-        .onChange(of: thoughtsDraft) { taker.setThoughts(thoughtsDraft) }
         .onChange(of: taker.asking) { if taker.asking { showAnswers = true } }
         .confirmationDialog("Delete this note?", isPresented: $confirmDelete) {
             Button("Delete Note", role: .destructive) {
@@ -425,7 +416,6 @@ struct NoteTakerView: View {
 
     private func loadDrafts() {
         titleDraft = taker.note?.displayTitle ?? ""
-        thoughtsDraft = taker.note?.thoughts ?? ""
         search = ""
         searching = false
         showAnswers = false
@@ -488,7 +478,6 @@ struct NoteTakerView: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 5) {
                             switch item {
-                            case .thoughts: EmptyView()
                             case .transcript:
                                 Image(systemName: "waveform")
                                     .foregroundStyle(taker.isRecording && !taker.isPaused ? Color.green : Color.secondary)
@@ -516,24 +505,6 @@ struct NoteTakerView: View {
     }
 
     // MARK: Tabs
-
-    private var thoughtsTab: some View {
-        ZStack(alignment: .topLeading) {
-            TextEditor(text: $thoughtsDraft)
-                .font(.body)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 19)
-                .padding(.vertical, 14)
-            if thoughtsDraft.isEmpty {
-                Text("Your own notes. Claude reads them too when you ask it something.")
-                    .foregroundStyle(.tertiary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .allowsHitTesting(false)
-            }
-        }
-        .disabled(taker.note == nil)
-    }
 
     private var transcriptTab: some View {
         VStack(alignment: .leading, spacing: 0) {

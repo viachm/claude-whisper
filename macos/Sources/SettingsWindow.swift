@@ -980,7 +980,7 @@ private struct NotesPane: View {
         let query = search.trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else { return store.notes }
         return store.notes.filter { note in
-            [note.displayTitle ?? "", note.summary ?? "", note.thoughts ?? "", note.transcript]
+            [note.displayTitle ?? "", note.summary ?? "", note.transcript]
                 .contains { $0.localizedCaseInsensitiveContains(query) }
         }
     }

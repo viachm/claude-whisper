@@ -265,7 +265,7 @@ do {
     }
     check((try? NoteSummaryProtocol.parse(#"{"result":"no tags"}"#).get()) == nil, "an answer without tags is not used")
     check(NoteAskProtocol.parse(#"{"is_error":false,"result":"  You missed nothing. "}"#) == .success("You missed nothing."), "an answer is the trimmed result")
-    check(NoteAskProtocol.input(transcript: "Me: hi", notes: "  ", question: "Q").contains("<notes>") == false, "empty notes are left out of a question")
+    check(NoteAskProtocol.input(transcript: "Me: hi", question: "Q") == "<transcript>\nMe: hi\n</transcript>\n<question>Q</question>", "a question carries the transcript")
     var note = Note(started: Date(), locale: "en-US")
     note.title = "Claude's"
     check(note.displayTitle == "Claude's", "Claude's title is shown")

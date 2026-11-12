@@ -70,8 +70,6 @@ struct Note: Codable, Equatable, Identifiable {
     var name: String?
     /// Claude's summary, in Markdown.
     var summary: String?
-    /// What the user typed in "My thoughts".
-    var thoughts: String?
     /// Questions asked about the call, with Claude's answers, oldest first.
     var answers: [NoteAnswer]?
     /// Where the recording was paused, in time order.
@@ -290,7 +288,7 @@ enum NoteAskProtocol {
     static let whatDidIMiss = "What did I miss?"
 
     static let systemPrompt = """
-        You help someone during or after a call. The user message holds the call's transcript so far in <transcript> tags, one line per turn ("Me" is the person asking you, "Them" is everyone else; it comes from live speech recognition, so expect misheard words), their own notes in <notes> tags if they wrote any, and their question in <question> tags.
+        You help someone during or after a call. The user message holds the call's transcript so far in <transcript> tags, one line per turn ("Me" is the person asking you, "Them" is everyone else; it comes from live speech recognition, so expect misheard words), and their question in <question> tags.
 
         Answer the question from the transcript, as briefly as possible: one or two sentences, or a few short bullets, in the language of the question. No introduction, no closing remark, no headings.
 
@@ -303,10 +301,8 @@ enum NoteAskProtocol {
          "--no-session-persistence", "--output-format", "json"]
     }
 
-    static func input(transcript: String, notes: String?, question: String) -> String {
-        var text = "<transcript>\n\(transcript)\n</transcript>\n"
-        if let notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { text += "<notes>\n\(notes)\n</notes>\n" }
-        return text + "<question>\(question)</question>"
+    static func input(transcript: String, question: String) -> String {
+        "<transcript>\n\(transcript)\n</transcript>\n<question>\(question)</question>"
     }
 
     static func parse(_ output: String) -> Result<String, SummaryError> {
