@@ -3,5 +3,5 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p build
-swiftc -swift-version 5 Sources/RefinerProtocol.swift Sources/SessionSettings.swift Sources/ImproveKey.swift Sources/Release.swift Tests/*.swift -o build/tests
+swiftc -swift-version 5 Sources/RefinerProtocol.swift Sources/SessionSettings.swift Sources/ImproveKey.swift Sources/Release.swift Sources/NoteModel.swift Tests/*.swift -o build/tests
 ./build/tests

@@ -16,6 +16,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
     private var statusItem: NSStatusItem!
     private let historyMenu = NSMenu(title: "History")
+    private let notesMenu = NSMenu(title: "Notes")
+    private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
+    private let noteStore = NoteStore()
+    /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
+    private var noteWindowBox: AnyObject?
     private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
     private lazy var settings = SettingsWindowController(history: history, actions: SettingsActions(
@@ -71,6 +76,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        if #available(macOS 26.0, *) { MainActor.assumeIsolated { (noteWindowBox as? NoteTakerWindow)?.taker.stop() } }
         session.stop()
         refiner.reset()
         Log.write("Claude Whisper quit")
@@ -90,6 +96,12 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         setIcon(active: false)
         let menu = NSMenu()
+        menu.delegate = self
+        noteTakerItem.target = self
+        menu.addItem(noteTakerItem)
+        notesMenu.delegate = self
+        menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
+        menu.addItem(.separator())
         historyMenu.delegate = self
         menu.addItem(withTitle: "History", action: nil, keyEquivalent: "").submenu = historyMenu
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
@@ -103,6 +115,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Built each time it opens: the latest dictations, a click copies one.
     func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu === statusItem.menu { return MainActor.assumeIsolated { refreshNoteTakerItem() } }
+        if menu === notesMenu { return buildNotesMenu() }
         guard menu === historyMenu else { return }
         menu.removeAllItems()
         if history.entries.isEmpty {
@@ -133,6 +147,66 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showHistory() { settings.show(tab: .history) }
+
+    // MARK: Note Taker
+
+    @available(macOS 26.0, *)
+    @MainActor private var noteWindow: NoteTakerWindow {
+        if let window = noteWindowBox as? NoteTakerWindow { return window }
+        let window = NoteTakerWindow(taker: NoteTaker(store: noteStore))
+        noteWindowBox = window
+        return window
+    }
+
+    @MainActor private func refreshNoteTakerItem() {
+        guard #available(macOS 26.0, *) else {
+            noteTakerItem.title = "Note Taker (needs macOS 26)"
+            noteTakerItem.isEnabled = false
+            return
+        }
+        let window = noteWindowBox as? NoteTakerWindow
+        noteTakerItem.title = window?.taker.isRecording == true ? "Show Note Taker" : "Start Note Taker"
+    }
+
+    /// Starts a new note, or brings the window back while one is recording.
+    @MainActor @objc private func noteTakerClicked() {
+        guard #available(macOS 26.0, *) else { return }
+        if !noteWindow.taker.isRecording { noteWindow.taker.start() }
+        noteWindow.show()
+    }
+
+    /// The latest notes; a click opens one in the Note Taker window.
+    private func buildNotesMenu() {
+        notesMenu.removeAllItems()
+        noteStore.reload()
+        if noteStore.notes.isEmpty {
+            notesMenu.addItem(withTitle: "No notes yet", action: nil, keyEquivalent: "").isEnabled = false
+        }
+        let time = DateFormatter()
+        for note in noteStore.notes.prefix(15) {
+            time.dateFormat = Calendar.current.isDateInToday(note.started) ? "HH:mm" : "d MMM HH:mm"
+            var title = time.string(from: note.started)
+            if let duration = note.duration { title += " · \(max(1, Int(duration / 60))) min" }
+            if !note.snippet.isEmpty { title += "  \(note.snippet)" }
+            let item = notesMenu.addItem(withTitle: title, action: #selector(openNote(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = note.id
+        }
+        notesMenu.addItem(.separator())
+        notesMenu.addItem(withTitle: "Open Notes Folder", action: #selector(openNotesFolder), keyEquivalent: "").target = self
+    }
+
+    @MainActor @objc private func openNote(_ item: NSMenuItem) {
+        guard #available(macOS 26.0, *), let id = item.representedObject as? UUID,
+              let note = noteStore.notes.first(where: { $0.id == id }) else { return }
+        noteWindow.taker.open(note)
+        noteWindow.show()
+    }
+
+    @objc private func openNotesFolder() {
+        try? FileManager.default.createDirectory(at: noteStore.directory, withIntermediateDirectories: true)
+        NSWorkspace.shared.open(noteStore.directory)
+    }
     @objc private func clearHistory() { history.clear() }
 
     /// Never shown for a menu bar app, but it is what routes Cmd+C, Cmd+V, Cmd+W and friends to

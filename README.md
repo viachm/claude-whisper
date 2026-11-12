@@ -58,6 +58,14 @@ The menu bar icon keeps your last 30 dictations. Click one to copy it.
   <img src=".github/assets/history.gif" width="620" alt="The menu bar icon's History submenu lists the latest dictations; clicking one copies it">
 </p>
 
+### Take notes of a call (macOS 26)
+
+**Start Note Taker** in the menu opens a panel on the right third of the screen and writes the call
+down as a dialog while it happens: your microphone as **Me**, everything your Mac plays as **Them**.
+**Copy** takes the whole conversation; every note is saved and listed under **Notes** in the menu.
+Transcription runs on your Mac with Apple's speech recogniser (not Claude), in the language you pick
+in the panel. Use headphones, or your microphone hears the other side too.
+
 ### Make it yours
 
 Settings: the dictation key and mode, Improve, how the text is delivered, sounds and the capsule.

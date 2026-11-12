@@ -1,6 +1,6 @@
 import Foundation
 
-// Tests for RefinerProtocol, CleanupMode, ImproveKey, SessionSettings and Release. Plain swiftc (no Xcode project or package): run with ./test.sh.
+// Tests for RefinerProtocol, CleanupMode, ImproveKey, SessionSettings, Release and the Note Taker's notes. Plain swiftc (no Xcode project or package): run with ./test.sh.
 
 var failures = 0
 
@@ -196,6 +196,34 @@ do {
     check(mac?.url.absoluteString == "https://example.com/m.zip", "the macOS zip is found by name")
     check(Release.sha256(fromDigest: mac?.digest) == "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789", "digest gives lowercase hex")
     check(Release.sha256(fromDigest: nil) == nil && Release.sha256(fromDigest: "sha512:00") == nil, "other digests are ignored")
+}
+
+// Note Taker: turns and plain text
+
+do {
+    let segments = [
+        NoteSegment(speaker: .them, start: 4, text: "Sounds good."),
+        NoteSegment(speaker: .me, start: 0, text: "Hi all."),
+        NoteSegment(speaker: .me, start: 1.5, text: "Shall we start?"),
+        NoteSegment(speaker: .them, start: 6, text: "Yes."),
+    ]
+    let turns = Note.turns(segments)
+    check(turns.map(\.speaker) == [.me, .them], "turns follow time order and join a speaker's consecutive lines")
+    check(turns.first?.text == "Hi all. Shall we start?", "a turn joins its lines with a space")
+    let live = Note.turns(segments, pending: [NoteSegment(speaker: .me, start: 8, text: "Great")])
+    check(live.count == 3 && live.last?.pending == "Great" && live.last?.text == "", "text still being recognised gets its own turn after the others")
+    let joined = Note.turns(segments, pending: [NoteSegment(speaker: .them, start: 7, text: "And")])
+    check(joined.count == 2 && joined.last?.text == "Sounds good. Yes." && joined.last?.pending == "And", "pending text joins the speaker's last turn")
+    check(Note.turns([NoteSegment(speaker: .me, start: 0, text: "")]).isEmpty, "empty lines are left out")
+
+    var note = Note(started: Date(timeIntervalSince1970: 0), locale: "en-US", segments: segments)
+    note.ended = Date(timeIntervalSince1970: 600)
+    let text = note.plainText()
+    check(text.hasPrefix("Note Taker, ") && text.hasSuffix("Me: Hi all. Shall we start?\n\nThem: Sounds good. Yes."), "plain text is a heading and one paragraph per turn")
+    check(note.duration == 600, "duration runs from start to end")
+    check(note.snippet == "Hi all. Shall we start?", "snippet is the first turn")
+    let decoded = try? JSONDecoder().decode(Note.self, from: JSONEncoder().encode(note))
+    check(decoded == note, "a note survives saving and loading")
 }
 
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")

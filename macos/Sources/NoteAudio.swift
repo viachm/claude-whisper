@@ -1,0 +1,215 @@
+import AVFoundation
+import CoreAudio
+import Speech
+
+/// The microphone, as buffers on an audio thread.
+final class MicCapture {
+    private let engine = AVAudioEngine()
+
+    func start(_ handler: @escaping (AVAudioPCMBuffer) -> Void) throws {
+        let input = engine.inputNode
+        input.installTap(onBus: 0, bufferSize: 4096, format: input.outputFormat(forBus: 0)) { buffer, _ in
+            handler(buffer)
+        }
+        engine.prepare()
+        try engine.start()
+    }
+
+    func stop() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+    }
+}
+
+struct AudioError: LocalizedError {
+    let step: String
+    let status: OSStatus
+    var errorDescription: String? { "\(step) failed (\(status))" }
+}
+
+/// Everything the Mac plays (the other people on a call), through a Core Audio process tap. The
+/// first start asks for the "System Audio Recording" permission; until it is given, the buffers
+/// are silent. Claude Whisper's own sounds are left out.
+@available(macOS 14.2, *)
+final class SystemAudioCapture {
+    private var tap = AudioObjectID(kAudioObjectUnknown)
+    private var device = AudioObjectID(kAudioObjectUnknown)
+    private var proc: AudioDeviceIOProcID?
+    private let queue = DispatchQueue(label: "Claude Whisper system audio", qos: .userInitiated)
+
+    func start(_ handler: @escaping (AVAudioPCMBuffer) -> Void) throws {
+        let own = Self.processObject(pid: getpid()).map { [$0] } ?? []
+        let description = CATapDescription(stereoGlobalTapButExcludeProcesses: own)
+        description.uuid = UUID()
+        description.name = "Claude Whisper Note Taker"
+        description.isPrivate = true
+        description.muteBehavior = .unmuted
+        try check("AudioHardwareCreateProcessTap", AudioHardwareCreateProcessTap(description, &tap))
+
+        var asbd = AudioStreamBasicDescription()
+        var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        var address = Self.address(kAudioTapPropertyFormat)
+        try check("reading the tap format", AudioObjectGetPropertyData(tap, &address, 0, nil, &size, &asbd))
+        guard let format = AVAudioFormat(streamDescription: &asbd) else { throw AudioError(step: "tap format", status: -1) }
+
+        let output = try Self.defaultOutputUID()
+        let aggregate: [String: Any] = [
+            kAudioAggregateDeviceNameKey: "Claude Whisper Note Taker",
+            kAudioAggregateDeviceUIDKey: UUID().uuidString,
+            kAudioAggregateDeviceMainSubDeviceKey: output,
+            kAudioAggregateDeviceIsPrivateKey: true,
+            kAudioAggregateDeviceIsStackedKey: false,
+            kAudioAggregateDeviceTapAutoStartKey: true,
+            kAudioAggregateDeviceSubDeviceListKey: [[kAudioSubDeviceUIDKey: output]],
+            kAudioAggregateDeviceTapListKey: [[kAudioSubTapDriftCompensationKey: true,
+                                               kAudioSubTapUIDKey: description.uuid.uuidString]],
+        ]
+        try check("AudioHardwareCreateAggregateDevice", AudioHardwareCreateAggregateDevice(aggregate as CFDictionary, &device))
+        try check("AudioDeviceCreateIOProcIDWithBlock", AudioDeviceCreateIOProcIDWithBlock(&proc, device, queue) { _, input, _, _, _ in
+            // Only valid during this call: the handler converts (copies) it before returning.
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, bufferListNoCopy: input, deallocator: nil) else { return }
+            handler(buffer)
+        })
+        try check("AudioDeviceStart", AudioDeviceStart(device, proc))
+    }
+
+    func stop() {
+        if device != kAudioObjectUnknown {
+            if let proc {
+                AudioDeviceStop(device, proc)
+                AudioDeviceDestroyIOProcID(device, proc)
+            }
+            AudioHardwareDestroyAggregateDevice(device)
+        }
+        if tap != kAudioObjectUnknown { AudioHardwareDestroyProcessTap(tap) }
+        proc = nil
+        device = AudioObjectID(kAudioObjectUnknown)
+        tap = AudioObjectID(kAudioObjectUnknown)
+    }
+
+    deinit { stop() }
+
+    private func check(_ step: String, _ status: OSStatus) throws {
+        if status != noErr { throw AudioError(step: step, status: status) }
+    }
+
+    private static func address(_ selector: AudioObjectPropertySelector) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal,
+                                   mElement: kAudioObjectPropertyElementMain)
+    }
+
+    /// Core Audio's object for a process, which exists once the process has used audio.
+    private static func processObject(pid: pid_t) -> AudioObjectID? {
+        var address = address(kAudioHardwarePropertyTranslatePIDToProcessObject)
+        var pid = pid
+        var object = AudioObjectID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioObjectID>.size)
+        let status = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address,
+                                                UInt32(MemoryLayout<pid_t>.size), &pid, &size, &object)
+        return status == noErr && object != kAudioObjectUnknown ? object : nil
+    }
+
+    private static func defaultOutputUID() throws -> String {
+        var address = address(kAudioHardwarePropertyDefaultOutputDevice)
+        var device = AudioDeviceID(0)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var status = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
+        if status != noErr { throw AudioError(step: "finding the output device", status: status) }
+        address.mSelector = kAudioDevicePropertyDeviceUID
+        var uid: Unmanaged<CFString>?
+        size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        status = AudioObjectGetPropertyData(device, &address, 0, nil, &size, &uid)
+        guard status == noErr, let uid else { throw AudioError(step: "reading the output device", status: status) }
+        return uid.takeRetainedValue() as String
+    }
+}
+
+/// Live, on-device transcription of one audio source with Apple's SpeechTranscriber. Buffers go
+/// in from an audio thread; text comes out through `onResult` (on no particular thread) as
+/// volatile guesses that are later replaced by a final result for the same stretch of audio.
+@available(macOS 26.0, *)
+final class SpeechStream: @unchecked Sendable {
+    /// Text, start in seconds from the first buffer, and whether it is final.
+    typealias Handler = (String, Double, Bool) -> Void
+
+    private let transcriber: SpeechTranscriber
+    private let analyzer: SpeechAnalyzer
+    private let onResult: Handler
+    private var continuation: AsyncStream<AnalyzerInput>.Continuation?
+    private var format: AVAudioFormat?
+    private var converter: AVAudioConverter?
+    private var results: Task<Void, Never>?
+
+    init(locale: Locale, onResult: @escaping Handler) {
+        transcriber = SpeechTranscriber(locale: locale, transcriptionOptions: [],
+                                        reportingOptions: [.volatileResults], attributeOptions: [])
+        analyzer = SpeechAnalyzer(modules: [transcriber])
+        self.onResult = onResult
+    }
+
+    /// The languages that can be transcribed on this Mac, as BCP 47 codes.
+    static func supportedLocales() async -> [String] {
+        await SpeechTranscriber.supportedLocales.map { $0.identifier(.bcp47) }.sorted()
+    }
+
+    /// Downloads the language's model if macOS doesn't have it yet; `downloading` is called first.
+    func prepare(downloading: () -> Void) async throws {
+        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+            downloading()
+            try await request.downloadAndInstall()
+        }
+    }
+
+    func start() async throws {
+        format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
+        let (stream, continuation) = AsyncStream<AnalyzerInput>.makeStream()
+        self.continuation = continuation
+        results = Task { [transcriber, onResult] in
+            do {
+                for try await result in transcriber.results {
+                    onResult(String(result.text.characters), result.range.start.seconds, result.isFinal)
+                }
+            } catch {
+                Log.write("note taker: transcription stopped: \(error)")
+            }
+        }
+        try await analyzer.start(inputSequence: stream)
+    }
+
+    /// From the audio thread: converts the buffer to what the transcriber wants and queues it.
+    func append(_ buffer: AVAudioPCMBuffer) {
+        guard let format, let continuation, buffer.frameLength > 0 else { return }
+        if converter?.inputFormat != buffer.format {
+            converter = AVAudioConverter(from: buffer.format, to: format)
+            converter?.downmix = true
+        }
+        guard let converter else { return }
+        let capacity = AVAudioFrameCount(Double(buffer.frameLength) * format.sampleRate / buffer.format.sampleRate) + 1024
+        guard let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
+        var fed = false
+        var error: NSError?
+        converter.convert(to: out, error: &error) { _, status in
+            if fed {
+                status.pointee = .noDataNow
+                return nil
+            }
+            fed = true
+            status.pointee = .haveData
+            return buffer
+        }
+        if let error { return Log.write("note taker: audio conversion failed: \(error)") }
+        if out.frameLength > 0 { continuation.yield(AnalyzerInput(buffer: out)) }
+    }
+
+    /// Ends the input and waits for the last final results.
+    func finish() async {
+        continuation?.finish()
+        continuation = nil
+        do {
+            try await analyzer.finalizeAndFinishThroughEndOfInput()
+        } catch {
+            Log.write("note taker: finishing transcription failed: \(error)")
+        }
+        await results?.value
+    }
+}
