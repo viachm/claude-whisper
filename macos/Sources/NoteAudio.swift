@@ -5,14 +5,30 @@ import Speech
 /// The microphone, as buffers on an audio thread.
 final class MicCapture {
     private let engine = AVAudioEngine()
+    private var frames = 0
+    private var lastReport = Date()
 
     func start(_ handler: @escaping (AVAudioPCMBuffer) -> Void) throws {
         let input = engine.inputNode
-        input.installTap(onBus: 0, bufferSize: 4096, format: input.outputFormat(forBus: 0)) { buffer, _ in
+        let format = input.outputFormat(forBus: 0)
+        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+            self?.measure(buffer)
             handler(buffer)
         }
         engine.prepare()
         try engine.start()
+        Log.write("note taker: microphone at \(Int(format.sampleRate)) Hz \(format.channelCount) ch")
+    }
+
+    /// Logs every 30 s that microphone audio arrives, next to the call audio's line.
+    private func measure(_ buffer: AVAudioPCMBuffer) {
+        frames += Int(buffer.frameLength)
+        let seconds = Date().timeIntervalSince(lastReport)
+        if seconds >= 30 {
+            Log.write("note taker: microphone \(Int(Double(frames) / seconds)) frames/s")
+            frames = 0
+            lastReport = Date()
+        }
     }
 
     func stop() {

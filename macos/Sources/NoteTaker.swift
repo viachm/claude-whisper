@@ -255,6 +255,7 @@ final class NoteTaker: ObservableObject {
     /// then Claude titles and summarizes the note.
     func stop() {
         guard isRecording else { return }
+        Log.write("note taker: stopping")
         closePause()
         isRecording = false
         isPaused = false
