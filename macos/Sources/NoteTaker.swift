@@ -63,19 +63,35 @@ final class NoteTaker: ObservableObject {
 
     // MARK: Recording
 
+    /// Starts a new note.
     func start() {
         guard !isRecording else { return }
+        record(Note(started: Date(), locale: Self.locale))
+    }
+
+    /// Records more into the note shown (a new one if there is none); the time since it stopped
+    /// shows as a pause, and stopping again rewrites the summary.
+    func continueNote() {
+        guard !isRecording else { return }
+        guard var note, let ended = note.ended else { return start() }
+        note.pauses = (note.pauses ?? []) + [NotePause(start: ended.timeIntervalSince(note.started),
+                                                       duration: Date().timeIntervalSince(ended))]
+        note.ended = nil
+        record(note)
+    }
+
+    private func record(_ note: Note) {
         run += 1
         let run = run
-        let locale = Self.locale
-        note = Note(started: Date(), locale: locale)
+        let locale = note.locale
+        self.note = note
         pending = [:]
         offsets = [:]
         status = nil
         isRecording = true
         isPaused = false
         pausedAt = nil
-        Log.write("note taker: started (\(locale))")
+        Log.write("note taker: \(note.segments.isEmpty ? "started" : "continued") (\(locale))")
         Task {
             do {
                 try await begin(run: run, locale: Locale(identifier: locale))
@@ -439,6 +455,8 @@ struct NoteTakerView: View {
                 Button(taker.note?.summary == nil ? "Write Summary" : "Rewrite Summary") { taker.summarize() }
                     .disabled(taker.isRecording || taker.isSummarizing || taker.note?.segments.isEmpty != false)
                 Divider()
+                Button("New Note") { taker.start() }
+                    .disabled(taker.isRecording)
                 Button("Show Notes Folder") { NSWorkspace.shared.open(taker.store.directory) }
                 Divider()
                 Button("Delete Note…", role: .destructive) { confirmDelete = true }
@@ -688,7 +706,7 @@ struct NoteTakerView: View {
                     .help(taker.isPaused ? "Resume recording" : "Pause: the microphone and the call audio are off until you resume")
                 }
                 Button {
-                    if taker.isRecording { taker.stop() } else { taker.start() }
+                    if taker.isRecording { taker.stop() } else { taker.continueNote() }
                 } label: {
                     HStack(spacing: 8) {
                         if taker.isRecording {
@@ -696,7 +714,7 @@ struct NoteTakerView: View {
                             Text("Stop")
                         } else {
                             Circle().fill(Color.red).frame(width: 11, height: 11)
-                            Text("New note")
+                            Text(taker.note == nil ? "Start" : "Continue")
                         }
                     }
                     .font(.system(size: 14, weight: .medium))
