@@ -21,6 +21,8 @@ final class NoteTaker: ObservableObject {
     /// Notes Claude is titling and summarizing right now.
     @Published private(set) var summarizing: Set<UUID> = []
     @Published private(set) var asking = false
+    /// The question Claude is answering right now, shown at once.
+    @Published private(set) var askingQuestion: String?
 
     let store: NoteStore
     private let workspace: URL
@@ -330,11 +332,13 @@ final class NoteTaker: ObservableObject {
             .map { "\($0.speaker.label): \([$0.text, $0.pending].filter { !$0.isEmpty }.joined(separator: " "))" }
             .joined(separator: "\n")
         asking = true
+        askingQuestion = question
         NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
                        input: NoteAskProtocol.input(transcript: transcript, question: question),
                        directory: workspace, timeout: 90) { [weak self] output in
             guard let self else { return }
             asking = false
+            askingQuestion = nil
             let answer: String
             switch output.map(NoteAskProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
             case .success(let text): answer = text
@@ -461,8 +465,8 @@ struct NoteTakerView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            if showAnswers, let answers = taker.note?.answers, !answers.isEmpty || taker.asking {
-                AnswersCard(answers: answers, asking: taker.asking) { showAnswers = false }
+            if showAnswers, !(taker.note?.answers ?? []).isEmpty || taker.askingQuestion != nil {
+                AnswersCard(answers: taker.note?.answers ?? [], pending: taker.askingQuestion) { showAnswers = false }
             }
             bottomBar
         }
@@ -978,11 +982,30 @@ private struct PauseView: View {
     }
 }
 
+/// A question you asked, as a chat bubble on the right, so it reads apart from Claude's answer.
+@available(macOS 26.0, *)
+private struct QuestionBubble: View {
+    let text: String
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 40)
+            Text(text)
+                .font(.system(size: 14, weight: .medium))
+                .textSelection(.enabled)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.accentColor.opacity(0.16)))
+        }
+    }
+}
+
 /// Questions asked about the call and Claude's answers, above the ask field.
 @available(macOS 26.0, *)
 private struct AnswersCard: View {
     let answers: [NoteAnswer]
-    let asking: Bool
+    /// A question still waiting for its answer.
+    let pending: String?
     let close: () -> Void
     /// The answers' natural height: the card is as tall as they are, up to `maxHeight`, then scrolls.
     @State private var contentHeight: CGFloat = 0
@@ -1003,8 +1026,8 @@ private struct AnswersCard: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         ForEach(answers) { item in
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(item.question).font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                QuestionBubble(text: item.question)
                                 MarkdownView(text: item.answer).font(.system(size: NoteTakerView.textSize))
                                 Button { copyToClipboard(item.answer) } label: { Label("Copy", systemImage: "doc.on.doc") }
                                     .buttonStyle(.plain)
@@ -1012,7 +1035,8 @@ private struct AnswersCard: View {
                                     .foregroundStyle(.secondary)
                             }
                         }
-                        if asking {
+                        if let pending {
+                            QuestionBubble(text: pending)
                             HStack(spacing: 8) {
                                 ProgressView().controlSize(.small)
                                 Text("Claude is reading the call…").foregroundStyle(.secondary)
@@ -1032,7 +1056,7 @@ private struct AnswersCard: View {
                 .frame(height: min(max(contentHeight, 40), maxHeight))
                 .onAppear { proxy.scrollTo("end", anchor: .bottom) }
                 .onChange(of: answers.count) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
-                .onChange(of: asking) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+                .onChange(of: pending) { withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
             }
         }
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.05)))
