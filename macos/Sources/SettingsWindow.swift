@@ -968,6 +968,7 @@ private struct NotesPane: View {
     let open: (UUID) -> Void
     @AppStorage("noteTakerLocale") private var locale = "en-US"
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
+    @AppStorage("noteTakerKeepAudio") private var keepAudio = true
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -1009,6 +1010,7 @@ private struct NotesPane: View {
                         .labelsHidden()
                         .fixedSize()
                     }
+                    Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
                     Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
                         .font(.caption)
                         .foregroundStyle(.secondary)

@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import SwiftUI
 
 /// Note Taker: transcribes a call as a dialog, your microphone as "Me" and everything the Mac
@@ -25,6 +26,11 @@ final class NoteTaker: ObservableObject {
     private let workspace: URL
     private var mic: MicCapture?
     private var system: SystemAudioCapture?
+    private var writers: [AudioTrackWriter] = []
+
+    static let keepAudioKey = "noteTakerKeepAudio"
+    /// Whether notes keep their audio, so it can be listened to; on unless turned off in Settings.
+    static var keepsAudio: Bool { UserDefaults.standard.object(forKey: keepAudioKey) as? Bool ?? true }
     private var streams: [Speaker: SpeechStream] = [:]
     /// Per source, from which transcriber time (seconds of audio it was given) which offset
     /// applies: the transcriber's times count audio only, so the offset is the time from the
@@ -119,26 +125,57 @@ final class NoteTaker: ObservableObject {
 
     /// Starts the microphone and the call audio, feeding the transcribers.
     private func startCapture() throws {
-        guard let started = note?.started else { return }
+        guard let note else { return }
+        let started = note.started
         func mark(_ speaker: Speaker) {
             let streamTime = streams[speaker]?.seconds ?? 0
             offsets[speaker, default: []].append((streamTime, Date().timeIntervalSince(started) - streamTime))
         }
+        let index = note.recordings?.count ?? 0
+        func writer(_ speaker: Speaker) -> AudioTrackWriter? {
+            guard Self.keepsAudio else { return nil }
+            let url = store.audioFile(note.id, index: index, speaker: speaker)
+            do {
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                return try AudioTrackWriter(url: url)
+            } catch {
+                Log.write("note taker: can't save audio: \(error)")
+                return nil
+            }
+        }
+        let recordingStart = Date().timeIntervalSince(started)
+        var saved: [Speaker] = []
+
         let mic = MicCapture()
         let micStream = streams[.me]
-        try mic.start { micStream?.append($0) }
+        let micWriter = writer(.me)
+        try mic.start { buffer in
+            micStream?.append(buffer)
+            micWriter?.append(buffer)
+        }
         self.mic = mic
         mark(.me)
+        if let micWriter { writers.append(micWriter); saved.append(.me) }
 
         let system = SystemAudioCapture()
         let systemStream = streams[.them]
+        let systemWriter = writer(.them)
         do {
-            try system.start { systemStream?.append($0) }
+            try system.start { buffer in
+                systemStream?.append(buffer)
+                systemWriter?.append(buffer)
+            }
             self.system = system
             mark(.them)
+            if let systemWriter { writers.append(systemWriter); saved.append(.them) }
         } catch {
+            systemWriter?.close()
+            try? FileManager.default.removeItem(at: store.audioFile(note.id, index: index, speaker: .them))
             Log.write("note taker: no system audio: \(error)")
             status = "Can't hear the call audio (\(error.localizedDescription)); only your microphone is transcribed."
+        }
+        if !saved.isEmpty {
+            self.note?.recordings = (note.recordings ?? []) + [NoteRecording(index: index, start: recordingStart, speakers: saved)]
         }
     }
 
@@ -147,6 +184,8 @@ final class NoteTaker: ObservableObject {
         system?.stop()
         mic = nil
         system = nil
+        for writer in writers { writer.close() }
+        writers = []
     }
 
     /// Turns the microphone and the call audio off; what was heard so far becomes final.
@@ -389,6 +428,7 @@ private enum NoteTab: String, CaseIterable {
 struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
     let close: () -> Void
+    @StateObject private var player = NotePlayer()
     @State private var tab = NoteTab.transcript
     @State private var titleDraft = ""
     @State private var question = ""
@@ -421,8 +461,15 @@ struct NoteTakerView: View {
         }
         .font(.system(size: 14))
         .frame(minWidth: 360, minHeight: 420)
-        .onAppear(perform: loadDrafts)
-        .onChange(of: taker.note?.id) { loadDrafts() }
+        .onAppear {
+            loadDrafts()
+            loadAudio()
+        }
+        .onChange(of: taker.note?.id) {
+            loadDrafts()
+            loadAudio()
+        }
+        .onChange(of: taker.isRecording) { loadAudio() }
         .onChange(of: taker.note?.displayTitle) { if !titleFocused { titleDraft = taker.note?.displayTitle ?? "" } }
         .onChange(of: titleFocused) { if !titleFocused { taker.rename(titleDraft) } }
         .onChange(of: taker.asking) { if taker.asking { showAnswers = true } }
@@ -432,6 +479,11 @@ struct NoteTakerView: View {
                 close()
             }
         }
+    }
+
+    /// The player follows the note shown, and has nothing while it records.
+    private func loadAudio() {
+        if taker.isRecording { player.unload() } else { player.load(taker.note, store: taker.store) }
     }
 
     private func loadDrafts() {
@@ -547,13 +599,26 @@ struct NoteTakerView: View {
     private var transcriptToolbar: some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
-                Image(systemName: "clock").foregroundStyle(.secondary)
+                if !taker.isRecording && player.hasAudio {
+                    Button { player.toggle() } label: {
+                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                            .frame(width: 16)
+                    }
+                    .foregroundStyle(.primary)
+                    .help(player.isPlaying ? "Pause" : "Play the call")
+                    Slider(value: Binding(get: { player.current }, set: { player.seek(audio: $0) }), in: 0...max(player.duration, 1))
+                        .controlSize(.small)
+                    Text("\(Self.elapsed(player.current)) / \(Self.elapsed(player.duration))")
+                        .fixedSize()
+                } else {
+                    Image(systemName: "clock").foregroundStyle(.secondary)
+                }
                 if taker.isRecording, let started = taker.note?.started {
                     TimelineView(.periodic(from: started, by: 1)) { context in
                         Text(Self.elapsed(taker.recorded(at: context.date)))
                     }
                     if taker.isPaused { Text("Paused").foregroundStyle(.orange) }
-                } else {
+                } else if !player.hasAudio {
                     Text(Self.elapsed(taker.note?.duration ?? 0))
                 }
                 if searching {
@@ -624,7 +689,9 @@ struct NoteTakerView: View {
                     }
                     ForEach(visibleItems) { item in
                         switch item {
-                        case .turn(let turn): TurnView(turn: turn)
+                        case .turn(let turn):
+                            TurnView(turn: turn, play: player.hasAudio && !taker.isRecording
+                                     ? { player.play(fromNoteTime: turn.start) } : nil)
                         case .pause(let pause): PauseView(pause: pause)
                         }
                     }
@@ -816,6 +883,8 @@ private struct Chip: View {
 @available(macOS 26.0, *)
 private struct TurnView: View {
     let turn: NoteTurn
+    /// Plays the audio from this record, when the note has audio.
+    var play: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -823,10 +892,22 @@ private struct TurnView: View {
                 Text(turn.speaker.label)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(turn.speaker == .me ? Color.accentColor : Color.orange)
-                Text(NoteTakerView.elapsed(turn.start))
+                if let play {
+                    Button(action: play) {
+                        Label(NoteTakerView.elapsed(turn.start), systemImage: "play.fill")
+                            .labelStyle(.titleAndIcon)
+                    }
+                    .buttonStyle(.plain)
                     .font(.system(size: 11))
                     .monospacedDigit()
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
+                    .help("Listen from here")
+                } else {
+                    Text(NoteTakerView.elapsed(turn.start))
+                        .font(.system(size: 11))
+                        .monospacedDigit()
+                        .foregroundStyle(.tertiary)
+                }
             }
             (Text(turn.text) + Text(turn.text.isEmpty || turn.pending.isEmpty ? "" : " ")
                 + Text(turn.pending).foregroundColor(.secondary))
@@ -949,5 +1030,94 @@ struct MarkdownView: View {
     private static func inline(_ line: String) -> AttributedString {
         (try? AttributedString(markdown: line, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
             ?? AttributedString(line)
+    }
+}
+
+/// Plays a note's saved audio: every recording's microphone and call tracks laid out on one
+/// timeline that leaves the pauses out.
+@available(macOS 26.0, *)
+@MainActor
+final class NotePlayer: ObservableObject {
+    @Published private(set) var isPlaying = false
+    /// Seconds into the audio.
+    @Published var current: Double = 0
+    @Published private(set) var duration: Double = 0
+    @Published private(set) var loadedID: UUID?
+    private var player: AVPlayer?
+    private var observer: Any?
+    private var loading: Task<Void, Never>?
+    private var note: Note?
+
+    var hasAudio: Bool { duration > 0 }
+
+    func load(_ note: Note?, store: NoteStore) {
+        guard note?.id != loadedID || note?.recordings != self.note?.recordings else { return }
+        unload()
+        self.note = note
+        loadedID = note?.id
+        guard let note, let recordings = note.recordings, !recordings.isEmpty else { return }
+        loading = Task {
+            let composition = AVMutableComposition()
+            for recording in recordings {
+                let at = CMTime(seconds: note.audioTime(recording.start), preferredTimescale: 600)
+                for speaker in recording.speakers {
+                    let asset = AVURLAsset(url: store.audioFile(note.id, index: recording.index, speaker: speaker))
+                    guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
+                          let length = try? await asset.load(.duration), length.seconds > 0,
+                          let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+                    else { continue }
+                    try? track.insertTimeRange(CMTimeRange(start: .zero, duration: length), of: source, at: at)
+                }
+            }
+            guard !Task.isCancelled, loadedID == note.id else { return }
+            let player = AVPlayer(playerItem: AVPlayerItem(asset: composition))
+            self.player = player
+            duration = composition.duration.seconds.isFinite ? composition.duration.seconds : 0
+            observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] time in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.current = time.seconds
+                    if self.isPlaying, time.seconds >= self.duration - 0.05 { self.pause() }
+                }
+            }
+        }
+    }
+
+    func unload() {
+        loading?.cancel()
+        pause()
+        if let observer { player?.removeTimeObserver(observer) }
+        observer = nil
+        player = nil
+        note = nil
+        loadedID = nil
+        current = 0
+        duration = 0
+    }
+
+    func toggle() {
+        if isPlaying { return pause() }
+        if current >= duration - 0.1 { seek(audio: 0) }
+        player?.play()
+        isPlaying = player != nil
+    }
+
+    func pause() {
+        player?.pause()
+        isPlaying = false
+    }
+
+    /// Jumps to a seconds-into-the-audio position.
+    func seek(audio seconds: Double) {
+        current = seconds
+        player?.seek(to: CMTime(seconds: seconds, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    /// Plays from a moment of the note, such as where a record starts.
+    func play(fromNoteTime time: Double) {
+        guard let note else { return }
+        seek(audio: max(0, note.audioTime(time) - 0.3))
+        player?.play()
+        isPlaying = player != nil
     }
 }

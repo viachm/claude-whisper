@@ -124,6 +124,78 @@ final class SystemAudioCapture {
     }
 }
 
+/// Converts (and so copies) audio buffers to one format, keeping resampler state between them so
+/// a stream of buffers stays seamless. Used from one audio thread at a time.
+final class BufferConverter {
+    let output: AVAudioFormat
+    private var converter: AVAudioConverter?
+
+    init(to output: AVAudioFormat) {
+        self.output = output
+    }
+
+    func convert(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+        guard buffer.frameLength > 0 else { return nil }
+        if converter?.inputFormat != buffer.format {
+            converter = AVAudioConverter(from: buffer.format, to: output)
+            converter?.downmix = true
+        }
+        guard let converter else { return nil }
+        let capacity = AVAudioFrameCount(Double(buffer.frameLength) * output.sampleRate / buffer.format.sampleRate) + 1024
+        guard let out = AVAudioPCMBuffer(pcmFormat: output, frameCapacity: capacity) else { return nil }
+        var fed = false
+        var error: NSError?
+        converter.convert(to: out, error: &error) { _, status in
+            if fed {
+                status.pointee = .noDataNow
+                return nil
+            }
+            fed = true
+            status.pointee = .haveData
+            return buffer
+        }
+        if let error {
+            Log.write("note taker: audio conversion failed: \(error)")
+            return nil
+        }
+        return out.frameLength > 0 ? out : nil
+    }
+}
+
+/// Saves one audio source as a small AAC file (mono, 22 kHz, 32 kbit/s: about 14 MB an hour),
+/// writing on a queue of its own so the audio thread never waits for the disk.
+final class AudioTrackWriter: @unchecked Sendable {
+    private var file: AVAudioFile?
+    private let converter: BufferConverter
+    private let queue = DispatchQueue(label: "Claude Whisper audio writer")
+
+    init(url: URL) throws {
+        let settings: [String: Any] = [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 22050,
+                                       AVNumberOfChannelsKey: 1, AVEncoderBitRateKey: 32000]
+        let file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
+        self.file = file
+        converter = BufferConverter(to: file.processingFormat)
+    }
+
+    /// From the audio thread.
+    func append(_ buffer: AVAudioPCMBuffer) {
+        guard let out = converter.convert(buffer) else { return }
+        queue.async { [weak self] in
+            do {
+                try self?.file?.write(from: out)
+            } catch {
+                Log.write("note taker: could not write audio: \(error)")
+                self?.file = nil
+            }
+        }
+    }
+
+    /// Finishes the file once what is queued is written. Call after the audio has stopped.
+    func close() {
+        queue.sync { file = nil }
+    }
+}
+
 /// Live, on-device transcription of one audio source with Apple's SpeechTranscriber. Buffers go
 /// in from an audio thread; text comes out through `onResult` (on no particular thread) as
 /// volatile guesses that are later replaced by a final result for the same stretch of audio.
@@ -137,7 +209,7 @@ final class SpeechStream: @unchecked Sendable {
     private let onResult: Handler
     private var continuation: AsyncStream<AnalyzerInput>.Continuation?
     private var format: AVAudioFormat?
-    private var converter: AVAudioConverter?
+    private var converter: BufferConverter?
     private var results: Task<Void, Never>?
     /// Seconds of audio handed to the transcriber so far: the time its next result will start at.
     private(set) var seconds: Double = 0
@@ -181,30 +253,11 @@ final class SpeechStream: @unchecked Sendable {
 
     /// From the audio thread: converts the buffer to what the transcriber wants and queues it.
     func append(_ buffer: AVAudioPCMBuffer) {
-        guard let format, let continuation, buffer.frameLength > 0 else { return }
-        if converter?.inputFormat != buffer.format {
-            converter = AVAudioConverter(from: buffer.format, to: format)
-            converter?.downmix = true
-        }
-        guard let converter else { return }
-        let capacity = AVAudioFrameCount(Double(buffer.frameLength) * format.sampleRate / buffer.format.sampleRate) + 1024
-        guard let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
-        var fed = false
-        var error: NSError?
-        converter.convert(to: out, error: &error) { _, status in
-            if fed {
-                status.pointee = .noDataNow
-                return nil
-            }
-            fed = true
-            status.pointee = .haveData
-            return buffer
-        }
-        if let error { return Log.write("note taker: audio conversion failed: \(error)") }
-        if out.frameLength > 0 {
-            seconds += Double(out.frameLength) / format.sampleRate
-            continuation.yield(AnalyzerInput(buffer: out))
-        }
+        guard let format, let continuation else { return }
+        if converter?.output != format { converter = BufferConverter(to: format) }
+        guard let out = converter?.convert(buffer) else { return }
+        seconds += Double(out.frameLength) / format.sampleRate
+        continuation.yield(AnalyzerInput(buffer: out))
     }
 
     /// Turns what has been heard so far into final results, for a pause: with no more audio

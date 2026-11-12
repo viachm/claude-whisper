@@ -251,6 +251,7 @@ do {
     note.ended = Date(timeIntervalSince1970: 100)
     note.pauses = [NotePause(start: 10, duration: 30)]
     check(note.duration == 70, "the length leaves pauses out")
+    check(note.audioTime(5) == 5 && note.audioTime(25) == 10 && note.audioTime(60) == 30, "audio time leaves out the pauses before it")
     check(NoteSummaryProtocol.arguments(model: .opus).contains("opus"), "the chosen model is used")
 }
 

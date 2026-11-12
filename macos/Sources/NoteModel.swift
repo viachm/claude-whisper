@@ -27,6 +27,15 @@ struct NotePause: Codable, Equatable {
     var duration: Double?
 }
 
+/// One stretch of saved audio, from a start or a resume to the next pause or stop: a file per
+/// source, `<index>-me.m4a` and `<index>-them.m4a`, in the note's audio folder.
+struct NoteRecording: Codable, Equatable {
+    var index: Int
+    /// Seconds from the start of the note.
+    var start: Double
+    var speakers: [Speaker]
+}
+
 /// A line of the note window: a turn of the conversation, or a pause between two.
 enum NoteItem: Equatable, Identifiable {
     case turn(NoteTurn)
@@ -78,6 +87,16 @@ struct Note: Codable, Equatable, Identifiable {
     var answers: [NoteAnswer]?
     /// Where the recording was paused, in time order.
     var pauses: [NotePause]?
+    /// The saved audio, in time order; nil when none was kept.
+    var recordings: [NoteRecording]?
+
+    /// Where a moment of the note (seconds from its start) is in its saved audio, which leaves
+    /// the pauses out.
+    func audioTime(_ time: Double) -> Double {
+        let paused = (pauses ?? []).filter { $0.start < time }
+            .reduce(0) { $0 + min($1.duration ?? .infinity, time - $1.start) }
+        return max(0, time - paused)
+    }
 
     var displayTitle: String? { name ?? title }
 
@@ -202,8 +221,16 @@ final class NoteStore: ObservableObject {
         notes.sort { $0.started > $1.started }
     }
 
+    /// Where a note's audio files are.
+    func audioDirectory(_ id: UUID) -> URL { directory.appendingPathComponent(id.uuidString, isDirectory: true) }
+
+    func audioFile(_ id: UUID, index: Int, speaker: Speaker) -> URL {
+        audioDirectory(id).appendingPathComponent("\(index)-\(speaker.rawValue).m4a")
+    }
+
     func delete(_ id: UUID) {
         try? FileManager.default.removeItem(at: directory.appendingPathComponent("\(id.uuidString).json"))
+        try? FileManager.default.removeItem(at: audioDirectory(id))
         notes.removeAll { $0.id == id }
     }
 

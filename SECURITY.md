@@ -17,7 +17,7 @@ Claude Whisper needs broad permissions to do its job, so it is worth knowing wha
   Note Taker (macOS 26) reads it while a note is recording, to transcribe what you say.
 - **System audio recording** (macOS, Note Taker only): while a note is recording, to transcribe the
   other people on a call. Note Taker transcribes on your Mac with Apple's speech recogniser; the
-  audio itself is not saved and not sent anywhere (macOS may download a speech model for the language once).
+  audio is never sent anywhere; it is saved with the note (to listen to later) unless you turn that off in Settings › Notes, and deleting the note deletes it (macOS may download a speech model for the language once).
 - **Network**: your speech goes to Anthropic through Claude Code's dictation, and with Improve on
   the transcribed text goes to Claude through `claude -p`, both under your own Claude account. Note Taker sends a note's transcript to Claude the same way when it stops, to title and summarize it, and when you ask a question about the call. The
   app's only connections of its own are to GitHub, to look for a newer release and download it:
