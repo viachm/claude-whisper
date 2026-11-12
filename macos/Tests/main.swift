@@ -226,6 +226,28 @@ do {
     check(decoded == note, "a note survives saving and loading")
 }
 
+// Note Taker: pauses
+
+do {
+    let segments = [
+        NoteSegment(speaker: .me, start: 1, text: "Before."),
+        NoteSegment(speaker: .me, start: 20, text: "After."),
+        NoteSegment(speaker: .them, start: 25, text: "Hi."),
+    ]
+    let items = Note.items(segments, pauses: [NotePause(start: 10, duration: 5)])
+    check(items.count == 4, "a pause splits the conversation")
+    if case .pause = items[1], case .turn(let after) = items[2] {
+        check(after.text == "After.", "a pause ends the turn it falls in")
+    } else {
+        check(false, "the pause sits between the turns around it")
+    }
+    var note = Note(started: Date(timeIntervalSince1970: 0), locale: "en-US")
+    note.ended = Date(timeIntervalSince1970: 100)
+    note.pauses = [NotePause(start: 10, duration: 30)]
+    check(note.duration == 70, "the length leaves pauses out")
+    check(NoteSummaryProtocol.arguments(model: .opus).contains("opus"), "the chosen model is used")
+}
+
 // Note Taker: Claude's title, summary and answers
 
 do {

@@ -139,6 +139,8 @@ final class SpeechStream: @unchecked Sendable {
     private var format: AVAudioFormat?
     private var converter: AVAudioConverter?
     private var results: Task<Void, Never>?
+    /// Seconds of audio handed to the transcriber so far: the time its next result will start at.
+    private(set) var seconds: Double = 0
 
     init(locale: Locale, onResult: @escaping Handler) {
         transcriber = SpeechTranscriber(locale: locale, transcriptionOptions: [],
@@ -198,7 +200,20 @@ final class SpeechStream: @unchecked Sendable {
             return buffer
         }
         if let error { return Log.write("note taker: audio conversion failed: \(error)") }
-        if out.frameLength > 0 { continuation.yield(AnalyzerInput(buffer: out)) }
+        if out.frameLength > 0 {
+            seconds += Double(out.frameLength) / format.sampleRate
+            continuation.yield(AnalyzerInput(buffer: out))
+        }
+    }
+
+    /// Turns what has been heard so far into final results, for a pause: with no more audio
+    /// coming, the transcriber would otherwise keep the last words as a guess.
+    func finalizeSoFar() async {
+        do {
+            try await analyzer.finalize(through: nil)
+        } catch {
+            Log.write("note taker: finalizing failed: \(error)")
+        }
     }
 
     /// Ends the input and waits for the last final results.

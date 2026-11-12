@@ -12,6 +12,9 @@ final class NoteTaker: ObservableObject {
     @Published private(set) var note: Note?
     @Published private(set) var pending: [Speaker: NoteSegment] = [:]
     @Published private(set) var isRecording = false
+    /// Recording, but with the microphone and the call audio off until `resume()`.
+    @Published private(set) var isPaused = false
+    private var pausedAt: Date?
     /// A problem or a slow step to show in the window, such as a model download.
     @Published private(set) var status: String?
     /// Notes Claude is titling and summarizing right now.
@@ -23,9 +26,10 @@ final class NoteTaker: ObservableObject {
     private var mic: MicCapture?
     private var system: SystemAudioCapture?
     private var streams: [Speaker: SpeechStream] = [:]
-    /// Seconds from the note's start to each source's first buffer, added to the
-    /// transcriber's times, which count from there.
-    private var offsets: [Speaker: Double] = [:]
+    /// Per source, from which transcriber time (seconds of audio it was given) which offset
+    /// applies: the transcriber's times count audio only, so the offset is the time from the
+    /// note's start to the first buffer, and grows by each pause.
+    private var offsets: [Speaker: [(from: Double, offset: Double)]] = [:]
     private var run = 0
 
     static let localeKey = "noteTakerLocale"
@@ -37,6 +41,21 @@ final class NoteTaker: ObservableObject {
     }
 
     var turns: [NoteTurn] { Note.turns(note?.segments ?? [], pending: Array(pending.values)) }
+
+    /// Turns and pauses, with the current pause (if any) at the end.
+    var items: [NoteItem] {
+        var pauses = note?.pauses ?? []
+        if let pausedAt, let started = note?.started { pauses.append(NotePause(start: pausedAt.timeIntervalSince(started))) }
+        return Note.items(note?.segments ?? [], pending: Array(pending.values), pauses: pauses)
+    }
+
+    /// Time recorded by `date`, pauses left out, for the live timer.
+    func recorded(at date: Date) -> TimeInterval {
+        guard let note else { return 0 }
+        let paused = (note.pauses ?? []).reduce(0) { $0 + ($1.duration ?? 0) }
+        let current = pausedAt.map { date.timeIntervalSince($0) } ?? 0
+        return date.timeIntervalSince(note.started) - paused - current
+    }
 
     var transcriptText: String { note?.plainText(pending: Array(pending.values)) ?? "" }
 
@@ -54,6 +73,8 @@ final class NoteTaker: ObservableObject {
         offsets = [:]
         status = nil
         isRecording = true
+        isPaused = false
+        pausedAt = nil
         Log.write("note taker: started (\(locale))")
         Task {
             do {
@@ -75,31 +96,82 @@ final class NoteTaker: ObservableObject {
             try await stream.start()
             streams[speaker] = stream
         }
-        guard self.run == run, isRecording, let started = note?.started else { return }
+        guard self.run == run, isRecording, !isPaused else { return }
         status = nil
+        try startCapture()
+    }
 
+    /// Starts the microphone and the call audio, feeding the transcribers.
+    private func startCapture() throws {
+        guard let started = note?.started else { return }
+        func mark(_ speaker: Speaker) {
+            let streamTime = streams[speaker]?.seconds ?? 0
+            offsets[speaker, default: []].append((streamTime, Date().timeIntervalSince(started) - streamTime))
+        }
         let mic = MicCapture()
         let micStream = streams[.me]
         try mic.start { micStream?.append($0) }
         self.mic = mic
-        offsets[.me] = Date().timeIntervalSince(started)
+        mark(.me)
 
         let system = SystemAudioCapture()
         let systemStream = streams[.them]
         do {
             try system.start { systemStream?.append($0) }
             self.system = system
-            offsets[.them] = Date().timeIntervalSince(started)
+            mark(.them)
         } catch {
             Log.write("note taker: no system audio: \(error)")
             status = "Can't hear the call audio (\(error.localizedDescription)); only your microphone is transcribed."
         }
     }
 
+    private func stopCapture() {
+        mic?.stop()
+        system?.stop()
+        mic = nil
+        system = nil
+    }
+
+    /// Turns the microphone and the call audio off; what was heard so far becomes final.
+    func pause() {
+        guard isRecording, !isPaused else { return }
+        isPaused = true
+        pausedAt = Date()
+        stopCapture()
+        Log.write("note taker: paused")
+        let streams = Array(self.streams.values)
+        Task { for stream in streams { await stream.finalizeSoFar() } }
+    }
+
+    func resume() {
+        guard isRecording, isPaused else { return }
+        closePause()
+        isPaused = false
+        Log.write("note taker: resumed")
+        do {
+            try startCapture()
+        } catch {
+            Log.write("note taker: could not resume: \(error)")
+            status = "Could not resume: \(error.localizedDescription)"
+            stop()
+        }
+    }
+
+    /// Records the pause in the note.
+    private func closePause() {
+        guard let pausedAt, let started = note?.started else { return }
+        note?.pauses = (note?.pauses ?? []) + [NotePause(start: pausedAt.timeIntervalSince(started),
+                                                          duration: Date().timeIntervalSince(pausedAt))]
+        self.pausedAt = nil
+        save()
+    }
+
     private func received(_ speaker: Speaker, run: Int, text: String, start: Double, final: Bool) {
         guard run == self.run, note != nil else { return }
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let segment = NoteSegment(speaker: speaker, start: start + (offsets[speaker] ?? 0), text: text)
+        let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
+        let segment = NoteSegment(speaker: speaker, start: start + offset, text: text)
         if final {
             pending[speaker] = nil
             guard !text.isEmpty else { return }
@@ -114,11 +186,10 @@ final class NoteTaker: ObservableObject {
     /// then Claude titles and summarizes the note.
     func stop() {
         guard isRecording else { return }
+        closePause()
         isRecording = false
-        mic?.stop()
-        system?.stop()
-        mic = nil
-        system = nil
+        isPaused = false
+        stopCapture()
         let streams = self.streams
         self.streams = [:]
         let run = run
@@ -139,6 +210,7 @@ final class NoteTaker: ObservableObject {
     func open(_ saved: Note) {
         stop()
         run += 1
+        pausedAt = nil
         note = saved
         pending = [:]
         status = nil
@@ -177,7 +249,7 @@ final class NoteTaker: ObservableObject {
         let id = note.id
         summarizing.insert(id)
         let started = Date()
-        NoteClaude.run(arguments: NoteSummaryProtocol.arguments(),
+        NoteClaude.run(arguments: NoteSummaryProtocol.arguments(model: .current),
                        input: NoteSummaryProtocol.input(transcript: note.transcript), directory: workspace) { [weak self] output in
             guard let self else { return }
             summarizing.remove(id)
@@ -205,7 +277,7 @@ final class NoteTaker: ObservableObject {
             .map { "\($0.speaker.label): \([$0.text, $0.pending].filter { !$0.isEmpty }.joined(separator: " "))" }
             .joined(separator: "\n")
         asking = true
-        NoteClaude.run(arguments: NoteAskProtocol.arguments(),
+        NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
                        input: NoteAskProtocol.input(transcript: transcript, notes: note.thoughts, question: question),
                        directory: workspace, timeout: 90) { [weak self] output in
             guard let self else { return }
@@ -314,6 +386,7 @@ struct NoteTakerView: View {
     @State private var copied = false
     @State private var confirmDelete = false
     @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
+    @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @FocusState private var titleFocused: Bool
 
     var body: some View {
@@ -418,8 +491,8 @@ struct NoteTakerView: View {
                             case .thoughts: EmptyView()
                             case .transcript:
                                 Image(systemName: "waveform")
-                                    .foregroundStyle(taker.isRecording ? Color.green : Color.secondary)
-                                    .symbolEffect(.variableColor.iterative, isActive: taker.isRecording)
+                                    .foregroundStyle(taker.isRecording && !taker.isPaused ? Color.green : Color.secondary)
+                                    .symbolEffect(.variableColor.iterative, isActive: taker.isRecording && !taker.isPaused)
                             case .summary:
                                 Image(systemName: "sparkle")
                                     .symbolEffect(.pulse, isActive: taker.isSummarizing)
@@ -484,8 +557,9 @@ struct NoteTakerView: View {
                 Image(systemName: "clock").foregroundStyle(.secondary)
                 if taker.isRecording, let started = taker.note?.started {
                     TimelineView(.periodic(from: started, by: 1)) { context in
-                        Text(Self.elapsed(context.date.timeIntervalSince(started)))
+                        Text(Self.elapsed(taker.recorded(at: context.date)))
                     }
+                    if taker.isPaused { Text("Paused").foregroundStyle(.orange) }
                 } else {
                     Text(Self.elapsed(taker.note?.duration ?? 0))
                 }
@@ -533,34 +607,40 @@ struct NoteTakerView: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.primary.opacity(0.05)))
     }
 
-    private var visibleTurns: [NoteTurn] {
+    private var visibleItems: [NoteItem] {
         let query = search.trimmingCharacters(in: .whitespaces)
-        guard !query.isEmpty else { return taker.turns }
-        return taker.turns.filter { ($0.text + " " + $0.pending).localizedCaseInsensitiveContains(query) }
+        guard !query.isEmpty else { return taker.items }
+        return taker.items.filter {
+            guard case .turn(let turn) = $0 else { return false }
+            return (turn.text + " " + turn.pending).localizedCaseInsensitiveContains(query)
+        }
     }
 
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    if taker.turns.isEmpty {
+                    if taker.turns.isEmpty && !taker.isPaused {
                         Text(taker.isRecording ? "Listening…" : "Nothing was said.")
                             .italic()
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.top, 30)
-                    } else if visibleTurns.isEmpty {
+                    } else if !search.isEmpty && visibleItems.isEmpty {
                         Text("No matches").foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.top, 30)
                     }
-                    ForEach(visibleTurns) { turn in
-                        TurnView(turn: turn)
+                    ForEach(visibleItems) { item in
+                        switch item {
+                        case .turn(let turn): TurnView(turn: turn)
+                        case .pause(let pause): PauseView(pause: pause)
+                        }
                     }
                     Color.clear.frame(height: 1).id("end")
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
             }
-            .onChange(of: taker.turns) {
+            .onChange(of: taker.items) {
                 guard search.isEmpty else { return }
                 withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("end", anchor: .bottom) }
             }
@@ -618,6 +698,19 @@ struct NoteTakerView: View {
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 10) {
+                if taker.isRecording {
+                    Button {
+                        if taker.isPaused { taker.resume() } else { taker.pause() }
+                    } label: {
+                        Image(systemName: taker.isPaused ? "play.fill" : "pause.fill")
+                            .font(.body.weight(.medium))
+                            .frame(width: 40, height: 40)
+                            .background(Circle().strokeBorder(Color.primary.opacity(0.15)))
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .help(taker.isPaused ? "Resume recording" : "Pause: the microphone and the call audio are off until you resume")
+                }
                 Button {
                     if taker.isRecording { taker.stop() } else { taker.start() }
                 } label: {
@@ -653,6 +746,19 @@ struct NoteTakerView: View {
                     taker.ask(question)
                     question = ""
                 }
+            Menu {
+                Picker("Claude model", selection: $model) {
+                    ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Text(model.name).font(.caption)
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .fixedSize()
+            .help("The Claude model that answers and writes the summary")
             if taker.asking {
                 ProgressView().controlSize(.small)
             } else if question.isEmpty {
@@ -727,6 +833,23 @@ private struct TurnView: View {
     }
 }
 
+/// Where the recording was paused, between two turns.
+@available(macOS 26.0, *)
+private struct PauseView: View {
+    let pause: NotePause
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(Color.primary.opacity(0.12)).frame(height: 1)
+            Label(pause.duration.map { "Paused \(NoteTakerView.elapsed($0))" } ?? "Paused", systemImage: "pause.circle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Rectangle().fill(Color.primary.opacity(0.12)).frame(height: 1)
+        }
+    }
+}
+
 /// Questions asked about the call and Claude's answers, above the ask field.
 @available(macOS 26.0, *)
 private struct AnswersCard: View {
@@ -750,8 +873,8 @@ private struct AnswersCard: View {
                     VStack(alignment: .leading, spacing: 14) {
                         ForEach(answers) { item in
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(item.question).font(.callout.weight(.semibold))
-                                MarkdownView(text: item.answer)
+                                Text(item.question).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                                MarkdownView(text: item.answer).font(.callout)
                                 Button { copyToClipboard(item.answer) } label: { Label("Copy", systemImage: "doc.on.doc") }
                                     .buttonStyle(.plain)
                                     .font(.caption)

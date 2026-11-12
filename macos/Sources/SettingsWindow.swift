@@ -967,6 +967,7 @@ private struct NotesPane: View {
     @ObservedObject var store: NoteStore
     let open: (UUID) -> Void
     @AppStorage("noteTakerLocale") private var locale = "en-US"
+    @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -995,6 +996,15 @@ private struct NotesPane: View {
                             ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
                                 Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
                             }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    HStack {
+                        Text("Claude model for summaries and questions")
+                        Spacer()
+                        Picker("", selection: $model) {
+                            ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
                         }
                         .labelsHidden()
                         .fixedSize()
