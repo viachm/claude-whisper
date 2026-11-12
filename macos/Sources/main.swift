@@ -238,8 +238,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     @objc private func clearHistory() { history.clear() }
 
-    /// Never shown for a menu bar app, but it is what routes Cmd+C, Cmd+V, Cmd+W and friends to
-    /// the Settings window while it is in front.
+    /// Never shown for a menu bar app, but it is what routes Cmd+C, Cmd+V, Cmd+W, Cmd+M and friends
+    /// to the Settings and Note Taker windows while they are in front.
     private func mainMenu() -> NSMenu {
         let main = NSMenu()
         let appMenu = NSMenu()
@@ -254,6 +254,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         let window = NSMenu(title: "Window")
+        window.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         window.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         for submenu in [appMenu, edit, window] {
             main.addItem(withTitle: submenu.title, action: nil, keyEquivalent: "").submenu = submenu
