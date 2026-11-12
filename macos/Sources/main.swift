@@ -56,6 +56,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if firstLaunch && !VoiceKey.isFastStart { VoiceKey.setFastStart(true) }
         setUpMenu()
         requestPermissions()
+        MainActor.assumeIsolated { pruneNotes() }
+        // Once a day for a Mac that stays up for weeks.
+        Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.pruneNotes() }
+        }
 
         hotkey.onStart = { [weak self] in self?.pressed() }
         hotkey.onStop = { [weak self] held in self?.released(held: held) }
@@ -166,6 +171,16 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let window = NoteTakerWindow(taker: NoteTaker(store: noteStore, workspace: session.workspace))
         noteWindowBox = window
         return window
+    }
+
+    /// Deletes notes older than Settings › Notes › "Delete notes older than" (3 months by default).
+    @MainActor private func pruneNotes() {
+        var recording: UUID?
+        if #available(macOS 26.0, *), let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording {
+            recording = taker.note?.id
+        }
+        let count = noteStore.prune(keeping: recording)
+        if count > 0 { Log.write("deleted \(count) note(s) older than \(NoteRetention.current.title)") }
     }
 
     @MainActor private func refreshNoteTakerItem() {

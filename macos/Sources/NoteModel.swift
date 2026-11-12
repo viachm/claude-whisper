@@ -192,6 +192,38 @@ struct Note: Codable, Equatable, Identifiable {
     }
 }
 
+/// How long notes are kept before they are deleted, with their audio.
+enum NoteRetention: String, CaseIterable, Identifiable {
+    case week, month, threeMonths, year, never
+
+    static let key = "noteTakerRetention"
+    static var current: NoteRetention { UserDefaults.standard.string(forKey: key).flatMap(NoteRetention.init) ?? .threeMonths }
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .week: return "1 week"
+        case .month: return "1 month"
+        case .threeMonths: return "3 months"
+        case .year: return "1 year"
+        case .never: return "Never"
+        }
+    }
+
+    /// The oldest start a note may have on `now`, or nil to keep everything.
+    func cutoff(from now: Date) -> Date? {
+        let calendar = Calendar.current
+        switch self {
+        case .week: return calendar.date(byAdding: .day, value: -7, to: now)
+        case .month: return calendar.date(byAdding: .month, value: -1, to: now)
+        case .threeMonths: return calendar.date(byAdding: .month, value: -3, to: now)
+        case .year: return calendar.date(byAdding: .year, value: -1, to: now)
+        case .never: return nil
+        }
+    }
+}
+
 /// The saved notes, newest first, one JSON file each in
 /// `~/Library/Application Support/Claude Whisper/notes`.
 final class NoteStore: ObservableObject {
@@ -219,6 +251,17 @@ final class NoteStore: ObservableObject {
         notes.removeAll { $0.id == note.id }
         notes.append(note)
         notes.sort { $0.started > $1.started }
+    }
+
+    /// Deletes notes (and their audio) last changed before the retention period, except `keeping`
+    /// (the one recording). Returns how many went.
+    @discardableResult
+    func prune(_ retention: NoteRetention = .current, now: Date = Date(), keeping: UUID? = nil) -> Int {
+        reload()
+        guard let cutoff = retention.cutoff(from: now) else { return 0 }
+        let old = notes.filter { ($0.ended ?? $0.started) < cutoff && $0.id != keeping }
+        for note in old { delete(note.id) }
+        return old.count
     }
 
     /// Where a note's audio files are.

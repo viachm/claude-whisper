@@ -232,6 +232,28 @@ do {
     check(decoded == note, "a note survives saving and loading")
 }
 
+// Note Taker: cleanup
+
+do {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent("notes-test-\(UUID().uuidString)")
+    let store = NoteStore(directory: directory)
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+    var old = Note(started: now.addingTimeInterval(-100 * 86400), locale: "en-US")
+    old.ended = old.started.addingTimeInterval(600)
+    var recent = Note(started: now.addingTimeInterval(-10 * 86400), locale: "en-US")
+    recent.ended = recent.started.addingTimeInterval(600)
+    try? store.save(old)
+    try? store.save(recent)
+    try? FileManager.default.createDirectory(at: store.audioDirectory(old.id), withIntermediateDirectories: true)
+    check(store.prune(.never, now: now) == 0 && store.notes.count == 2, "Never keeps every note")
+    check(store.prune(.year, now: now) == 0, "a year keeps notes from 100 days ago")
+    check(store.prune(.threeMonths, now: now) == 1 && store.notes.map(\.id) == [recent.id], "3 months deletes older notes")
+    check(!FileManager.default.fileExists(atPath: store.audioDirectory(old.id).path), "a deleted note's audio goes too")
+    check(store.prune(.week, now: now, keeping: recent.id) == 0, "the note being recorded is kept")
+    check(NoteRetention.current == .threeMonths || UserDefaults.standard.string(forKey: NoteRetention.key) != nil, "3 months is the default")
+    try? FileManager.default.removeItem(at: directory)
+}
+
 // Note Taker: pauses
 
 do {

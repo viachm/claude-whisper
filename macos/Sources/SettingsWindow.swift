@@ -969,6 +969,7 @@ private struct NotesPane: View {
     @AppStorage("noteTakerLocale") private var locale = "en-US"
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
+    @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -1011,6 +1012,15 @@ private struct NotesPane: View {
                         .fixedSize()
                     }
                     Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
+                    HStack {
+                        Text("Delete notes older than")
+                        Spacer()
+                        Picker("", selection: $retention) {
+                            ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
                     Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -1060,6 +1070,7 @@ private struct NotesPane: View {
             .padding(12)
         }
         .onAppear { store.reload() }
+        .onChange(of: retention) { store.prune(retention) }
         .task {
             if #available(macOS 26.0, *) { locales = await SpeechStream.supportedLocales() }
         }

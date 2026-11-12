@@ -30,14 +30,35 @@ struct AudioError: LocalizedError {
 /// Everything the Mac plays (the other people on a call), through a Core Audio process tap. The
 /// first start asks for the "System Audio Recording" permission; until it is given, the buffers
 /// are silent. Claude Whisper's own sounds are left out.
+///
+/// The tap runs on an aggregate device clocked by the output device, so when the output device
+/// changes, or changes its sample rate (Bluetooth headphones switching to their call mode when a
+/// call starts), it is rebuilt; otherwise the call audio would stop arriving.
 @available(macOS 14.2, *)
 final class SystemAudioCapture {
     private var tap = AudioObjectID(kAudioObjectUnknown)
     private var device = AudioObjectID(kAudioObjectUnknown)
     private var proc: AudioDeviceIOProcID?
     private let queue = DispatchQueue(label: "Claude Whisper system audio", qos: .userInitiated)
+    private var handler: ((AVAudioPCMBuffer) -> Void)?
+    private var watchedOutput = AudioObjectID(kAudioObjectUnknown)
+    private var listeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
+    private var restartWork: DispatchWorkItem?
+    /// Called on the main queue after the tap was rebuilt for a new output device.
+    var onRestart: (() -> Void)?
+    /// For the log: buffers and the loudest sample since the last line.
+    private var buffers = 0
+    private var peak: Float = 0
+    private var lastReport = Date()
 
     func start(_ handler: @escaping (AVAudioPCMBuffer) -> Void) throws {
+        self.handler = handler
+        try startTap()
+        watch()
+    }
+
+    private func startTap() throws {
+        guard let handler else { return }
         let own = Self.processObject(pid: getpid()).map { [$0] } ?? []
         let description = CATapDescription(stereoGlobalTapButExcludeProcesses: own)
         description.uuid = UUID()
@@ -65,15 +86,90 @@ final class SystemAudioCapture {
                                                kAudioSubTapUIDKey: description.uuid.uuidString]],
         ]
         try check("AudioHardwareCreateAggregateDevice", AudioHardwareCreateAggregateDevice(aggregate as CFDictionary, &device))
-        try check("AudioDeviceCreateIOProcIDWithBlock", AudioDeviceCreateIOProcIDWithBlock(&proc, device, queue) { _, input, _, _, _ in
+        try check("AudioDeviceCreateIOProcIDWithBlock", AudioDeviceCreateIOProcIDWithBlock(&proc, device, queue) { [weak self] _, input, _, _, _ in
             // Only valid during this call: the handler converts (copies) it before returning.
             guard let buffer = AVAudioPCMBuffer(pcmFormat: format, bufferListNoCopy: input, deallocator: nil) else { return }
+            self?.measure(buffer)
             handler(buffer)
         })
         try check("AudioDeviceStart", AudioDeviceStart(device, proc))
+        Log.write("note taker: call audio from \(Self.deviceName(Self.defaultOutput())) at \(Int(Self.sampleRate(Self.defaultOutput()))) Hz, tap \(Int(format.sampleRate)) Hz \(format.channelCount) ch")
+    }
+
+    /// Logs every 30 s whether call audio arrives and how loud it is: silence for a long time
+    /// while someone talks points at the permission or the output device.
+    private func measure(_ buffer: AVAudioPCMBuffer) {
+        buffers += 1
+        if let data = buffer.floatChannelData {
+            for channel in 0..<Int(buffer.format.channelCount) {
+                for i in stride(from: 0, to: Int(buffer.frameLength), by: 4) { peak = max(peak, abs(data[channel][i])) }
+            }
+        }
+        if Date().timeIntervalSince(lastReport) >= 30 {
+            Log.write("note taker: call audio \(buffers) buffers, peak \(String(format: "%.3f", peak))")
+            buffers = 0
+            peak = 0
+            lastReport = Date()
+        }
+    }
+
+    /// Rebuilds the tap when the default output device, or its sample rate, changes.
+    private func watch() {
+        let output = Self.defaultOutput()
+        watchedOutput = output
+        listen(AudioObjectID(kAudioObjectSystemObject), Self.address(kAudioHardwarePropertyDefaultOutputDevice))
+        if output != kAudioObjectUnknown {
+            listen(output, Self.address(kAudioDevicePropertyNominalSampleRate))
+            listen(output, Self.address(kAudioDevicePropertyDeviceIsAlive))
+        }
+    }
+
+    private func listen(_ object: AudioObjectID, _ address: AudioObjectPropertyAddress) {
+        var address = address
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.outputChanged() }
+        if AudioObjectAddPropertyListenerBlock(object, &address, .main, block) == noErr {
+            listeners.append((object, address, block))
+        }
+    }
+
+    private func unwatch() {
+        for (object, address, block) in listeners {
+            var address = address
+            AudioObjectRemovePropertyListenerBlock(object, &address, .main, block)
+        }
+        listeners = []
+    }
+
+    /// Coalesced: a device switch fires several of these at once.
+    private func outputChanged() {
+        restartWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.restart() }
+        restartWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+    }
+
+    private func restart() {
+        guard handler != nil else { return }
+        Log.write("note taker: output device changed, restarting call audio")
+        stopTap()
+        unwatch()
+        do {
+            try startTap()
+        } catch {
+            Log.write("note taker: could not restart call audio: \(error)")
+        }
+        watch()
+        onRestart?()
     }
 
     func stop() {
+        restartWork?.cancel()
+        handler = nil
+        unwatch()
+        stopTap()
+    }
+
+    private func stopTap() {
         if device != kAudioObjectUnknown {
             if let proc {
                 AudioDeviceStop(device, proc)
@@ -109,12 +205,36 @@ final class SystemAudioCapture {
         return status == noErr && object != kAudioObjectUnknown ? object : nil
     }
 
+    private static func defaultOutput() -> AudioDeviceID {
+        var address = address(kAudioHardwarePropertyDefaultOutputDevice)
+        var device = AudioDeviceID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
+        return device
+    }
+
+    private static func sampleRate(_ device: AudioDeviceID) -> Double {
+        var address = address(kAudioDevicePropertyNominalSampleRate)
+        var rate = Float64(0)
+        var size = UInt32(MemoryLayout<Float64>.size)
+        AudioObjectGetPropertyData(device, &address, 0, nil, &size, &rate)
+        return rate
+    }
+
+    private static func deviceName(_ device: AudioDeviceID) -> String {
+        var address = address(kAudioObjectPropertyName)
+        var name: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, &name) == noErr, let name else { return "unknown device" }
+        return name.takeRetainedValue() as String
+    }
+
     private static func defaultOutputUID() throws -> String {
         var address = address(kAudioHardwarePropertyDefaultOutputDevice)
-        var device = AudioDeviceID(0)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var status = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
-        if status != noErr { throw AudioError(step: "finding the output device", status: status) }
+        let device = defaultOutput()
+        if device == kAudioObjectUnknown { throw AudioError(step: "finding the output device", status: -1) }
+        var status: OSStatus
+        var size: UInt32
         address.mSelector = kAudioDevicePropertyDeviceUID
         var uid: Unmanaged<CFString>?
         size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)

@@ -167,6 +167,7 @@ final class NoteTaker: ObservableObject {
             }
             self.system = system
             mark(.them)
+            system.onRestart = { mark(.them) }
             if let systemWriter { writers.append(systemWriter); saved.append(.them) }
         } catch {
             systemWriter?.close()
@@ -600,16 +601,7 @@ struct NoteTakerView: View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
                 if !taker.isRecording && player.hasAudio {
-                    Button { player.toggle() } label: {
-                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                            .frame(width: 16)
-                    }
-                    .foregroundStyle(.primary)
-                    .help(player.isPlaying ? "Pause" : "Play the call")
-                    Slider(value: Binding(get: { player.current }, set: { player.seek(audio: $0) }), in: 0...max(player.duration, 1))
-                        .controlSize(.small)
-                    Text("\(Self.elapsed(player.current)) / \(Self.elapsed(player.duration))")
-                        .fixedSize()
+                    PlayerControls(player: player)
                 } else {
                     Image(systemName: "clock").foregroundStyle(.secondary)
                 }
@@ -849,6 +841,11 @@ struct NoteTakerView: View {
     /// The size of transcript, summary and answer text: a little larger than the system's 13 pt.
     static let textSize: CGFloat = 15
 
+    static func speedLabel(_ speed: Float) -> String {
+        let number: String = speed == speed.rounded() ? String(Int(speed)) : String(format: "%g", Double(speed))
+        return number + "×"
+    }
+
     static func elapsed(_ seconds: TimeInterval) -> String {
         let s = Int(max(0, seconds))
         return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60)
@@ -915,6 +912,44 @@ private struct TurnView: View {
                 .lineSpacing(2)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// Play/pause, a scrubber, the time and the speed, for a note with saved audio.
+@available(macOS 26.0, *)
+private struct PlayerControls: View {
+    @ObservedObject var player: NotePlayer
+
+    private var position: Binding<Double> {
+        Binding(get: { player.current }, set: { player.seek(audio: $0) })
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button { player.toggle() } label: {
+                Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 16)
+            }
+            .foregroundStyle(.primary)
+            .help(player.isPlaying ? "Pause" : "Play the call")
+            Slider(value: position, in: 0...max(player.duration, 1))
+                .controlSize(.small)
+            Text(NoteTakerView.elapsed(player.current) + " / " + NoteTakerView.elapsed(player.duration))
+                .fixedSize()
+            Menu {
+                Picker("Speed", selection: $player.speed) {
+                    ForEach(NotePlayer.speeds, id: \.self) { speed in
+                        Text(NoteTakerView.speedLabel(speed)).tag(speed)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Text(NoteTakerView.speedLabel(player.speed))
+            }
+            .menuStyle(.button)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Playback speed")
         }
     }
 }
@@ -1043,6 +1078,15 @@ final class NotePlayer: ObservableObject {
     @Published var current: Double = 0
     @Published private(set) var duration: Double = 0
     @Published private(set) var loadedID: UUID?
+    /// Playback speed, kept between notes.
+    @Published var speed: Float = UserDefaults.standard.object(forKey: "noteTakerSpeed") as? Float ?? 1 {
+        didSet {
+            UserDefaults.standard.set(speed, forKey: "noteTakerSpeed")
+            player?.defaultRate = speed
+            if isPlaying { player?.rate = speed }
+        }
+    }
+    static let speeds: [Float] = [1, 1.25, 1.5, 2]
     private var player: AVPlayer?
     private var observer: Any?
     private var loading: Task<Void, Never>?
@@ -1070,7 +1114,11 @@ final class NotePlayer: ObservableObject {
                 }
             }
             guard !Task.isCancelled, loadedID == note.id else { return }
-            let player = AVPlayer(playerItem: AVPlayerItem(asset: composition))
+            let item = AVPlayerItem(asset: composition)
+            // Keeps voices natural (no chipmunk pitch) when sped up.
+            item.audioTimePitchAlgorithm = .timeDomain
+            let player = AVPlayer(playerItem: item)
+            player.defaultRate = speed
             self.player = player
             duration = composition.duration.seconds.isFinite ? composition.duration.seconds : 0
             observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] time in
