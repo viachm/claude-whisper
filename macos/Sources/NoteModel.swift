@@ -100,13 +100,13 @@ struct Note: Codable, Equatable, Identifiable {
 
     var displayTitle: String? { name ?? title }
 
-    /// A line joins the speaker's previous record only when it follows within this many seconds
-    /// (a breath mid-thought) and the record stays shorter than `maxRecord` characters.
-    static let joinGap: Double = 1.5
-    static let maxRecord = 320
+    /// A line joins the speaker's previous record unless this many seconds of silence came
+    /// before it: a monologue stays one record, however long.
+    static let joinGap: Double = 5
 
     /// The conversation as records in time order, with lines still being recognised merged in.
-    /// Someone who stops and starts again, or talks on for long, gets a new record.
+    /// A new record starts when someone else speaks, or when the same person starts again after
+    /// a silence.
     static func turns(_ segments: [NoteSegment], pending: [NoteSegment] = []) -> [NoteTurn] {
         let all = (segments.map { ($0, false) } + pending.map { ($0, true) })
             .filter { !$0.0.text.isEmpty }
@@ -117,8 +117,7 @@ struct Note: Codable, Equatable, Identifiable {
         var turns: [NoteTurn] = []
         for (segment, isPending) in all {
             if let last = turns.last, last.speaker == segment.speaker,
-               segment.start - last.end <= joinGap,
-               last.text.count + last.pending.count + segment.text.count <= maxRecord {
+               segment.start - last.end <= joinGap {
                 turns[turns.count - 1].end = max(last.end, segment.end ?? segment.start)
                 if isPending {
                     turns[turns.count - 1].pending = join(last.pending, segment.text)

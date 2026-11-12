@@ -799,7 +799,7 @@ struct NoteTakerView: View {
 
     private var askField: some View {
         HStack(spacing: 8) {
-            TextField("Ask anything about this call", text: $question)
+            TextField("Ask Claude…", text: $question)
                 .textFieldStyle(.plain)
                 .onSubmit {
                     taker.ask(question)
@@ -829,6 +829,7 @@ struct NoteTakerView: View {
                 }
                 Button(NoteAskProtocol.whatDidIMiss) { taker.ask(NoteAskProtocol.whatDidIMiss) }
                     .buttonStyle(.plain)
+                    .fixedSize()
                     .font(.system(size: 13, weight: .medium))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
