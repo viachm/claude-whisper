@@ -20,6 +20,14 @@ final class NoteTaker: ObservableObject {
     @Published private(set) var status: String?
     /// Notes Claude is titling and summarizing right now.
     @Published private(set) var summarizing: Set<UUID> = []
+    /// Notes whose transcript Claude is cleaning up right now.
+    @Published private(set) var improving: Set<UUID> = []
+
+    static let improveKey = "noteTakerImprove"
+    /// Whether Claude cleans up the transcript after a call; on unless turned off in Settings.
+    static var improvesTranscript: Bool { UserDefaults.standard.object(forKey: improveKey) as? Bool ?? true }
+
+    var isImproving: Bool { note.map { improving.contains($0.id) } ?? false }
     @Published private(set) var asking = false
     /// The question Claude is answering right now, shown at once.
     @Published private(set) var askingQuestion: String?
@@ -263,7 +271,9 @@ final class NoteTaker: ObservableObject {
             self.note?.ended = Date()
             save()
             Log.write("note taker: stopped, \(note.segments.count) lines")
-            if !note.segments.isEmpty { summarize() }
+            if !note.segments.isEmpty {
+                if Self.improvesTranscript { improve(thenSummarize: true) } else { summarize() }
+            }
         }
     }
 
@@ -298,6 +308,31 @@ final class NoteTaker: ObservableObject {
 
     // MARK: Claude
 
+    /// Asks Claude to clean up the transcript of the note shown and tell the other people apart,
+    /// then (after a call) to summarize the cleaned-up version.
+    func improve(thenSummarize: Bool = false) {
+        guard let note, !note.segments.isEmpty, !improving.contains(note.id) else { return }
+        let id = note.id
+        let records = note.records
+        improving.insert(id)
+        let started = Date()
+        NoteClaude.run(arguments: NoteImproveProtocol.arguments(model: .current),
+                       input: NoteImproveProtocol.input(records), directory: workspace, timeout: 600) { [weak self] output in
+            guard let self else { return }
+            improving.remove(id)
+            switch output.map(NoteImproveProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
+            case .success(let parsed):
+                let improved = NoteImproveProtocol.improved(parsed, records: records)
+                Log.write("note taker: improved \(improved.count) of \(records.count) records in \(Int(Date().timeIntervalSince(started))) s")
+                update(id) { $0.improved = improved }
+            case .failure(let error):
+                Log.write("note taker: improving failed: \(error.reason)")
+                if self.note?.id == id { status = "Couldn't improve the transcript: \(error.reason)" }
+            }
+            if thenSummarize, self.note?.id == id { summarize() }
+        }
+    }
+
     /// Asks Claude for a title and a summary of the note shown.
     func summarize() {
         guard let note, !note.segments.isEmpty, !summarizing.contains(note.id) else { return }
@@ -328,9 +363,11 @@ final class NoteTaker: ObservableObject {
         guard let note, !question.isEmpty, !asking else { return }
         let id = note.id
         // Lines still being recognised count too: "what did I miss" is about right now.
-        let transcript = Note.turns(note.segments, pending: Array(pending.values))
-            .map { "\($0.speaker.label): \([$0.text, $0.pending].filter { !$0.isEmpty }.joined(separator: " "))" }
-            .joined(separator: "\n")
+        let transcript = isRecording
+            ? Note.turns(note.segments, pending: Array(pending.values))
+                .map { "\($0.speaker.label): \([$0.text, $0.pending].filter { !$0.isEmpty }.joined(separator: " "))" }
+                .joined(separator: "\n")
+            : note.transcript
         asking = true
         askingQuestion = question
         NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
@@ -440,6 +477,7 @@ struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
     let close: () -> Void
     @StateObject private var player = NotePlayer()
+    @State private var showOriginal = false
     @State private var tab = NoteTab.transcript
     @State private var titleDraft = ""
     @State private var question = ""
@@ -517,6 +555,11 @@ struct NoteTakerView: View {
                     .disabled(taker.note?.summary == nil)
                 Button(taker.note?.summary == nil ? "Write Summary" : "Rewrite Summary") { taker.summarize() }
                     .disabled(taker.isRecording || taker.isSummarizing || taker.note?.segments.isEmpty != false)
+                Divider()
+                Button(taker.note?.improved == nil ? "Improve Transcript" : "Improve Transcript Again") { taker.improve() }
+                    .disabled(taker.isRecording || taker.isImproving || taker.note?.segments.isEmpty != false)
+                Toggle("Show Original Transcript", isOn: $showOriginal)
+                    .disabled(taker.note?.improved == nil)
                 Divider()
                 Button("New Note") { taker.start() }
                     .disabled(taker.isRecording)
@@ -603,6 +646,16 @@ struct NoteTakerView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 10)
             }
+            if taker.isImproving {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Claude is cleaning up the transcript and telling speakers apart…")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
+            }
             transcript
         }
     }
@@ -672,7 +725,8 @@ struct NoteTakerView: View {
         guard !query.isEmpty else { return taker.items }
         return taker.items.filter {
             guard case .turn(let turn) = $0 else { return false }
-            return (turn.text + " " + turn.pending).localizedCaseInsensitiveContains(query)
+            let improved = (taker.note?.improved?[turn.id.uuidString] ?? []).map(\.text).joined(separator: " ")
+            return (turn.text + " " + turn.pending + " " + improved).localizedCaseInsensitiveContains(query)
         }
     }
 
@@ -692,8 +746,17 @@ struct NoteTakerView: View {
                     ForEach(visibleItems) { item in
                         switch item {
                         case .turn(let turn):
-                            TurnView(turn: turn, play: player.hasAudio && !taker.isRecording
-                                     ? { player.play(fromNoteTime: turn.start) } : nil)
+                            let play: (() -> Void)? = player.hasAudio && !taker.isRecording
+                                ? { player.play(fromNoteTime: turn.start) } : nil
+                            if !showOriginal, let utterances = taker.note?.improved?[turn.id.uuidString] {
+                                ForEach(Array(utterances.enumerated()), id: \.offset) { index, utterance in
+                                    TurnView(speaker: utterance.speaker, start: index == 0 ? turn.start : nil,
+                                             text: utterance.text, pending: "", play: index == 0 ? play : nil)
+                                }
+                            } else {
+                                TurnView(speaker: turn.speaker.label, start: turn.start, text: turn.text,
+                                         pending: turn.pending, play: play)
+                            }
                         case .pause(let pause): PauseView(pause: pause)
                         }
                     }
@@ -710,10 +773,11 @@ struct NoteTakerView: View {
     }
 
     @ViewBuilder private var summaryTab: some View {
-        if taker.isSummarizing {
+        if taker.isSummarizing || (taker.isImproving && taker.note?.summary == nil) {
             VStack(spacing: 12) {
                 ProgressView()
-                Text("Claude is writing the summary…").foregroundStyle(.secondary)
+                Text(taker.isImproving ? "Claude is cleaning up the transcript; the summary comes next…" : "Claude is writing the summary…")
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 50)
@@ -890,19 +954,33 @@ private struct Chip: View {
 
 @available(macOS 26.0, *)
 private struct TurnView: View {
-    let turn: NoteTurn
+    /// "Me", "Them", a name or "Speaker 1".
+    let speaker: String
+    /// Seconds from the note's start; nil for the second and later people in a split record.
+    let start: Double?
+    let text: String
+    let pending: String
     /// Plays the audio from this record, when the note has audio.
     var play: (() -> Void)?
+
+    /// Me in the accent colour; everyone else gets a colour of their own, the same each time.
+    static func color(_ speaker: String) -> Color {
+        if speaker == "Me" { return .accentColor }
+        if speaker == "Them" { return .orange }
+        let palette: [Color] = [.orange, .green, .purple, .pink, .teal, .brown, .indigo, .mint]
+        let hash = speaker.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0xFFFF }
+        return palette[hash % palette.count]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text(turn.speaker.label)
+                Text(speaker)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(turn.speaker == .me ? Color.accentColor : Color.orange)
-                if let play {
+                    .foregroundStyle(Self.color(speaker))
+                if let start, let play {
                     Button(action: play) {
-                        Label(NoteTakerView.elapsed(turn.start), systemImage: "play.fill")
+                        Label(NoteTakerView.elapsed(start), systemImage: "play.fill")
                             .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.plain)
@@ -910,15 +988,15 @@ private struct TurnView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .help("Listen from here")
-                } else {
-                    Text(NoteTakerView.elapsed(turn.start))
+                } else if let start {
+                    Text(NoteTakerView.elapsed(start))
                         .font(.system(size: 11))
                         .monospacedDigit()
                         .foregroundStyle(.tertiary)
                 }
             }
-            (Text(turn.text) + Text(turn.text.isEmpty || turn.pending.isEmpty ? "" : " ")
-                + Text(turn.pending).foregroundColor(.secondary))
+            (Text(text) + Text(text.isEmpty || pending.isEmpty ? "" : " ")
+                + Text(pending).foregroundColor(.secondary))
                 .font(.system(size: NoteTakerView.textSize))
                 .lineSpacing(2)
                 .textSelection(.enabled)

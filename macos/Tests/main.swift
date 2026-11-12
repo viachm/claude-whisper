@@ -232,6 +232,28 @@ do {
     check(decoded == note, "a note survives saving and loading")
 }
 
+// Note Taker: improved transcript
+
+do {
+    let segments = [
+        NoteSegment(speaker: .me, start: 0, end: 2, text: "hi rikwan"),
+        NoteSegment(speaker: .them, start: 3, end: 6, text: "hi, can you hear me? yes I can"),
+    ]
+    var note = Note(started: Date(), locale: "en-US", segments: segments)
+    let records = note.records
+    check(NoteImproveProtocol.input(records) == "<transcript>\n[1] Me: hi rikwan\n[2] Them: hi, can you hear me? yes I can\n</transcript>", "records go to Claude numbered")
+    let answer = #"{"is_error":false,"result":"[1] Anna: Hi Rick.\n[2] Speaker 1: Hi, can you hear me?\n[2] Speaker 2: Yes, I can.\nnoise line\n[9 Broken"}"#
+    guard case .success(let parsed) = NoteImproveProtocol.parse(answer) else { check(false, "improved lines parse"); fatalError() }
+    check(parsed[2]?.map(\.speaker) == ["Speaker 1", "Speaker 2"], "a record can be split between people")
+    note.improved = NoteImproveProtocol.improved(parsed, records: records)
+    check(note.lines.map(\.speaker) == ["Me", "Speaker 1", "Speaker 2"], "Me stays Me whatever Claude wrote")
+    check(note.transcript == "Me: Hi Rick.\nSpeaker 1: Hi, can you hear me?\nSpeaker 2: Yes, I can.", "summaries and copies use the improved text")
+    let partial = NoteImproveProtocol.improved([2: [NoteUtterance(speaker: "Anna", text: "Yes.")]], records: records)
+    note.improved = partial
+    check(note.lines.first?.text == "hi rikwan", "a record Claude left out keeps its text")
+    check((try? NoteImproveProtocol.parse(#"{"result":"Sure, here it is"}"#).get()) == nil, "an answer without lines is not used")
+}
+
 // Note Taker: cleanup
 
 do {

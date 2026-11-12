@@ -969,6 +969,7 @@ private struct NotesPane: View {
     @AppStorage("noteTakerLocale") private var locale = "en-US"
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
+    @AppStorage("noteTakerImprove") private var improve = true
     @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
     @AppStorage(NoteContext.textKey) private var context = ""
     @AppStorage(NoteContext.folderKey) private var folder = ""
@@ -1014,6 +1015,7 @@ private struct NotesPane: View {
                         .fixedSize()
                     }
                     Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
+                    Toggle("After a call, Claude cleans up the transcript and tells speakers apart", isOn: $improve)
                     HStack {
                         Text("Delete notes older than")
                         Spacer()
