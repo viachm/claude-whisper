@@ -99,6 +99,9 @@ struct Note: Codable, Equatable, Identifiable {
     /// Claude's improved transcript, by record (the id of the record's first line): the
     /// corrected text and who said it, possibly split between several people.
     var improved: [String: [NoteUtterance]]?
+    /// The app quit while recording, before Claude's clean-up and summary: they run when the note
+    /// is next opened.
+    var summaryPending: Bool?
 
     /// The records of the conversation (pauses left out), as the window shows them.
     var records: [NoteTurn] {

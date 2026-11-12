@@ -264,18 +264,59 @@ final class NoteTaker: ObservableObject {
         self.streams = [:]
         let run = run
         Task {
-            for stream in streams.values { await stream.finish() }
+            await Self.finish(streams.values)
             // Let the final results queued on the main actor land first.
             try? await Task.sleep(for: .milliseconds(200))
-            guard run == self.run, let note else { return }
-            pending = [:]
+            guard run == self.run, note != nil else { return }
+            keepPending()
             self.note?.ended = Date()
             save()
+            guard let note else { return }
             Log.write("note taker: stopped, \(note.segments.count) lines")
             if !note.segments.isEmpty {
                 if Self.improvesTranscript { improve(thenSummarize: true) } else { summarize() }
             }
         }
+    }
+
+    /// Quitting while recording: what was heard so far becomes final and is saved; Claude's
+    /// clean-up and summary wait until the note is next opened. `done` runs on the main actor.
+    func stopForQuit(_ done: @escaping () -> Void) {
+        guard isRecording else { return done() }
+        Log.write("note taker: stopping for quit")
+        closePause()
+        isRecording = false
+        isPaused = false
+        stopCapture()
+        let streams = self.streams
+        self.streams = [:]
+        let run = run
+        Task {
+            await Self.finish(streams.values)
+            try? await Task.sleep(for: .milliseconds(200))
+            if run == self.run, note != nil {
+                keepPending()
+                note?.ended = Date()
+                if note?.segments.isEmpty == false { note?.summaryPending = true }
+                save()
+                Log.write("note taker: stopped for quit, \(note?.segments.count ?? 0) lines")
+            }
+            done()
+        }
+    }
+
+    /// Finishes every stream at once; each gives up after a few seconds (see SpeechStream.finish).
+    private static func finish(_ streams: some Collection<SpeechStream>) async {
+        await withTaskGroup(of: Void.self) { group in
+            for stream in streams { group.addTask { await stream.finish() } }
+        }
+    }
+
+    /// Words still shown as a guess when the transcriber stopped answering are kept as they are.
+    private func keepPending() {
+        let guesses = pending.values.filter { !$0.text.isEmpty }
+        if !guesses.isEmpty { note?.segments += guesses }
+        pending = [:]
     }
 
     /// Shows a saved note (stopping a recording first).
@@ -286,6 +327,13 @@ final class NoteTaker: ObservableObject {
         note = saved
         pending = [:]
         status = nil
+        if saved.summaryPending == true {
+            note?.summaryPending = nil
+            save()
+            if !saved.segments.isEmpty {
+                if Self.improvesTranscript { improve(thenSummarize: true) } else { summarize() }
+            }
+        }
     }
 
     // MARK: Editing

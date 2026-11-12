@@ -416,15 +416,54 @@ final class SpeechStream: @unchecked Sendable {
         }
     }
 
-    /// Ends the input and waits for the last final results.
-    func finish() async {
+    /// Ends the input and waits for the last final results, for at most `limit` seconds: on short
+    /// notes the analyzer sometimes never finishes, which used to leave the note unsaved.
+    func finish(limit: Double = 3) async {
+        let gate = OnceGate()
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            Task {
+                await self.finishNow()
+                gate.run { done.resume() }
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(limit))
+                gate.run {
+                    Log.write("note taker: transcription did not finish within \(Int(limit)) s (\(self.stage))")
+                    self.results?.cancel()
+                    done.resume()
+                }
+            }
+        }
+    }
+
+    /// How far finish() got, for the log when it gives up.
+    private var stage = "not finishing"
+
+    private func finishNow() async {
         continuation?.finish()
         continuation = nil
+        stage = "finalizing"
         do {
             try await analyzer.finalizeAndFinishThroughEndOfInput()
         } catch {
             Log.write("note taker: finishing transcription failed: \(error)")
         }
+        stage = "waiting for the last results"
         await results?.value
+        stage = "done"
+    }
+}
+
+/// Runs the first of several racing callbacks and ignores the rest.
+final class OnceGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var done = false
+
+    func run(_ action: () -> Void) {
+        lock.lock()
+        let first = !done
+        done = true
+        lock.unlock()
+        if first { action() }
     }
 }

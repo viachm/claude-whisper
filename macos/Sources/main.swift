@@ -23,6 +23,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var noteWindowBox: AnyObject?
     /// The red dot on the menu bar icon while Note Taker records.
     private var recordingDot: NSView?
+    private var iconActive = false
     private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
     private lazy var settings = SettingsWindowController(history: history, notes: noteStore, actions: SettingsActions(
@@ -80,6 +81,24 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // did nothing; so does any start while a permission is missing, whose banner leads to it.
         if firstLaunch || Permission.allCases.contains(where: { !$0.isGranted }) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.settings.show() }
+        }
+    }
+
+    /// Quitting (the menu, logging out, an update, or a plain `kill`) while a note records: the
+    /// note is finished and saved first, for up to 5 seconds.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard #available(macOS 26.0, *) else { return .terminateNow }
+        return MainActor.assumeIsolated {
+            guard let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording else { return .terminateNow }
+            var replied = false
+            let reply = {
+                guard !replied else { return }
+                replied = true
+                sender.reply(toApplicationShouldTerminate: true)
+            }
+            taker.stopForQuit(reply)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: reply)
+            return .terminateLater
         }
     }
 
@@ -271,6 +290,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// A small copy of the app icon: voice bars in a rounded square, outlined while idle and
     /// filled while listening. Drawn as a template so it follows the menu bar's colours.
     private func setIcon(active: Bool) {
+        iconActive = active
+        // While a note records and nothing is dictated, the bars give way to the red dot.
+        let bars = active || recordingDot == nil
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
             let shape = NSBezierPath(roundedRect: tile, xRadius: 4.5, yRadius: 4.5)
@@ -281,7 +303,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             var x = tile.midX - (CGFloat(heights.count) * barWidth + CGFloat(heights.count - 1) * gap) / 2
             // Listening: the bars are cut out of the filled square.
             NSGraphicsContext.current?.compositingOperation = active ? .destinationOut : .sourceOver
-            for h in heights {
+            for h in heights where bars {
                 NSBezierPath(roundedRect: NSRect(x: x, y: tile.midY - h / 2, width: barWidth, height: h),
                              xRadius: barWidth / 2, yRadius: barWidth / 2).fill()
                 x += barWidth + gap
@@ -293,31 +315,30 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.image = image
     }
 
-    /// A dot in the icon's top-right corner while a note records: red, or grey while paused. The
-    /// icon is a template image (one colour), so the dot is its own view on top of it.
+    /// A dot in the middle of the icon while a note records, like a record button: red, or grey
+    /// while paused. The icon is a template image (one colour), so the dot is its own view on top.
     private func showRecordingDot(_ recording: Bool, paused: Bool) {
         guard let button = statusItem.button else { return }
         guard recording else {
             recordingDot?.removeFromSuperview()
             recordingDot = nil
+            setIcon(active: iconActive)
             button.setAccessibilityLabel(nil)
             return
         }
         let dot = recordingDot ?? {
-            let size: CGFloat = 7
-            let view = NSView(frame: NSRect(x: button.bounds.maxX - size - 2, y: 2, width: size, height: size))
-            view.autoresizingMask = [.minXMargin]
+            let size: CGFloat = 9
+            let view = NSView(frame: NSRect(x: (button.bounds.midX - size / 2).rounded(),
+                                            y: (button.bounds.midY - size / 2).rounded(), width: size, height: size))
+            view.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin, .maxYMargin]
             view.wantsLayer = true
             view.layer?.cornerRadius = size / 2
-            view.layer?.borderWidth = 1
             button.addSubview(view)
             recordingDot = view
+            setIcon(active: iconActive)
             return view
         }()
-        // The button is flipped, so y 2 is near the top.
-        if !button.isFlipped { dot.frame.origin.y = button.bounds.maxY - dot.frame.height - 2 }
         dot.layer?.backgroundColor = (paused ? NSColor.systemGray : NSColor.systemRed).cgColor
-        dot.layer?.borderColor = NSColor.windowBackgroundColor.withAlphaComponent(0.8).cgColor
         button.setAccessibilityLabel(paused ? "Claude Whisper, note paused" : "Claude Whisper, recording a note")
     }
 
@@ -590,6 +611,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
 // Writing to a claude process that has just exited must fail with EPIPE, not kill the app.
 signal(SIGPIPE, SIG_IGN)
+// A plain `kill` (SIGTERM) quits through NSApp.terminate, so a note being recorded is saved first.
+signal(SIGTERM, SIG_IGN)
+let terminationSignal = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+terminationSignal.setEventHandler {
+    Log.write("asked to quit (SIGTERM)")
+    NSApp.terminate(nil)
+}
+terminationSignal.resume()
 Migration.fromShepit()
 let app = NSApplication.shared
 let delegate = App()
