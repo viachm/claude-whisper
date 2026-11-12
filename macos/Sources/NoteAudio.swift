@@ -48,6 +48,7 @@ final class SystemAudioCapture {
     var onRestart: (() -> Void)?
     /// For the log: buffers and the loudest sample since the last line.
     private var buffers = 0
+    private var frames = 0
     private var peak: Float = 0
     private var lastReport = Date()
 
@@ -71,7 +72,7 @@ final class SystemAudioCapture {
         var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         var address = Self.address(kAudioTapPropertyFormat)
         try check("reading the tap format", AudioObjectGetPropertyData(tap, &address, 0, nil, &size, &asbd))
-        guard let format = AVAudioFormat(streamDescription: &asbd) else { throw AudioError(step: "tap format", status: -1) }
+        let tapRate = asbd.mSampleRate
 
         let output = try Self.defaultOutputUID()
         let aggregate: [String: Any] = [
@@ -86,6 +87,12 @@ final class SystemAudioCapture {
                                                kAudioSubTapUIDKey: description.uuid.uuidString]],
         ]
         try check("AudioHardwareCreateAggregateDevice", AudioHardwareCreateAggregateDevice(aggregate as CFDictionary, &device))
+        // The aggregate runs at the output device's rate and hands the tap's audio over resampled
+        // to it: 16 kHz for Bluetooth headphones in call mode, while the tap itself says 48 kHz.
+        // Taking the tap's rate would play the call 3x fast to the transcriber.
+        let deviceRate = Self.sampleRate(device)
+        if deviceRate > 0 { asbd.mSampleRate = deviceRate }
+        guard let format = AVAudioFormat(streamDescription: &asbd) else { throw AudioError(step: "tap format", status: -1) }
         try check("AudioDeviceCreateIOProcIDWithBlock", AudioDeviceCreateIOProcIDWithBlock(&proc, device, queue) { [weak self] _, input, _, _, _ in
             // Only valid during this call: the handler converts (copies) it before returning.
             guard let buffer = AVAudioPCMBuffer(pcmFormat: format, bufferListNoCopy: input, deallocator: nil) else { return }
@@ -93,21 +100,24 @@ final class SystemAudioCapture {
             handler(buffer)
         })
         try check("AudioDeviceStart", AudioDeviceStart(device, proc))
-        Log.write("note taker: call audio from \(Self.deviceName(Self.defaultOutput())) at \(Int(Self.sampleRate(Self.defaultOutput()))) Hz, tap \(Int(format.sampleRate)) Hz \(format.channelCount) ch")
+        Log.write("note taker: call audio from \(Self.deviceName(Self.defaultOutput())) at \(Int(Self.sampleRate(Self.defaultOutput()))) Hz, tap \(Int(tapRate)) Hz, read at \(Int(format.sampleRate)) Hz \(format.channelCount) ch")
     }
 
     /// Logs every 30 s whether call audio arrives and how loud it is: silence for a long time
     /// while someone talks points at the permission or the output device.
     private func measure(_ buffer: AVAudioPCMBuffer) {
         buffers += 1
+        frames += Int(buffer.frameLength)
         if let data = buffer.floatChannelData {
             for channel in 0..<Int(buffer.format.channelCount) {
                 for i in stride(from: 0, to: Int(buffer.frameLength), by: 4) { peak = max(peak, abs(data[channel][i])) }
             }
         }
         if Date().timeIntervalSince(lastReport) >= 30 {
-            Log.write("note taker: call audio \(buffers) buffers, peak \(String(format: "%.3f", peak))")
+            let seconds = Date().timeIntervalSince(lastReport)
+            Log.write("note taker: call audio \(buffers) buffers, \(Int(Double(frames) / seconds)) frames/s, peak \(String(format: "%.3f", peak))")
             buffers = 0
+            frames = 0
             peak = 0
             lastReport = Date()
         }

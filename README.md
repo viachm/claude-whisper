@@ -60,7 +60,7 @@ The menu bar icon keeps your last 30 dictations. Click one to copy it.
 
 ### Take notes of a call (macOS 26)
 
-**Start Note Taker** in the menu opens a panel on the right third of the screen and writes the call
+**Start Note Taker** in the menu opens a panel on the right of the screen and writes the call
 down as a dialog while it happens: your microphone as **Me**, everything your Mac plays as **Them**.
 When you stop, Claude gives the note a title and writes a summary; while it runs, ask Claude about
 the call ("What did I miss?"). With the audio kept (Settings › Notes), play the call back or click a line's time to hear it. Every note is saved and listed

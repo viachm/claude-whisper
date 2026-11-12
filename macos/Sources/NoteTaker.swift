@@ -387,7 +387,9 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         self.panel = panel
         if !panel.isVisible, let screen = NSScreen.main {
             let area = screen.visibleFrame
-            let width = (area.width / 3).rounded()
+            // 40% of the screen at first; a width the user dragged to is kept.
+            let saved = UserDefaults.standard.double(forKey: "noteTakerWidth")
+            let width = min(area.width, max(420, saved > 0 ? saved : (area.width * 0.4).rounded()))
             panel.setFrame(NSRect(x: area.maxX - width, y: area.minY, width: width, height: area.height), display: true)
         }
         NSApp.activate()
@@ -415,6 +417,10 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         taker.stop()
+    }
+
+    func windowDidEndLiveResize(_ notification: Notification) {
+        if let width = panel?.frame.width { UserDefaults.standard.set(width, forKey: "noteTakerWidth") }
     }
 }
 
