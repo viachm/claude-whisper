@@ -997,12 +997,25 @@ private struct NotesPane: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    settingsSection
-                    Section(header: historyHeader) { historyRows }
+            Form {
+                if supported {
+                    NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
+                                      retention: $retention, context: $context, folder: $folder, locales: locales,
+                                      chooseFolder: chooseFolder)
+                } else {
+                    Section { Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary) }
+                }
+                Section {
+                    TextField("Search notes", text: $search)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($searchFocused)
+                        .id("history")
+                    historyRows
+                } header: {
+                    historyHeader
                 }
             }
+            .formStyle(.grouped)
             .onAppear {
                 store.reload()
                 focusSearchIfAsked(proxy)
@@ -1032,55 +1045,27 @@ private struct NotesPane: View {
         }
     }
 
-    @ViewBuilder private var settingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if supported {
-                NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
-                                  retention: $retention, context: $context, folder: $folder, locales: locales,
-                                  chooseFolder: chooseFolder)
-            } else {
-                Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 20)
-    }
-
     private var historyHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Notes History").font(.headline)
-                Text(store.notes.isEmpty ? "" : "\(store.notes.count)").foregroundStyle(.secondary)
-                Spacer()
-                Button("Open Notes Folder") {
-                    try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
-                    NSWorkspace.shared.open(store.directory)
-                }
+        HStack(alignment: .firstTextBaseline) {
+            SectionTitle("Notes History")
+            if !store.notes.isEmpty { Text("\(store.notes.count)").foregroundStyle(.secondary) }
+            Spacer()
+            Button("Open Notes Folder") {
+                try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+                NSWorkspace.shared.open(store.directory)
             }
-            TextField("Search notes", text: $search)
-                .textFieldStyle(.roundedBorder)
-                .focused($searchFocused)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .overlay(alignment: .bottom) { Divider() }
-        .id("history")
     }
 
     @ViewBuilder private var historyRows: some View {
         if store.notes.isEmpty {
             Text("Your notes will show up here.").foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity).padding(.vertical, 40)
         } else if visible.isEmpty {
             Text("No notes match “\(search)”.").foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity).padding(.vertical, 40)
         } else {
             ForEach(visible) { note in
                 NoteHistoryRow(note: note, subtitle: Self.subtitle(note), canOpen: supported,
                                open: { open(note.id) }, delete: { deleting = note })
-                Divider().padding(.leading, 20)
             }
         }
     }
@@ -1106,7 +1091,7 @@ private struct NotesPane: View {
     }
 }
 
-/// The Note Taker options at the top of Settings › Notes.
+/// The Note Taker options at the top of Settings › Notes, as grouped sections like the other tabs.
 private struct NoteTakerSettings: View {
     @Binding var locale: String
     @Binding var model: NoteModel
@@ -1119,75 +1104,73 @@ private struct NoteTakerSettings: View {
     let chooseFolder: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Language of calls")
-                Spacer()
-                Picker("", selection: $locale) {
-                    ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
-                        Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
-                    }
+        Section {
+            Picker("Language of calls", selection: $locale) {
+                ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
+                    Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
                 }
-                .labelsHidden()
-                .fixedSize()
             }
-            HStack {
-                Text("Claude model for summaries and questions")
-                Spacer()
-                Picker("", selection: $model) {
-                    ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
-                }
-                .labelsHidden()
-                .fixedSize()
+            Toggle("Keep the call audio", isOn: $keepAudio)
+            Picker("Delete notes older than", selection: $retention) {
+                ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
             }
-            Toggle("Keep the call audio, to listen to it later (about 30 MB an hour)", isOn: $keepAudio)
-            Toggle("After a call, Claude cleans up the transcript and tells speakers apart", isOn: $improve)
-            HStack {
-                Text("Delete notes older than")
-                Spacer()
-                Picker("", selection: $retention) {
-                    ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
-                }
-                .labelsHidden()
-                .fixedSize()
-            }
-            contextEditor
-            Text("Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser, your microphone as “Me” and the call audio as “Them”; when you stop, Claude titles and summarizes the note.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    @ViewBuilder private var contextEditor: some View {
-        Text("Context for Claude").padding(.top, 4)
-        ZStack(alignment: .topLeading) {
-            TextEditor(text: $context)
-                .font(.body)
-                .frame(height: 64)
-                .scrollContentBackground(.hidden)
-                .padding(4)
-                .background(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.primary.opacity(0.15)))
-            if context.isEmpty {
-                Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
-                    .foregroundStyle(.tertiary)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .allowsHitTesting(false)
-            }
-        }
-        HStack {
-            Text("Folder Claude may read")
-            Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            Spacer()
-            if !folder.isEmpty { Button("Clear") { folder = "" } }
-            Button("Choose…") { chooseFolder() }
-        }
-        Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
-            .font(.caption)
+        } header: {
+            SectionTitle("Recording")
+        } footer: {
+            Text("""
+                Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser: \
+                your microphone as “Me”, the call as “Them”. With the audio kept you can play the call back in the \
+                note (about 30 MB an hour).
+                """)
             .foregroundStyle(.secondary)
+        }
+
+        Section {
+            Picker("Model", selection: $model) {
+                ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
+            }
+            Toggle("Clean up the transcript after a call", isOn: $improve)
+        } header: {
+            SectionTitle("Claude")
+        } footer: {
+            Text("""
+                When you press Stop, Claude titles and summarizes the note. With clean-up on, it first fixes \
+                misheard words and names, drops “um”s and splits “Them” into the people who spoke: by name when \
+                the call makes it clear, otherwise Speaker 1, Speaker 2. The original stays: ⋯ › Show Original \
+                Transcript.
+                """)
+            .foregroundStyle(.secondary)
+        }
+
+        Section {
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $context)
+                    .font(.body)
+                    .frame(height: 64)
+                    .scrollContentBackground(.hidden)
+                if context.isEmpty {
+                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend).")
+                        .foregroundStyle(.tertiary)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+            }
+            LabeledContent("Folder Claude may read") {
+                HStack {
+                    Text(folder.isEmpty ? "None" : (folder as NSString).abbreviatingWithTildeInPath)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if !folder.isEmpty { Button("Clear") { folder = "" } }
+                    Button("Choose…") { chooseFolder() }
+                }
+            }
+        } header: {
+            SectionTitle("Context for Claude")
+        } footer: {
+            Text("Sent with every summary and question. With a folder, Claude can read files in it (and nothing else) to look up the project, people and terms.")
+                .foregroundStyle(.secondary)
+        }
     }
 }
 
@@ -1198,7 +1181,6 @@ private struct NoteHistoryRow: View {
     let canOpen: Bool
     let open: () -> Void
     let delete: () -> Void
-    @State private var hovering = false
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -1213,11 +1195,7 @@ private struct NoteHistoryRow: View {
             Button(action: delete) { Image(systemName: "trash") }
                 .help("Delete this note and its audio")
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
-        .background(hovering ? Color.primary.opacity(0.05) : .clear)
         .contentShape(Rectangle())
-        .onHover { hovering = $0 }
         .onTapGesture(count: 2) { if canOpen { open() } }
         .contextMenu {
             if canOpen { Button("Open", action: open) }
