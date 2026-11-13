@@ -124,16 +124,16 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setIcon(active: false)
         let menu = NSMenu()
         menu.delegate = self
-        noteTakerItem.target = self
-        menu.addItem(noteTakerItem)
-        notesMenu.delegate = self
-        menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
-        menu.addItem(.separator())
         historyMenu.delegate = self
         menu.addItem(withTitle: "History", action: nil, keyEquivalent: "").submenu = historyMenu
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
         updateItem.target = self
         menu.addItem(updateItem)
+        menu.addItem(.separator())
+        noteTakerItem.target = self
+        menu.addItem(noteTakerItem)
+        notesMenu.delegate = self
+        menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Claude Whisper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
