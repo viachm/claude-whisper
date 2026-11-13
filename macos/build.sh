@@ -25,7 +25,9 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 SLICES=""
 for arch in $ARCHS; do
-  swiftc -O -swift-version 5 -target "$arch-apple-macos14" Sources/*.swift -o "build/$EXE-$arch"
+  # Package.swift: the app's sources plus FluidAudio (Note Taker's speech model), pinned.
+  swift build -c release --arch "$arch" --product "$EXE"
+  cp "$(swift build -c release --arch "$arch" --show-bin-path)/$EXE" "build/$EXE-$arch"
   SLICES="$SLICES build/$EXE-$arch"
 done
 lipo -create $SLICES -output "$APP/Contents/MacOS/$EXE"

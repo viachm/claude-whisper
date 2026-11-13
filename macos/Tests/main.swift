@@ -344,5 +344,64 @@ do {
     check((try? d.decode(Note.self, from: Data(old.utf8)))?.summary == nil, "notes saved before titles and summaries still load")
 }
 
+// Note Taker's languages and how its audio is cut into utterances for Parakeet
+
+do {
+    check(NoteLanguage.usesParakeet("uk") && NoteLanguage.usesParakeet("auto") && NoteLanguage.usesParakeet("en"),
+          "Ukrainian, English and automatic use Parakeet")
+    check(!NoteLanguage.usesParakeet("en-US") && !NoteLanguage.usesParakeet("ja-JP"),
+          "Apple locales (and notes saved before Parakeet) use Apple's recogniser")
+    check(NoteLanguage.hint("auto") == nil && NoteLanguage.hint("uk") == "uk", "automatic gives Parakeet no hint")
+    check(NoteLanguage.appleOnly(["en-US", "ja-JP", "uk-UA", "de-DE"]) == ["ja-JP"],
+          "only languages Parakeet lacks are offered with Apple's recogniser")
+    check(NoteLanguage.title("auto") == "Automatic", "automatic has a name")
+
+    let rate = UtteranceSegmenter.rate
+    func quiet(_ seconds: Double, level: Float = 0) -> [Float] { [Float](repeating: level, count: Int(seconds * Double(rate))) }
+    /// Speech-like: 200 ms syllables with short quiet gaps between them.
+    func speech(_ seconds: Double) -> [Float] {
+        (0..<Int(seconds * Double(rate))).map { i in
+            i % 4000 < 3200 ? Float(sin(Double(i) * 0.3)) * 0.15 : 0.004
+        }
+    }
+
+    var s = UtteranceSegmenter()
+    check(s.append(quiet(5)).isEmpty && s.current == nil && s.flush() == nil, "silence makes no utterance")
+
+    s = UtteranceSegmenter()
+    var done = s.append(quiet(2) + speech(2) + quiet(2))
+    check(done.count == 1, "speech between pauses is one utterance")
+    if let u = done.first {
+        check(abs(Double(u.start) / Double(rate) - 1.75) < 0.1, "the utterance starts a moment before the speech")
+        check(abs(Double(u.end) / Double(rate) - 4.2) < 0.15, "and ends a moment after it")
+    }
+    check(s.current == nil, "nothing is in progress after the pause")
+
+    s = UtteranceSegmenter()
+    done = s.append(speech(2) + quiet(0.8) + speech(2) + quiet(2))
+    check(done.count == 1, "a short phrase runs on across a short pause, for context")
+    s = UtteranceSegmenter()
+    done = s.append(speech(7) + quiet(0.8) + speech(2) + quiet(2))
+    check(done.count == 2, "a long enough utterance ends at a short pause")
+
+    s = UtteranceSegmenter()
+    done = s.append(quiet(1) + quiet(0.1).map { _ in 0.3 } + quiet(2))
+    check(done.isEmpty, "a click is not an utterance")
+
+    s = UtteranceSegmenter()
+    done = s.append(speech(20))
+    check(done.count == 1 && done[0].samples.count <= Int(14.6 * Double(rate)) && done[0].samples.count >= 11 * rate,
+          "a long utterance is cut before 15 seconds")
+    let rest = s.flush()
+    check(rest != nil && rest!.start == done[0].end, "the rest follows on from the cut")
+    check(s.current == nil, "flushing ends the utterance in progress")
+
+    s = UtteranceSegmenter()
+    _ = s.append(quiet(1, level: 0.01) + speech(1.5))
+    check(s.current != nil && s.current!.samples.count >= rate, "speech over a hiss is heard and shown while it lasts")
+    done = s.append(quiet(2, level: 0.01))
+    check(done.count == 1, "the hiss counts as a pause")
+}
+
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
 exit(failures == 0 ? 0 : 1)
