@@ -591,7 +591,7 @@ struct NoteTakerView: View {
     @State private var confirmDelete = false
     @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
-    @FocusState private var titleFocused: Bool
+    @State private var titleEditing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -627,8 +627,8 @@ struct NoteTakerView: View {
             loadAudio()
         }
         .onChange(of: taker.isRecording) { loadAudio() }
-        .onChange(of: taker.note?.displayTitle) { if !titleFocused { titleDraft = taker.note?.displayTitle ?? "" } }
-        .onChange(of: titleFocused) { if !titleFocused { taker.rename(titleDraft) } }
+        .onChange(of: taker.note?.displayTitle) { if !titleEditing { titleDraft = taker.note?.displayTitle ?? "" } }
+        .onChange(of: titleEditing) { if !titleEditing { taker.rename(titleDraft) } }
         .onChange(of: taker.asking) { if taker.asking { showAnswers = true } }
         .confirmationDialog("Delete this note?", isPresented: $confirmDelete) {
             Button("Delete Note", role: .destructive) {
@@ -688,15 +688,14 @@ struct NoteTakerView: View {
         .frame(height: 38)
     }
 
+    private static let titleFont: NSFont = {
+        let base = NSFont.systemFont(ofSize: 24)
+        return base.fontDescriptor.withDesign(.serif).flatMap { NSFont(descriptor: $0, size: 24) } ?? base
+    }()
+
     private var heading: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Vertical, so the field grows to the serif font's height instead of clipping it.
-            TextField("New note", text: $titleDraft, axis: .vertical)
-                .lineLimit(1...3)
-                .textFieldStyle(.plain)
-                .font(.system(size: 24, weight: .regular, design: .serif))
-                .focused($titleFocused)
-                .onSubmit { titleFocused = false }
+            TitleField(text: $titleDraft, placeholder: "New note", font: Self.titleFont, editing: $titleEditing)
             HStack(spacing: 6) {
                 if let note = taker.note {
                     Chip(text: Self.day(note.started), icon: nil)
