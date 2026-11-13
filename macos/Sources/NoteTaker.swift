@@ -3,8 +3,9 @@ import AVFoundation
 import SwiftUI
 
 /// Note Taker: transcribes a call as a dialog, your microphone as "Me" and everything the Mac
-/// plays as "Them", on-device with Apple's speech recogniser (not Claude: Claude Code's voice
-/// mode only listens while a key is held, and only to the microphone). Claude, through the
+/// plays as "Them", on-device with the Parakeet model or, for other languages, Apple's speech
+/// recogniser (not Claude: Claude Code's voice mode only listens while a key is held, and only to
+/// the microphone). Claude, through the
 /// user's Claude Code login, titles and summarizes a note when it stops and answers questions
 /// about it. Each recording is saved as it goes; the window shows the live one or a saved one.
 @available(macOS 26.0, *)
@@ -41,15 +42,25 @@ final class NoteTaker: ObservableObject {
     static let keepAudioKey = "noteTakerKeepAudio"
     /// Whether notes keep their audio, so it can be listened to; on unless turned off in Settings.
     static var keepsAudio: Bool { UserDefaults.standard.object(forKey: keepAudioKey) as? Bool ?? true }
-    private var streams: [Speaker: SpeechStream] = [:]
+    private var streams: [Speaker: any NoteTranscriber] = [:]
+    /// A note waiting for the speech model to download before it records.
+    @Published private(set) var awaitingModel: Note?
     /// Per source, from which transcriber time (seconds of audio it was given) which offset
     /// applies: the transcriber's times count audio only, so the offset is the time from the
     /// note's start to the first buffer, and grows by each pause.
     private var offsets: [Speaker: [(from: Double, offset: Double)]] = [:]
     private var run = 0
 
+    /// Apple's recogniser's language, chosen in Settings on Macs without Parakeet (Intel).
     static let localeKey = "noteTakerLocale"
-    static var locale: String { UserDefaults.standard.string(forKey: localeKey) ?? "en-US" }
+    /// The language a new note is transcribed in (see NoteLanguage).
+    static var language: String {
+        SpeechModel.isAvailable ? NoteLanguage.current : UserDefaults.standard.string(forKey: localeKey) ?? "en-US"
+    }
+
+    private static func needsParakeet(_ language: String) -> Bool {
+        SpeechModel.isAvailable && NoteLanguage.usesParakeet(language)
+    }
 
     init(store: NoteStore, workspace: URL) {
         self.store = store
@@ -82,7 +93,7 @@ final class NoteTaker: ObservableObject {
     /// Starts a new note.
     func start() {
         guard !isRecording else { return }
-        record(Note(started: Date(), locale: Self.locale))
+        record(Note(started: Date(), locale: Self.language))
     }
 
     /// Records more into the note shown (a new one if there is none); the time since it stopped
@@ -97,6 +108,12 @@ final class NoteTaker: ObservableObject {
     }
 
     private func record(_ note: Note) {
+        // The first time, the speech model has to be downloaded: the window asks.
+        if Self.needsParakeet(note.locale), !SpeechModel.shared.isReady {
+            awaitingModel = note
+            return
+        }
+        awaitingModel = nil
         run += 1
         let run = run
         let locale = note.locale
@@ -110,7 +127,7 @@ final class NoteTaker: ObservableObject {
         Log.write("note taker: \(note.segments.isEmpty ? "started" : "continued") (\(locale))")
         Task {
             do {
-                try await begin(run: run, locale: Locale(identifier: locale))
+                try await begin(run: run, language: locale)
             } catch {
                 Log.write("note taker: could not start: \(error)")
                 status = "Could not start: \(error.localizedDescription)"
@@ -119,12 +136,31 @@ final class NoteTaker: ObservableObject {
         }
     }
 
-    private func begin(run: Int, locale: Locale) async throws {
+    /// Downloads the speech model, then records the note that was waiting for it.
+    func downloadModel() {
+        SpeechModel.shared.download { [weak self] in
+            guard let self, let note = awaitingModel else { return }
+            record(note)
+        }
+    }
+
+    /// "Not Now" on the download prompt.
+    func cancelAwaitingModel() { awaitingModel = nil }
+
+    private func begin(run: Int, language: String) async throws {
         for speaker in [Speaker.me, .them] {
-            let stream = SpeechStream(locale: locale) { [weak self] text, start, end, final in
+            let handler: (String, Double, Double, Bool) -> Void = { [weak self] text, start, end, final in
                 Task { @MainActor in self?.received(speaker, run: run, text: text, start: start, end: end, final: final) }
             }
-            try await stream.prepare { status = "Downloading the speech model for \(locale.identifier(.bcp47))…" }
+            let stream: any NoteTranscriber
+            if Self.needsParakeet(language) {
+                let manager = try await SpeechModel.shared.loaded()
+                stream = ParakeetStream(manager: manager, language: NoteLanguage.hint(language), onResult: handler)
+            } else {
+                let apple = SpeechStream(locale: Locale(identifier: language), onResult: handler)
+                try await apple.prepare { status = "Downloading the speech model for \(language)…" }
+                stream = apple
+            }
             try await stream.start()
             streams[speaker] = stream
         }
@@ -236,8 +272,8 @@ final class NoteTaker: ObservableObject {
     private func received(_ speaker: Speaker, run: Int, text: String, start: Double, end: Double, final: Bool) {
         guard run == self.run, note != nil else { return }
         var text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        // A lone "." or "," from a cough or a click is not a line.
-        if text.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)).isEmpty { text = "" }
+        // A lone "." or "9" from a cough or a click is not a line.
+        if text.unicodeScalars.filter(CharacterSet.letters.contains).count < 2 { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
@@ -306,11 +342,24 @@ final class NoteTaker: ObservableObject {
     }
 
     /// Finishes every stream at once; each gives up after a few seconds (see SpeechStream.finish).
-    private static func finish(_ streams: some Collection<SpeechStream>) async {
+    private static func finish(_ streams: some Collection<any NoteTranscriber>) async {
         await withTaskGroup(of: Void.self) { group in
-            for stream in streams { group.addTask { await stream.finish() } }
+            for stream in streams { group.addTask { await stream.finish(limit: 3) } }
         }
     }
+
+    /// Switches the language: for new notes, and for the one recording if Parakeet hears it.
+    func setLanguage(_ code: String) {
+        UserDefaults.standard.set(code, forKey: NoteLanguage.key)
+        guard isRecording, let note, Self.needsParakeet(note.locale), Self.needsParakeet(code) else { return }
+        self.note?.locale = code
+        for stream in streams.values { (stream as? ParakeetStream)?.setLanguage(NoteLanguage.hint(code)) }
+        Log.write("note taker: language \(code)")
+        save()
+    }
+
+    /// Whether the language of the note recording can be switched (between Parakeet's languages).
+    var canSwitchLanguage: Bool { isRecording && note.map { Self.needsParakeet($0.locale) } == true }
 
     /// Words still shown as a guess when the transcriber stopped answering are kept as they are.
     private func keepPending() {
@@ -564,6 +613,11 @@ struct NoteTakerView: View {
         }
         .font(.system(size: 14))
         .frame(minWidth: 360, minHeight: 420)
+        .overlay {
+            if taker.awaitingModel != nil {
+                ModelDownloadCard(download: taker.downloadModel, cancel: taker.cancelAwaitingModel)
+            }
+        }
         .onAppear {
             loadDrafts()
             loadAudio()
@@ -636,7 +690,9 @@ struct NoteTakerView: View {
 
     private var heading: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("New note", text: $titleDraft)
+            // Vertical, so the field grows to the serif font's height instead of clipping it.
+            TextField("New note", text: $titleDraft, axis: .vertical)
+                .lineLimit(1...3)
                 .textFieldStyle(.plain)
                 .font(.system(size: 24, weight: .regular, design: .serif))
                 .focused($titleFocused)
@@ -645,7 +701,22 @@ struct NoteTakerView: View {
                 if let note = taker.note {
                     Chip(text: Self.day(note.started), icon: nil)
                     if let duration = note.duration { Chip(text: Self.elapsed(duration), icon: "clock") }
-                    Chip(text: Locale.current.localizedString(forIdentifier: note.locale) ?? note.locale, icon: "globe")
+                    if taker.canSwitchLanguage {
+                        Menu {
+                            ForEach([NoteLanguage.automatic] + NoteLanguage.parakeetByName, id: \.self) { code in
+                                Button(NoteLanguage.title(code)) { taker.setLanguage(code) }
+                            }
+                        } label: {
+                            Chip(text: NoteLanguage.title(note.locale), icon: "globe")
+                        }
+                        .menuStyle(.button)
+                        .buttonStyle(.plain)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .help("The language of the call")
+                    } else {
+                        Chip(text: NoteLanguage.title(note.locale), icon: "globe")
+                    }
                 }
             }
         }
@@ -989,6 +1060,73 @@ struct NoteTakerView: View {
 }
 
 @available(macOS 26.0, *)
+/// Asks to download the speech model the first time Note Taker records, over the whole window.
+@available(macOS 26.0, *)
+private struct ModelDownloadCard: View {
+    @ObservedObject private var model = SpeechModel.shared
+    let download: () -> Void
+    let cancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.2)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+            VStack(spacing: 14) {
+                Image(systemName: "waveform.circle")
+                    .font(.system(size: 44, weight: .light))
+                    .foregroundStyle(.secondary)
+                Text("Download the Speech Model")
+                    .font(.system(size: 20, weight: .semibold))
+                Text("""
+                    Note Taker transcribes calls on this Mac with Parakeet, a free speech model for 25 languages, \
+                    Ukrainian and English among them. It is downloaded once (\(SpeechModel.size)); the call's audio \
+                    never leaves the Mac.
+                    """)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                switch model.state {
+                case .downloading(let fraction):
+                    VStack(spacing: 6) {
+                        ProgressView(value: min(max(fraction, 0), 1))
+                        Text(fraction < 0.99 ? "Downloading… \(Int(fraction * 100))%" : "Preparing the model…")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 4)
+                    Button("Hide", action: cancel)
+                case .failed(let reason):
+                    Text("The download failed: \(reason)")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                    buttons(title: "Try Again")
+                default:
+                    buttons(title: "Download Model")
+                }
+            }
+            .padding(28)
+            .frame(maxWidth: 380)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
+            .padding(24)
+        }
+    }
+
+    private func buttons(title: String) -> some View {
+        HStack(spacing: 10) {
+            Button("Not Now", action: cancel)
+                .controlSize(.large)
+            Button(title, action: download)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
+        }
+        .padding(.top, 4)
+    }
+}
+
 private struct Chip: View {
     let text: String
     let icon: String?

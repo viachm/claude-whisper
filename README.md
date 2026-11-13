@@ -64,9 +64,12 @@ The menu bar icon keeps your last 30 dictations. Click one to copy it.
 down as a dialog while it happens: your microphone as **Me**, everything your Mac plays as **Them**.
 When you stop, Claude cleans up the transcript, tells the other people apart (by name when the call makes it clear, otherwise Speaker 1, Speaker 2), gives the note a title and writes a summary; while it runs, ask Claude about
 the call ("What did I miss?"). With the audio kept (Settings › Notes), play the call back or click a line's time to hear it. Every note is saved and listed
-under **Notes** in the menu and in Settings. Transcription runs on your Mac with Apple's speech
-recogniser (not Claude), in the language picked in Settings › Notes. Use headphones, or your
-microphone hears the other side too.
+under **Notes** in the menu and in Settings. Transcription runs on your Mac (not Claude) with
+[Parakeet](https://huggingface.co/FluidInference/parakeet-ultra-coreml), a free speech model for 25
+languages, Ukrainian and English among them, which Note Taker asks to download (about 610 MB) the first
+time it records; other languages, and Intel Macs, use Apple's speech recogniser. Pick the language in
+Settings › Notes, or switch it on a note while it records. Use headphones, or your microphone hears the
+other side too.
 
 ### Make it yours
 
@@ -139,4 +142,6 @@ Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBU
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Note Taker uses [FluidAudio](https://github.com/FluidInference/FluidAudio) (Apache 2.0)
+and downloads Parakeet Ultra, based on NVIDIA's
+[Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) (CC BY 4.0).
