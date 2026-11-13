@@ -24,6 +24,8 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Note Taker transcribes the other people on your call from the sound your Mac plays.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Claude Whisper's hidden Claude Code session records your voice while you dictate.</string>
 </dict>

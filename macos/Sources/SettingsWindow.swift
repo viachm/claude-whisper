@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable, Identifiable {
-    case general, claude, permissions, history, about
+    case general, claude, permissions, history, notes, about
 
     var id: Self { self }
 
@@ -15,6 +15,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "Claude"
         case .permissions: return "Permissions"
         case .history: return "History"
+        case .notes: return "Notes"
         case .about: return "About"
         }
     }
@@ -25,6 +26,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return "terminal"
         case .permissions: return "lock.shield"
         case .history: return "clock.arrow.circlepath"
+        case .notes: return "note.text"
         case .about: return "info.circle"
         }
     }
@@ -36,6 +38,7 @@ enum SettingsTab: Hashable, CaseIterable, Identifiable {
         case .claude: return .orange
         case .permissions: return .blue
         case .history: return .purple
+        case .notes: return .yellow
         case .about: return .teal
         }
     }
@@ -47,9 +50,12 @@ final class SettingsState: ObservableObject {
     @Published var tab = SettingsTab.general
     @Published var session = ClaudeSession.State.stopped
     @Published var hotkeyProblem: String?
+    /// Set by "All Notes…" in the menu: Notes scrolls to its history and puts the cursor in search.
+    @Published var searchNotes = false
 }
 
 struct SettingsActions {
+    var openNote: (UUID) -> Void
     var restartSession: () -> Void
     var openLog: () -> Void
     var checkForUpdates: () -> Void
@@ -59,18 +65,20 @@ struct SettingsActions {
 final class SettingsWindowController {
     let state = SettingsState()
     private let history: History
+    private let notes: NoteStore
     private let actions: SettingsActions
     private var window: NSWindow?
 
-    init(history: History, actions: SettingsActions) {
+    init(history: History, notes: NoteStore, actions: SettingsActions) {
         self.history = history
+        self.notes = notes
         self.actions = actions
     }
 
     func show(tab: SettingsTab? = nil) {
         if let tab { state.tab = tab }
         if window == nil {
-            let view = SettingsView(prefs: .shared, history: history, state: state, actions: actions)
+            let view = SettingsView(prefs: .shared, history: history, notes: notes, state: state, actions: actions)
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "Claude Whisper Settings"
             // A plain title bar: drawing the sidebar under a transparent one left artefacts at the top.
@@ -78,6 +86,7 @@ final class SettingsWindowController {
             window.isReleasedWhenClosed = false
             // Opened from another desktop (Space), it comes to the current one instead of staying put.
             window.collectionBehavior = [.moveToActiveSpace]
+            HandCursor.install(on: window)
             self.window = window
         }
         // SwiftUI sizes the window lazily; lay it out first so it is centred by its real size.
@@ -104,6 +113,7 @@ final class SettingsWindowController {
 private struct SettingsView: View {
     @ObservedObject var prefs: Preferences
     let history: History
+    let notes: NoteStore
     @ObservedObject var state: SettingsState
     let actions: SettingsActions
     @State private var missing: [Permission] = []
@@ -126,7 +136,7 @@ private struct SettingsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(width: 720, height: 580)
+        .frame(width: 720, height: 640)
         .onAppear(perform: refreshPermissions)
         .onReceive(permissionTimer) { _ in refreshPermissions() }
         .sheet(isPresented: $managing) { PermissionsSheet(done: { managing = false }) }
@@ -188,6 +198,7 @@ private struct SettingsView: View {
         case .claude: ClaudePane(prefs: prefs, state: state, actions: actions)
         case .permissions: PermissionsPane()
         case .history: HistoryPane(history: history)
+        case .notes: NotesPane(store: notes, state: state, open: actions.openNote)
         case .about: AboutPane(checkForUpdates: actions.checkForUpdates)
         }
     }
@@ -949,6 +960,221 @@ private struct HistoryPane: View {
         }
         .confirmationDialog("Clear all \(history.entries.count) dictations?", isPresented: $confirmClear) {
             Button("Clear History", role: .destructive) { history.clear() }
+        }
+    }
+}
+
+// MARK: Notes
+
+private struct NotesPane: View {
+    @ObservedObject var store: NoteStore
+    @ObservedObject var state: SettingsState
+    let open: (UUID) -> Void
+    @AppStorage("noteTakerLocale") private var locale = "en-US"
+    @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
+    @AppStorage("noteTakerKeepAudio") private var keepAudio = true
+    @AppStorage("noteTakerImprove") private var improve = true
+    @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
+    @AppStorage(NoteContext.textKey) private var context = ""
+    @State private var locales: [String] = []
+    @State private var search = ""
+    @State private var deleting: Note?
+    @FocusState private var searchFocused: Bool
+
+    private var supported: Bool {
+        if #available(macOS 26.0, *) { return true } else { return false }
+    }
+
+    private var visible: [Note] {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return store.notes }
+        return store.notes.filter { note in
+            [note.displayTitle ?? "", note.summary ?? "", note.transcript]
+                .contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            Form {
+                if supported {
+                    NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
+                                      retention: $retention, context: $context, locales: locales)
+                } else {
+                    Section { Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary) }
+                }
+                Section {
+                    TextField("Search notes", text: $search)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($searchFocused)
+                        .id("history")
+                    historyRows
+                } header: {
+                    historyHeader
+                }
+            }
+            .formStyle(.grouped)
+            .onAppear {
+                store.reload()
+                focusSearchIfAsked(proxy)
+            }
+            .onChange(of: state.searchNotes) { focusSearchIfAsked(proxy) }
+        }
+        .onChange(of: retention) { store.prune(retention) }
+        .task {
+            if #available(macOS 26.0, *) { locales = await SpeechStream.supportedLocales() }
+        }
+        .confirmationDialog("Delete “\(deleting?.displayTitle ?? "this note")”?", isPresented: Binding(
+            get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            Button("Delete Note", role: .destructive) {
+                if let deleting { store.delete(deleting.id) }
+                deleting = nil
+            }
+        }
+    }
+
+    /// "All Notes…" in the menu: jump to the history and put the cursor in search.
+    private func focusSearchIfAsked(_ proxy: ScrollViewProxy) {
+        guard state.searchNotes else { return }
+        state.searchNotes = false
+        DispatchQueue.main.async {
+            proxy.scrollTo("history", anchor: .top)
+            searchFocused = true
+        }
+    }
+
+    private var historyHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            SectionTitle("Notes History")
+            if !store.notes.isEmpty { Text("\(store.notes.count)").foregroundStyle(.secondary) }
+            Spacer()
+            Button("Open Notes Folder") {
+                try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+                NSWorkspace.shared.open(store.directory)
+            }
+        }
+    }
+
+    @ViewBuilder private var historyRows: some View {
+        if store.notes.isEmpty {
+            Text("Your notes will show up here.").foregroundStyle(.secondary)
+        } else if visible.isEmpty {
+            Text("No notes match “\(search)”.").foregroundStyle(.secondary)
+        } else {
+            ForEach(visible) { note in
+                NoteHistoryRow(note: note, subtitle: Self.subtitle(note), canOpen: supported,
+                               open: { open(note.id) }, delete: { deleting = note })
+            }
+        }
+    }
+
+    private static func subtitle(_ note: Note) -> String {
+        let f = DateFormatter()
+        f.dateFormat = Calendar.current.isDateInToday(note.started) ? "'Today', HH:mm" : "d MMM yyyy, HH:mm"
+        var parts = [f.string(from: note.started)]
+        if let duration = note.duration { parts.append("\(max(1, Int(duration / 60))) min") }
+        if note.summary != nil { parts.append("summary") }
+        return parts.joined(separator: " · ")
+    }
+}
+
+/// The Note Taker options at the top of Settings › Notes, as grouped sections like the other tabs.
+private struct NoteTakerSettings: View {
+    @Binding var locale: String
+    @Binding var model: NoteModel
+    @Binding var keepAudio: Bool
+    @Binding var improve: Bool
+    @Binding var retention: NoteRetention
+    @Binding var context: String
+    let locales: [String]
+
+    var body: some View {
+        Section {
+            Picker("Language of calls", selection: $locale) {
+                ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
+                    Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
+                }
+            }
+            Toggle("Keep the call audio", isOn: $keepAudio)
+            Picker("Delete notes older than", selection: $retention) {
+                ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
+            }
+        } header: {
+            SectionTitle("Recording")
+        } footer: {
+            Text("""
+                Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser: \
+                your microphone as “Me”, the call as “Them”. With the audio kept you can play the call back in the \
+                note (about 30 MB an hour).
+                """)
+            .foregroundStyle(.secondary)
+        }
+
+        Section {
+            Picker("Model", selection: $model) {
+                ForEach(NoteModel.allCases) { Text($0.title).tag($0) }
+            }
+            Toggle("Clean up the transcript after a call", isOn: $improve)
+        } header: {
+            SectionTitle("Claude")
+        } footer: {
+            Text("""
+                When you press Stop, Claude titles and summarizes the note. With clean-up on, it first fixes \
+                misheard words and names, drops “um”s and splits “Them” into the people who spoke: by name when \
+                the call makes it clear, otherwise Speaker 1, Speaker 2. The original stays: ⋯ › Show Original \
+                Transcript.
+                """)
+            .foregroundStyle(.secondary)
+        }
+
+        Section {
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $context)
+                    .font(.body)
+                    .frame(height: 64)
+                    .scrollContentBackground(.hidden)
+                if context.isEmpty {
+                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend). Project docs: ~/Documents/xyz")
+                        .foregroundStyle(.tertiary)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+            }
+        } header: {
+            SectionTitle("Context for Claude")
+        } footer: {
+            Text("Sent with every summary and question. Write a folder's path here (in quotes if it has spaces) and Claude can read files in it, read-only and nowhere else, to look up the project, people and terms.")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// One note in Settings › Notes › history: open it to read, listen or copy.
+private struct NoteHistoryRow: View {
+    let note: Note
+    let subtitle: String
+    let canOpen: Bool
+    let open: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(note.displayTitle ?? (note.snippet.isEmpty ? "Untitled note" : note.snippet))
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            if canOpen { Button("Open", action: open) }
+            Button(action: delete) { Image(systemName: "trash") }
+                .help("Delete this note and its audio")
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { if canOpen { open() } }
+        .contextMenu {
+            if canOpen { Button("Open", action: open) }
+            Button("Delete…", role: .destructive, action: delete)
         }
     }
 }

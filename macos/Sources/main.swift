@@ -16,9 +16,18 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
     private var statusItem: NSStatusItem!
     private let historyMenu = NSMenu(title: "History")
+    private let notesMenu = NSMenu(title: "Notes")
+    private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
+    private let noteStore = NoteStore()
+    /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
+    private var noteWindowBox: AnyObject?
+    /// The red dot on the menu bar icon while Note Taker records.
+    private var recordingDot: NSView?
+    private var iconActive = false
     private var accessibilityTimer: Timer?
     private var pendingRestart: DispatchWorkItem?
-    private lazy var settings = SettingsWindowController(history: history, actions: SettingsActions(
+    private lazy var settings = SettingsWindowController(history: history, notes: noteStore, actions: SettingsActions(
+        openNote: { [weak self] id in MainActor.assumeIsolated { self?.openNote(id: id) } },
         restartSession: { [weak self] in self?.restartSession() },
         openLog: { [weak self] in self?.openLog() },
         checkForUpdates: { [weak self] in self?.checkForUpdates() }))
@@ -50,6 +59,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if firstLaunch && !VoiceKey.isFastStart { VoiceKey.setFastStart(true) }
         setUpMenu()
         requestPermissions()
+        MainActor.assumeIsolated { pruneNotes() }
+        // Once a day for a Mac that stays up for weeks.
+        Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.pruneNotes() }
+        }
 
         hotkey.onStart = { [weak self] in self?.pressed() }
         hotkey.onStop = { [weak self] held in self?.released(held: held) }
@@ -70,7 +84,26 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// Quitting (the menu, logging out, an update, or a plain `kill`) while a note records: the
+    /// note is finished and saved first, for up to 5 seconds.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard #available(macOS 26.0, *) else { return .terminateNow }
+        return MainActor.assumeIsolated {
+            guard let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording else { return .terminateNow }
+            var replied = false
+            let reply = {
+                guard !replied else { return }
+                replied = true
+                sender.reply(toApplicationShouldTerminate: true)
+            }
+            taker.stopForQuit(reply)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: reply)
+            return .terminateLater
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
+        if #available(macOS 26.0, *) { MainActor.assumeIsolated { (noteWindowBox as? NoteTakerWindow)?.taker.stop() } }
         session.stop()
         refiner.reset()
         Log.write("Claude Whisper quit")
@@ -90,19 +123,36 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         setIcon(active: false)
         let menu = NSMenu()
+        menu.delegate = self
         historyMenu.delegate = self
         menu.addItem(withTitle: "History", action: nil, keyEquivalent: "").submenu = historyMenu
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
         updateItem.target = self
         menu.addItem(updateItem)
         menu.addItem(.separator())
+        noteTakerItem.target = self
+        menu.addItem(noteTakerItem)
+        notesMenu.delegate = self
+        menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
+        menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Claude Whisper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
+        // older ones have none, so neither do these there.
+        if #available(macOS 26.0, *) {
+            let symbols = ["Start Note Taker": "record.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+                           "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
+            for item in menu.items {
+                if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
+            }
+        }
         statusItem.menu = menu
         NSApp.mainMenu = mainMenu()
     }
 
     /// Built each time it opens: the latest dictations, a click copies one.
     func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu === statusItem.menu { return MainActor.assumeIsolated { refreshNoteTakerItem() } }
+        if menu === notesMenu { return buildNotesMenu() }
         guard menu === historyMenu else { return }
         menu.removeAllItems()
         if history.entries.isEmpty {
@@ -133,10 +183,88 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showHistory() { settings.show(tab: .history) }
+
+    // MARK: Note Taker
+
+    @available(macOS 26.0, *)
+    @MainActor private var noteWindow: NoteTakerWindow {
+        if let window = noteWindowBox as? NoteTakerWindow { return window }
+        let window = NoteTakerWindow(taker: NoteTaker(store: noteStore, workspace: session.workspace))
+        noteWindowBox = window
+        let taker = window.taker
+        watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        return window
+    }
+
+    /// Deletes notes older than Settings › Notes › "Delete notes older than" (3 months by default).
+    @MainActor private func pruneNotes() {
+        var recording: UUID?
+        if #available(macOS 26.0, *), let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording {
+            recording = taker.note?.id
+        }
+        let count = noteStore.prune(keeping: recording)
+        if count > 0 { Log.write("deleted \(count) note(s) older than \(NoteRetention.current.title)") }
+    }
+
+    @MainActor private func refreshNoteTakerItem() {
+        guard #available(macOS 26.0, *) else {
+            noteTakerItem.title = "Note Taker (needs macOS 26)"
+            noteTakerItem.isEnabled = false
+            return
+        }
+        let window = noteWindowBox as? NoteTakerWindow
+        noteTakerItem.title = window?.taker.isRecording == true ? "Show Note Taker" : "Start Note Taker"
+    }
+
+    /// Starts a new note, or brings the window back while one is recording.
+    @MainActor @objc private func noteTakerClicked() {
+        guard #available(macOS 26.0, *) else { return }
+        if !noteWindow.taker.isRecording { noteWindow.taker.start() }
+        noteWindow.show()
+    }
+
+    /// The latest notes; a click opens one in the Note Taker window.
+    private func buildNotesMenu() {
+        notesMenu.removeAllItems()
+        noteStore.reload()
+        if noteStore.notes.isEmpty {
+            notesMenu.addItem(withTitle: "No notes yet", action: nil, keyEquivalent: "").isEnabled = false
+        }
+        let time = DateFormatter()
+        for note in noteStore.notes.prefix(15) {
+            time.dateFormat = Calendar.current.isDateInToday(note.started) ? "HH:mm" : "d MMM HH:mm"
+            var title = time.string(from: note.started)
+            if let duration = note.duration { title += " · \(max(1, Int(duration / 60))) min" }
+            if let name = note.displayTitle ?? (note.snippet.isEmpty ? nil : note.snippet) { title += "  \(name)" }
+            let item = notesMenu.addItem(withTitle: title, action: #selector(openNote(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = note.id
+        }
+        notesMenu.addItem(.separator())
+        notesMenu.addItem(withTitle: "All Notes…", action: #selector(showAllNotes), keyEquivalent: "").target = self
+    }
+
+    @MainActor @objc private func openNote(_ item: NSMenuItem) {
+        guard let id = item.representedObject as? UUID else { return }
+        openNote(id: id)
+    }
+
+    @MainActor private func openNote(id: UUID) {
+        guard #available(macOS 26.0, *), let note = noteStore.notes.first(where: { $0.id == id }) else { return }
+        noteWindow.taker.open(note)
+        noteWindow.show()
+    }
+
+    /// Settings › Notes, scrolled to the history with the cursor in its search field.
+    @objc private func showAllNotes() {
+        settings.state.searchNotes = true
+        settings.show(tab: .notes)
+    }
     @objc private func clearHistory() { history.clear() }
 
-    /// Never shown for a menu bar app, but it is what routes Cmd+C, Cmd+V, Cmd+W and friends to
-    /// the Settings window while it is in front.
+    /// Never shown for a menu bar app, but it is what routes Cmd+C, Cmd+V, Cmd+W, Cmd+M and friends
+    /// to the Settings and Note Taker windows while they are in front.
     private func mainMenu() -> NSMenu {
         let main = NSMenu()
         let appMenu = NSMenu()
@@ -151,6 +279,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         let window = NSMenu(title: "Window")
+        window.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         window.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         for submenu in [appMenu, edit, window] {
             main.addItem(withTitle: submenu.title, action: nil, keyEquivalent: "").submenu = submenu
@@ -161,6 +290,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// A small copy of the app icon: voice bars in a rounded square, outlined while idle and
     /// filled while listening. Drawn as a template so it follows the menu bar's colours.
     private func setIcon(active: Bool) {
+        iconActive = active
+        // While a note records and nothing is dictated, the bars give way to the red dot.
+        let bars = active || recordingDot == nil
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
             let shape = NSBezierPath(roundedRect: tile, xRadius: 4.5, yRadius: 4.5)
@@ -171,7 +303,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             var x = tile.midX - (CGFloat(heights.count) * barWidth + CGFloat(heights.count - 1) * gap) / 2
             // Listening: the bars are cut out of the filled square.
             NSGraphicsContext.current?.compositingOperation = active ? .destinationOut : .sourceOver
-            for h in heights {
+            for h in heights where bars {
                 NSBezierPath(roundedRect: NSRect(x: x, y: tile.midY - h / 2, width: barWidth, height: h),
                              xRadius: barWidth / 2, yRadius: barWidth / 2).fill()
                 x += barWidth + gap
@@ -181,6 +313,33 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         image.isTemplate = true
         image.accessibilityDescription = "Claude Whisper"
         statusItem.button?.image = image
+    }
+
+    /// A dot in the middle of the icon while a note records, like a record button: red, or grey
+    /// while paused. The icon is a template image (one colour), so the dot is its own view on top.
+    private func showRecordingDot(_ recording: Bool, paused: Bool) {
+        guard let button = statusItem.button else { return }
+        guard recording else {
+            recordingDot?.removeFromSuperview()
+            recordingDot = nil
+            setIcon(active: iconActive)
+            button.setAccessibilityLabel(nil)
+            return
+        }
+        let dot = recordingDot ?? {
+            let size: CGFloat = 7
+            let view = NSView(frame: NSRect(x: (button.bounds.midX - size / 2).rounded(),
+                                            y: (button.bounds.midY - size / 2).rounded(), width: size, height: size))
+            view.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin, .maxYMargin]
+            view.wantsLayer = true
+            view.layer?.cornerRadius = size / 2
+            button.addSubview(view)
+            recordingDot = view
+            setIcon(active: iconActive)
+            return view
+        }()
+        dot.layer?.backgroundColor = (paused ? NSColor.systemGray : NSColor.systemRed).cgColor
+        button.setAccessibilityLabel(paused ? "Claude Whisper, note paused" : "Claude Whisper, recording a note")
     }
 
     private func sessionChanged(_ state: ClaudeSession.State) {
@@ -452,6 +611,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
 // Writing to a claude process that has just exited must fail with EPIPE, not kill the app.
 signal(SIGPIPE, SIG_IGN)
+// A plain `kill` (SIGTERM) quits through NSApp.terminate, so a note being recorded is saved first.
+signal(SIGTERM, SIG_IGN)
+let terminationSignal = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+terminationSignal.setEventHandler {
+    Log.write("asked to quit (SIGTERM)")
+    NSApp.terminate(nil)
+}
+terminationSignal.resume()
 Migration.fromShepit()
 let app = NSApplication.shared
 let delegate = App()

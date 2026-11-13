@@ -225,7 +225,7 @@ final class ClaudeSession {
             let quiet = Date().timeIntervalSince(lastOutput)
             let elapsed = Date().timeIntervalSince(started)
             if since.contains("No speech detected") {
-                Log.write("no speech detected")
+                Log.write("no speech detected; screen: \(tail(400))")
                 return completion("")
             }
             if since.contains("processing") { sawProcessing = true }
