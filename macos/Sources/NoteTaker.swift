@@ -464,6 +464,8 @@ final class NoteTaker: ObservableObject {
 @MainActor
 final class NoteTakerWindow: NSObject, NSWindowDelegate {
     let taker: NoteTaker
+    /// Owned here, not by the view, so closing the panel can stop it.
+    let player = NotePlayer()
     private var panel: NSPanel?
 
     init(taker: NoteTaker) {
@@ -500,7 +502,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.minSize = NSSize(width: 360, height: 420)
-        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, close: { [weak panel] in panel?.close() }))
+        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
         HandCursor.install(on: panel)
         return panel
@@ -508,6 +510,8 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         taker.stop()
+        // Closing the panel stops the call playing.
+        player.pause()
     }
 
     func windowDidEndLiveResize(_ notification: Notification) {
@@ -525,8 +529,8 @@ private enum NoteTab: String, CaseIterable {
 @available(macOS 26.0, *)
 struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
+    @ObservedObject var player: NotePlayer
     let close: () -> Void
-    @StateObject private var player = NotePlayer()
     @State private var showOriginal = false
     @State private var tab = NoteTab.transcript
     @State private var titleDraft = ""

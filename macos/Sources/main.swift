@@ -327,7 +327,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         let dot = recordingDot ?? {
-            let size: CGFloat = 9
+            let size: CGFloat = 7
             let view = NSView(frame: NSRect(x: (button.bounds.midX - size / 2).rounded(),
                                             y: (button.bounds.midY - size / 2).rounded(), width: size, height: size))
             view.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin, .maxYMargin]
