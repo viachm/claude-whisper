@@ -1078,9 +1078,8 @@ private struct ModelDownloadCard: View {
                 Text("Download the Speech Model")
                     .font(.system(size: 20, weight: .semibold))
                 Text("""
-                    Note Taker transcribes calls on this Mac with Parakeet, a free speech model for 25 languages, \
-                    Ukrainian and English among them. It is downloaded once (\(SpeechModel.size)); the call's audio \
-                    never leaves the Mac.
+                    Note Taker transcribes calls on this Mac with Parakeet, a free speech model for 25 European \
+                    languages. It is downloaded once (\(SpeechModel.size)); the call's audio never leaves the Mac.
                     """)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)

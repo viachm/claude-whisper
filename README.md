@@ -66,7 +66,7 @@ When you stop, Claude cleans up the transcript, tells the other people apart (by
 the call ("What did I miss?"). With the audio kept (Settings › Notes), play the call back or click a line's time to hear it. Every note is saved and listed
 under **Notes** in the menu and in Settings. Transcription runs on your Mac (not Claude) with
 [Parakeet](https://huggingface.co/FluidInference/parakeet-ultra-coreml), a free speech model for 25
-languages, Ukrainian and English among them, which Note Taker asks to download (about 610 MB) the first
+European languages, which Note Taker asks to download (about 610 MB) the first
 time it records; other languages, and Intel Macs, use Apple's speech recogniser. Pick the language in
 Settings › Notes, or switch it on a note while it records. Use headphones, or your microphone hears the
 other side too.

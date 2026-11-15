@@ -1196,7 +1196,7 @@ private struct SpeechModelSection: View {
                 SectionTitle("Speech Model")
             } footer: {
                 Text("""
-                    Note Taker needs it to transcribe calls in Ukrainian, English and 23 other languages. Free \
+                    Note Taker needs it to transcribe calls in any of 25 European languages. Free \
                     (NVIDIA's Parakeet, CC BY 4.0), downloaded once from Hugging Face; the call's audio never \
                     leaves the Mac.
                     """)
