@@ -371,6 +371,8 @@ final class NoteTaker: ObservableObject {
     /// Shows a saved note (stopping a recording first).
     func open(_ saved: Note) {
         stop()
+        // Opening another note drops a download prompt left from an earlier Start.
+        awaitingModel = nil
         run += 1
         pausedAt = nil
         note = saved
