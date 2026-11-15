@@ -104,7 +104,24 @@ final class NoteTaker: ObservableObject {
         note.pauses = (note.pauses ?? []) + [NotePause(start: ended.timeIntervalSince(note.started),
                                                        duration: Date().timeIntervalSince(ended))]
         note.ended = nil
+        note.locale = Self.continuing(note)
         record(note)
+    }
+
+    /// The language more recording of a note is transcribed in: a note recorded with Apple's
+    /// recogniser in a language Parakeet has (all notes before Parakeet) moves to the language
+    /// chosen now, so it doesn't go back to the recogniser that didn't know that language.
+    private static func continuing(_ note: Note) -> String {
+        guard SpeechModel.isAvailable, !NoteLanguage.usesParakeet(note.locale),
+              NoteLanguage.appleOnly([note.locale]).isEmpty else { return note.locale }
+        return language
+    }
+
+    /// Whether Start (or Continue) has to download the speech model first.
+    var needsModel: Bool {
+        guard SpeechModel.isAvailable, !SpeechModel.shared.isReady else { return false }
+        let language = note.map { $0.ended == nil ? $0.locale : Self.continuing($0) } ?? Self.language
+        return NoteLanguage.usesParakeet(language)
     }
 
     private func record(_ note: Note) {
@@ -581,6 +598,8 @@ private enum NoteTab: String, CaseIterable {
 struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
     @ObservedObject var player: NotePlayer
+    /// Watched so Start replaces Download Model once the model is ready.
+    @ObservedObject private var speechModel = SpeechModel.shared
     let close: () -> Void
     @State private var showOriginal = false
     @State private var tab = NoteTab.transcript
@@ -971,6 +990,10 @@ struct NoteTakerView: View {
                         if taker.isRecording {
                             RoundedRectangle(cornerRadius: 2).fill(Color.red).frame(width: 12, height: 12)
                             Text("Stop")
+                        } else if taker.needsModel {
+                            // Nothing records until the speech model is downloaded.
+                            Image(systemName: "arrow.down.circle")
+                            Text("Download Model")
                         } else {
                             Circle().fill(Color.red).frame(width: 11, height: 11)
                             Text(taker.note == nil ? "Start" : "Continue")
