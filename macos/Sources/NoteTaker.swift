@@ -820,6 +820,7 @@ struct NoteTakerView: View {
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 24)
                     .padding(.top, 10)
+                    .padding(.bottom, 6)
             }
             if taker.isImproving {
                 HStack(spacing: 8) {
@@ -830,6 +831,7 @@ struct NoteTakerView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 10)
+                .padding(.bottom, 6)
             }
             transcript
         }
