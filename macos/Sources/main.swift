@@ -18,6 +18,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let historyMenu = NSMenu(title: "History")
     private let notesMenu = NSMenu(title: "Notes")
     private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
+    /// Shown only while a note records.
+    private let stopNoteTakerItem = NSMenuItem(title: "Stop Note Taker", action: #selector(stopNoteTaker), keyEquivalent: "")
     private let noteStore = NoteStore()
     /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
     private var noteWindowBox: AnyObject?
@@ -132,6 +134,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         noteTakerItem.target = self
         menu.addItem(noteTakerItem)
+        stopNoteTakerItem.target = self
+        stopNoteTakerItem.isHidden = true
+        menu.addItem(stopNoteTakerItem)
         notesMenu.delegate = self
         menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
         menu.addItem(.separator())
@@ -139,7 +144,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
         // older ones have none, so neither do these there.
         if #available(macOS 26.0, *) {
-            let symbols = ["Start Note Taker": "record.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+            let symbols = ["Start Note Taker": "record.circle", "Stop Note Taker": "stop.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
                            "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
             for item in menu.items {
                 if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
@@ -216,6 +221,13 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let window = noteWindowBox as? NoteTakerWindow
         // An open window may be behind others: the item brings it back rather than starting a note.
         noteTakerItem.title = window?.taker.isRecording == true || window?.isVisible == true ? "Show Note Taker" : "Start Note Taker"
+        stopNoteTakerItem.isHidden = window?.taker.isRecording != true
+    }
+
+    /// Stops the note recording; the window isn't brought up for it.
+    @MainActor @objc private func stopNoteTaker() {
+        guard #available(macOS 26.0, *) else { return }
+        (noteWindowBox as? NoteTakerWindow)?.taker.stop()
     }
 
     /// Starts a new note, or brings the window back while it is open or recording.
