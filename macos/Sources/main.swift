@@ -220,10 +220,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         let window = noteWindowBox as? NoteTakerWindow
         // An open window may be behind others: the item brings it back rather than starting a note.
-        noteTakerItem.title = window?.taker.isRecording == true || window?.isVisible == true ? "Show Note Taker" : "Start Note Taker"
+        noteTakerItem.title = window?.taker.isRecording == true || window?.isVisible == true ? "Open Note Taker" : "Start Note Taker"
         stopNoteTakerItem.isHidden = window?.taker.isRecording != true
-        // Show brings a window back, so it gets a window, not Start's record symbol.
-        let symbol = noteTakerItem.title == "Show Note Taker" ? "macwindow" : "record.circle"
+        // Open brings the window back, so it gets a window, not Start's record symbol.
+        let symbol = noteTakerItem.title == "Open Note Taker" ? "macwindow" : "record.circle"
         noteTakerItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 

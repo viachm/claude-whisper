@@ -607,7 +607,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        // The recording goes on (Show Note Taker in the menu brings it back); a call playing stops.
+        // The recording goes on (Open Note Taker in the menu brings it back); a call playing stops.
         player.pause()
     }
 
