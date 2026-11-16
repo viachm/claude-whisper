@@ -908,7 +908,9 @@ struct NoteTakerView: View {
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 14) {
+                // Not a LazyVStack: when Claude's cleanup changes the lines' heights, a lazy stack
+                // scrolled to the bottom stops drawing the lines above (the top went blank).
+                VStack(alignment: .leading, spacing: 14) {
                     if taker.turns.isEmpty && !taker.isPaused {
                         Text(taker.isRecording ? "Listening…" : "Nothing was said.")
                             .italic()
