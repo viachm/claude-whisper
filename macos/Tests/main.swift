@@ -419,5 +419,18 @@ do {
     check(english == "en", "an English call is English")
 }
 
+// The microphone and the call play equally loud
+
+do {
+    let quiet = Array(repeating: Float(0.0005), count: 60) + Array(repeating: Float(0.008), count: 20)
+    let loud = Array(repeating: Float(0.0002), count: 30) + Array(repeating: Float(0.09), count: 50)
+    let me = SpeechLevel.of(quiet), them = SpeechLevel.of(loud)
+    check(me == 0.008 && them == 0.09, "speech is told from background noise")
+    check(SpeechLevel.of(Array(repeating: 0.0004, count: 50)) == nil, "silence has no speech level")
+    let gains = SpeechLevel.gains([me, them, nil])
+    check(abs(gains[0] - 11.25) < 0.01 && gains[1] == 1 && gains[2] == 1, "the quiet microphone is raised to the call")
+    check(SpeechLevel.gains([0.001, 0.5]) == [12, 1], "the boost has a limit")
+}
+
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
 exit(failures == 0 ? 0 : 1)

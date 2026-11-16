@@ -1458,15 +1458,18 @@ final class NotePlayer: ObservableObject {
         guard let note, let recordings = note.recordings, !recordings.isEmpty else { return }
         loading = Task {
             let composition = AVMutableComposition()
+            var tracks: [(track: AVMutableCompositionTrack, url: URL)] = []
             for recording in recordings {
                 let at = CMTime(seconds: note.audioTime(recording.start), preferredTimescale: 600)
                 for speaker in recording.speakers {
-                    let asset = AVURLAsset(url: store.audioFile(note.id, index: recording.index, speaker: speaker))
+                    let url = store.audioFile(note.id, index: recording.index, speaker: speaker)
+                    let asset = AVURLAsset(url: url)
                     guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
                           let length = try? await asset.load(.duration), length.seconds > 0,
                           let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
                     else { continue }
                     try? track.insertTimeRange(CMTimeRange(start: .zero, duration: length), of: source, at: at)
+                    tracks.append((track, url))
                 }
             }
             guard !Task.isCancelled, loadedID == note.id else { return }
@@ -1477,6 +1480,7 @@ final class NotePlayer: ObservableObject {
             player.defaultRate = speed
             self.player = player
             duration = composition.duration.seconds.isFinite ? composition.duration.seconds : 0
+            balance(item, tracks: tracks)
             observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] time in
                 MainActor.assumeIsolated {
                     guard let self else { return }
@@ -1484,6 +1488,33 @@ final class NotePlayer: ObservableObject {
                     if self.isPlaying, time.seconds >= self.duration - 0.05 { self.pause() }
                 }
             }
+        }
+    }
+
+    /// Speech levels of the audio files played, measured once per file.
+    private static var levels: [URL: Float?] = [:]
+
+    /// Plays the microphone and the call equally loud: the quieter one is raised to the other.
+    /// Measuring a long call's files takes a moment, so it plays as recorded until then.
+    private func balance(_ item: AVPlayerItem, tracks: [(track: AVMutableCompositionTrack, url: URL)]) {
+        let urls = tracks.map(\.url)
+        let known = Self.levels
+        Task {
+            let levels = await Task.detached(priority: .utility) {
+                urls.map { url in known[url] ?? AudioGain.speechLevel(of: url) }
+            }.value
+            for (url, level) in zip(urls, levels) { Self.levels[url] = level }
+            let gains = SpeechLevel.gains(levels)
+            guard gains.contains(where: { $0 > 1 }) else { return }
+            let mix = AVMutableAudioMix()
+            mix.inputParameters = zip(tracks, gains).compactMap { entry, gain in
+                guard gain > 1, let tap = AudioGain.tap(gain: gain) else { return nil }
+                let parameters = AVMutableAudioMixInputParameters(track: entry.track)
+                parameters.audioTapProcessor = tap
+                return parameters
+            }
+            item.audioMix = mix
+            Log.write("note taker: playback gains \(gains.map { String(format: "%.1f", $0) }.joined(separator: ", "))")
         }
     }
 

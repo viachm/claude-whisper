@@ -70,12 +70,18 @@ final class TitleTextView: NSTextView {
     var placeholder = ""
     private(set) var isEditing = false
 
+    /// Measured with a layout of its own: resizing the view's own text container here would leave
+    /// it wrapping at a width SwiftUI only asked about, under a frame of a different height.
     func height(forWidth width: CGFloat) -> CGFloat {
-        guard let layout = layoutManager, let container = textContainer, let font else { return 30 }
-        container.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
+        guard let font else { return 30 }
+        let storage = NSTextStorage(string: string, attributes: [.font: font])
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(size: NSSize(width: width, height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layout.addTextContainer(container)
+        storage.addLayoutManager(layout)
         layout.ensureLayout(for: container)
-        let lineHeight = layout.defaultLineHeight(for: font)
-        return ceil(max(layout.usedRect(for: container).height, lineHeight))
+        return ceil(max(layout.usedRect(for: container).height, layout.defaultLineHeight(for: font)))
     }
 
     override func becomeFirstResponder() -> Bool {

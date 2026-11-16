@@ -182,3 +182,26 @@ struct UtteranceSegmenter {
 
     private func seconds(_ s: Double) -> Int { Int(s * Double(Self.rate)) }
 }
+
+/// How loud speech is in a recording, to play the microphone and the call equally loud: a
+/// microphone is often ten times quieter than the call.
+enum SpeechLevel {
+    /// The median loudness of the stretches (e.g. half seconds, as RMS) that stand out from the
+    /// recording's background noise; nil when none do.
+    static func of(_ levels: [Float]) -> Float? {
+        guard !levels.isEmpty else { return nil }
+        let floor = levels.sorted()[levels.count / 5]
+        let speech = levels.filter { $0 > max(floor * 4, 0.003) }.sorted()
+        return speech.isEmpty ? nil : speech[speech.count / 2]
+    }
+
+    /// The gain for each recording that brings its speech up to the loudest one's, at most 12×
+    /// (a track with no speech, or the loudest, plays as it is).
+    static func gains(_ levels: [Float?]) -> [Float] {
+        let loudest = levels.compactMap { $0 }.max() ?? 0
+        return levels.map { level in
+            guard let level, level > 0 else { return 1 }
+            return min(12, max(1, loudest / level))
+        }
+    }
+}
