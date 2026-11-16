@@ -1,4 +1,5 @@
 import Foundation
+import NaturalLanguage
 
 /// The language Note Taker transcribes a call in. "auto" and the 25 languages of the Parakeet
 /// model (two-letter codes such as "uk") use Parakeet; anything else is an Apple locale such as
@@ -29,6 +30,29 @@ enum NoteLanguage {
     static func appleOnly(_ locales: [String]) -> [String] {
         locales.filter { !parakeet.contains(Locale(identifier: $0).language.languageCode?.identifier ?? $0) }
             .sorted { title($0) < title($1) }
+    }
+}
+
+/// Settles the language of a call recorded in Automatic. Parakeet guesses each utterance on its
+/// own, so an English phrase in a Ukrainian call comes out in English; once the call's first
+/// lines show its language, the note keeps to it.
+struct LanguageDetector {
+    /// Letters heard before deciding: a few sentences.
+    var enough = 120
+    /// How sure the guess has to be.
+    var confidence = 0.7
+    private var text = ""
+
+    /// Adds a finished line; returns the call's language once it is clear.
+    mutating func add(_ line: String) -> String? {
+        text += " " + line
+        guard text.unicodeScalars.filter(CharacterSet.letters.contains).count >= enough else { return nil }
+        let recognizer = NLLanguageRecognizer()
+        recognizer.languageConstraints = NoteLanguage.parakeet.map { NLLanguage(rawValue: $0) }
+        recognizer.processString(text)
+        guard let (language, probability) = recognizer.languageHypotheses(withMaximum: 1).first,
+              probability >= confidence, NoteLanguage.parakeet.contains(language.rawValue) else { return nil }
+        return language.rawValue
     }
 }
 

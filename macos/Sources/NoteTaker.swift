@@ -49,6 +49,8 @@ final class NoteTaker: ObservableObject {
     /// applies: the transcriber's times count audio only, so the offset is the time from the
     /// note's start to the first buffer, and grows by each pause.
     private var offsets: [Speaker: [(from: Double, offset: Double)]] = [:]
+    /// Settles the language of a note recorded in Automatic from its first lines.
+    private var detector: LanguageDetector?
     private var run = 0
 
     /// Apple's recogniser's language, chosen in Settings on Macs without Parakeet (Intel).
@@ -137,6 +139,7 @@ final class NoteTaker: ObservableObject {
         self.note = note
         pending = [:]
         offsets = [:]
+        detector = locale == NoteLanguage.automatic && Self.needsParakeet(locale) ? LanguageDetector() : nil
         status = nil
         isRecording = true
         isPaused = false
@@ -299,6 +302,11 @@ final class NoteTaker: ObservableObject {
             guard !text.isEmpty else { return }
             note?.segments.append(segment)
             save()
+            if let code = detector?.add(text) {
+                detector = nil
+                Log.write("note taker: the call is in \(code)")
+                switchLanguage(code)
+            }
         } else {
             pending[speaker] = segment
         }
@@ -368,10 +376,17 @@ final class NoteTaker: ObservableObject {
     /// Switches the language: for new notes, and for the one recording if Parakeet hears it.
     func setLanguage(_ code: String) {
         UserDefaults.standard.set(code, forKey: NoteLanguage.key)
+        // Chosen by hand: Automatic guesses again, a language is kept.
+        detector = code == NoteLanguage.automatic ? LanguageDetector() : nil
+        switchLanguage(code)
+        Log.write("note taker: language \(code)")
+    }
+
+    /// Keeps the note recording to a language from now on (Settings stay as they are).
+    private func switchLanguage(_ code: String) {
         guard isRecording, let note, Self.needsParakeet(note.locale), Self.needsParakeet(code) else { return }
         self.note?.locale = code
         for stream in streams.values { (stream as? ParakeetStream)?.setLanguage(NoteLanguage.hint(code)) }
-        Log.write("note taker: language \(code)")
         save()
     }
 
@@ -527,7 +542,7 @@ final class NoteTaker: ObservableObject {
 }
 
 /// The Note Taker window: a third of the screen on its right edge, top to bottom, above other
-/// windows so it stays visible next to the call. Closing it stops the recording.
+/// windows so it stays visible next to the call. Closing it stops the recording, after asking.
 @available(macOS 26.0, *)
 @MainActor
 final class NoteTakerWindow: NSObject, NSWindowDelegate {
@@ -574,6 +589,21 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.delegate = self
         HandCursor.install(on: panel)
         return panel
+    }
+
+    /// Closing the panel stops the recording, so it asks first.
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard taker.isRecording else { return true }
+        let alert = NSAlert()
+        alert.messageText = "Stop recording?"
+        alert.informativeText = "Closing Note Taker stops recording the call. What was transcribed so far is kept."
+        alert.addButton(withTitle: "Stop and Close")
+        alert.addButton(withTitle: "Keep Recording")
+        alert.beginSheetModal(for: sender) { [weak sender] response in
+            guard response == .alertFirstButtonReturn else { return }
+            sender?.close()
+        }
+        return false
     }
 
     func windowWillClose(_ notification: Notification) {

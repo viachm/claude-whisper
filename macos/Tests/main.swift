@@ -403,5 +403,21 @@ do {
     check(done.count == 1, "the hiss counts as a pause")
 }
 
+// The language of a call in Automatic, from its first lines
+
+do {
+    var d = LanguageDetector()
+    check(d.add("Привіт, як справи?") == nil, "one short line is not enough to tell the language")
+    _ = d.add("So do you die? No, okay.")
+    _ = d.add("А ти там вказав, як під'єднати МСП, що кудись стукатися?")
+    let found = d.add("Я логаю в Харвест, а потім з Харвесту заходжу на апку, я собі просто синхронізую все")
+        ?? d.add("Ти клікаєш одну кнопочку справа зверху, і все синхронізується повторно, дублікатів немає.")
+    check(found == "uk", "a Ukrainian call with an English phrase is Ukrainian")
+    var e = LanguageDetector()
+    let english = e.add("Okay, so let's go through the release plan for this week and see what's left.")
+        ?? e.add("I think the backend part is done, but we still need to test the login on staging.")
+    check(english == "en", "an English call is English")
+}
+
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
 exit(failures == 0 ? 0 : 1)
