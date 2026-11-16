@@ -442,21 +442,37 @@ final class NoteTaker: ObservableObject {
 
     /// Asks Claude to clean up the transcript of the note shown and tell the other people apart,
     /// then (after a call) to summarize the cleaned-up version.
-    func improve(thenSummarize: Bool = false) {
+    /// After a call, only the records not yet improved go to Claude (with the improved ones
+    /// before them for context); `again` improves the whole transcript anew.
+    func improve(thenSummarize: Bool = false, again: Bool = false) {
         guard let note, !note.segments.isEmpty, !improving.contains(note.id) else { return }
         let id = note.id
-        let records = note.records
+        let records = again ? note.records : note.unimproved
+        guard !records.isEmpty else {
+            if thenSummarize { summarize() }
+            return
+        }
+        let earlier = again ? [] : note.lines(before: records[0].id)
         improving.insert(id)
         let started = Date()
         NoteClaude.run(arguments: NoteImproveProtocol.arguments(model: .current),
-                       input: NoteImproveProtocol.input(records), directory: workspace, timeout: 600) { [weak self] output in
+                       input: NoteImproveProtocol.input(records, earlier: earlier), directory: workspace, timeout: 600) { [weak self] output in
             guard let self else { return }
             improving.remove(id)
             switch output.map(NoteImproveProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
             case .success(let parsed):
                 let improved = NoteImproveProtocol.improved(parsed, records: records)
                 Log.write("note taker: improved \(improved.count) of \(records.count) records in \(Int(Date().timeIntervalSince(started))) s")
-                update(id) { $0.improved = improved }
+                update(id) { note in
+                    var all = again ? [:] : note.improved ?? [:]
+                    var lengths = again ? [:] : note.improvedLengths ?? [:]
+                    for record in records where improved[record.id.uuidString] != nil {
+                        all[record.id.uuidString] = improved[record.id.uuidString]
+                        lengths[record.id.uuidString] = record.text.count
+                    }
+                    note.improved = all
+                    note.improvedLengths = lengths
+                }
             case .failure(let error):
                 Log.write("note taker: improving failed: \(error.reason)")
                 if self.note?.id == id { status = "Couldn't improve the transcript: \(error.reason)" }
@@ -542,7 +558,7 @@ final class NoteTaker: ObservableObject {
 }
 
 /// The Note Taker window: a third of the screen on its right edge, top to bottom, above other
-/// windows so it stays visible next to the call. Closing it stops the recording, after asking.
+/// windows so it stays visible next to the call. Closing it only hides it: a recording goes on, with a red dot on the menu bar icon.
 @available(macOS 26.0, *)
 @MainActor
 final class NoteTakerWindow: NSObject, NSWindowDelegate {
@@ -591,24 +607,8 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         return panel
     }
 
-    /// Closing the panel stops the recording, so it asks first.
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        guard taker.isRecording else { return true }
-        let alert = NSAlert()
-        alert.messageText = "Stop recording?"
-        alert.informativeText = "Closing Note Taker stops recording the call. What was transcribed so far is kept."
-        alert.addButton(withTitle: "Stop and Close")
-        alert.addButton(withTitle: "Keep Recording")
-        alert.beginSheetModal(for: sender) { [weak sender] response in
-            guard response == .alertFirstButtonReturn else { return }
-            sender?.close()
-        }
-        return false
-    }
-
     func windowWillClose(_ notification: Notification) {
-        taker.stop()
-        // Closing the panel stops the call playing.
+        // The recording goes on (Show Note Taker in the menu brings it back); a call playing stops.
         player.pause()
     }
 
@@ -715,7 +715,7 @@ struct NoteTakerView: View {
                 Button(taker.note?.summary == nil ? "Write Summary" : "Rewrite Summary") { taker.summarize() }
                     .disabled(taker.isRecording || taker.isSummarizing || taker.note?.segments.isEmpty != false)
                 Divider()
-                Button(taker.note?.improved == nil ? "Improve Transcript" : "Improve Transcript Again") { taker.improve() }
+                Button(taker.note?.improved == nil ? "Improve Transcript" : "Improve Transcript Again") { taker.improve(again: true) }
                     .disabled(taker.isRecording || taker.isImproving || taker.note?.segments.isEmpty != false)
                 Toggle("Show Original Transcript", isOn: $showOriginal)
                     .disabled(taker.note?.improved == nil)

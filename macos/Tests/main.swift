@@ -252,6 +252,21 @@ do {
     note.improved = partial
     check(note.lines.first?.text == "hi rikwan", "a record Claude left out keeps its text")
     check((try? NoteImproveProtocol.parse(#"{"result":"Sure, here it is"}"#).get()) == nil, "an answer without lines is not used")
+
+    // Continue adds records after a pause: only those (and any that grew) go to Claude again.
+    note.improved = NoteImproveProtocol.improved(parsed, records: records)
+    note.improvedLengths = Dictionary(uniqueKeysWithValues: records.map { ($0.id.uuidString, $0.text.count) })
+    check(note.unimproved.isEmpty, "an improved transcript has nothing left to improve")
+    note.pauses = [NotePause(start: 10, duration: 60)]
+    note.segments.append(NoteSegment(speaker: .them, start: 75, end: 78, text: "so what about the release"))
+    check(note.unimproved.map(\.text) == ["so what about the release"], "only the continued part is new")
+    check(NoteImproveProtocol.input(note.unimproved, earlier: note.lines(before: note.unimproved[0].id)) ==
+          "<earlier>\nMe: Hi Rick.\nSpeaker 1: Hi, can you hear me?\nSpeaker 2: Yes, I can.\n</earlier>\n<transcript>\n[1] Them: so what about the release\n</transcript>",
+          "the improved start goes along as context")
+    note.segments.append(NoteSegment(speaker: .them, start: 7, end: 8, text: "and more"))
+    check(note.unimproved.count == 2, "a record that grew is improved again")
+    note.improvedLengths = nil
+    check(note.unimproved.count == 1, "notes improved before lengths were kept count as improved")
 }
 
 // Note Taker: cleanup

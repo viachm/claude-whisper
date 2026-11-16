@@ -252,7 +252,21 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @MainActor private func openNote(id: UUID) {
         guard #available(macOS 26.0, *), let note = noteStore.notes.first(where: { $0.id == id }) else { return }
-        noteWindow.taker.open(note)
+        let taker = noteWindow.taker
+        // The window may be hidden while a call records: opening another note would stop it.
+        if taker.isRecording, taker.note?.id != id {
+            let alert = NSAlert()
+            alert.messageText = "Stop recording?"
+            alert.informativeText = "Note Taker is recording a call. Opening another note stops the recording; what was transcribed so far is kept."
+            alert.addButton(withTitle: "Keep Recording")
+            alert.addButton(withTitle: "Stop and Open")
+            NSApp.activate()
+            guard alert.runModal() == .alertSecondButtonReturn else {
+                noteWindow.show()
+                return
+            }
+        }
+        if taker.note?.id != id || !taker.isRecording { taker.open(note) }
         noteWindow.show()
     }
 
