@@ -13,7 +13,7 @@ final class HandCursor: NSResponder {
         guard installed[key] == nil, let view = window.contentView else { return }
         let helper = HandCursor()
         helper.window = window
-        // activeAlways: the Note Taker panel floats without being the key window.
+        // activeAlways: the hand shows over the Note Taker window even when it is not the key window.
         view.addTrackingArea(NSTrackingArea(rect: .zero,
                                             options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
                                             owner: helper))

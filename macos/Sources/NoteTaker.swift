@@ -557,8 +557,9 @@ final class NoteTaker: ObservableObject {
     }
 }
 
-/// The Note Taker window: a third of the screen on its right edge, top to bottom, above other
-/// windows so it stays visible next to the call. Closing it only hides it: a recording goes on, with a red dot on the menu bar icon.
+/// The Note Taker window: a third of the screen on its right edge, top to bottom, an ordinary
+/// window that goes behind others when you click them. Closing it only hides it: a recording goes
+/// on, with a red dot on the menu bar icon.
 @available(macOS 26.0, *)
 @MainActor
 final class NoteTakerWindow: NSObject, NSWindowDelegate {
@@ -596,10 +597,8 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isMovableByWindowBackground = true
-        panel.level = .floating
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.minSize = NSSize(width: 360, height: 420)
         panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
         panel.delegate = self

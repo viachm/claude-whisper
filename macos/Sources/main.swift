@@ -214,13 +214,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         let window = noteWindowBox as? NoteTakerWindow
-        noteTakerItem.title = window?.taker.isRecording == true ? "Show Note Taker" : "Start Note Taker"
+        // An open window may be behind others: the item brings it back rather than starting a note.
+        noteTakerItem.title = window?.taker.isRecording == true || window?.isVisible == true ? "Show Note Taker" : "Start Note Taker"
     }
 
-    /// Starts a new note, or brings the window back while one is recording.
+    /// Starts a new note, or brings the window back while it is open or recording.
     @MainActor @objc private func noteTakerClicked() {
         guard #available(macOS 26.0, *) else { return }
-        if !noteWindow.taker.isRecording { noteWindow.taker.start() }
+        if !noteWindow.taker.isRecording, !noteWindow.isVisible { noteWindow.taker.start() }
         noteWindow.show()
     }
 
