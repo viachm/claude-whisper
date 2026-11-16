@@ -6,6 +6,8 @@ import SwiftUI
 /// that SwiftUI asks for its height.
 struct TitleField: NSViewRepresentable {
     @Binding var text: String
+    /// The note it names: another note's title replaces the text even mid-edit.
+    let id: UUID?
     let placeholder: String
     let font: NSFont
     /// Whether it is being edited; it ends with Return, Escape or a click elsewhere.
@@ -29,8 +31,17 @@ struct TitleField: NSViewRepresentable {
     }
 
     func updateNSView(_ view: TitleTextView, context: Context) {
-        context.coordinator.parent = self
-        if view.string != text, !view.isEditing { view.string = text }
+        let coordinator = context.coordinator
+        coordinator.parent = self
+        // Only typing keeps the text from following the binding: the window makes the view first
+        // responder by itself when it opens, which used to leave it showing the placeholder.
+        if coordinator.id != id {
+            coordinator.id = id
+            coordinator.typing = false
+            if view.string != text { view.string = text }
+        } else if view.string != text, !coordinator.typing {
+            view.string = text
+        }
         view.font = font
     }
 
@@ -43,10 +54,19 @@ struct TitleField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: TitleField
+        var id: UUID?
+        /// Between the first keystroke and the end of editing.
+        var typing = false
 
-        init(_ parent: TitleField) { self.parent = parent }
+        init(_ parent: TitleField) {
+            self.parent = parent
+            id = parent.id
+        }
 
-        func textDidBeginEditing(_ notification: Notification) { parent.editing = true }
+        func textDidBeginEditing(_ notification: Notification) {
+            typing = true
+            parent.editing = true
+        }
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? TitleTextView else { return }
@@ -54,7 +74,10 @@ struct TitleField: NSViewRepresentable {
             view.invalidateIntrinsicContentSize()
         }
 
-        func textDidEndEditing(_ notification: Notification) { parent.editing = false }
+        func textDidEndEditing(_ notification: Notification) {
+            typing = false
+            parent.editing = false
+        }
 
         func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             // Return and Escape finish editing; a title has no line breaks of its own.
@@ -68,7 +91,6 @@ struct TitleField: NSViewRepresentable {
 
 final class TitleTextView: NSTextView {
     var placeholder = ""
-    private(set) var isEditing = false
 
     /// Measured with a layout of its own: resizing the view's own text container here would leave
     /// it wrapping at a width SwiftUI only asked about, under a frame of a different height.
@@ -85,15 +107,14 @@ final class TitleTextView: NSTextView {
     }
 
     override func becomeFirstResponder() -> Bool {
-        isEditing = super.becomeFirstResponder()
+        let became = super.becomeFirstResponder()
         needsDisplay = true
-        return isEditing
+        return became
     }
 
     override func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
         if resigned {
-            isEditing = false
             setSelectedRange(NSRange(location: 0, length: 0))
             needsDisplay = true
         }

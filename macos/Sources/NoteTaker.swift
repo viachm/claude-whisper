@@ -746,7 +746,7 @@ struct NoteTakerView: View {
 
     private var heading: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TitleField(text: $titleDraft, placeholder: "New note", font: Self.titleFont, editing: $titleEditing)
+            TitleField(text: $titleDraft, id: taker.note?.id, placeholder: "New note", font: Self.titleFont, editing: $titleEditing)
             HStack(spacing: 6) {
                 if let note = taker.note {
                     Chip(text: Self.day(note.started), icon: nil)
