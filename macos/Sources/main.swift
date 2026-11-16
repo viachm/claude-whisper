@@ -222,6 +222,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // An open window may be behind others: the item brings it back rather than starting a note.
         noteTakerItem.title = window?.taker.isRecording == true || window?.isVisible == true ? "Show Note Taker" : "Start Note Taker"
         stopNoteTakerItem.isHidden = window?.taker.isRecording != true
+        // Show brings a window back, so it gets a window, not Start's record symbol.
+        let symbol = noteTakerItem.title == "Show Note Taker" ? "macwindow" : "record.circle"
+        noteTakerItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 
     /// Stops the note recording; the window isn't brought up for it.
