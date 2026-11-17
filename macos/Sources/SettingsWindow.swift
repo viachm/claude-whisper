@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable, Identifiable {
-    case general, claude, permissions, history, notes, about
+    case general, history, notes, claude, permissions, about
 
     var id: Self { self }
 
@@ -971,11 +971,11 @@ private struct NotesPane: View {
     @ObservedObject var state: SettingsState
     let open: (UUID) -> Void
     @AppStorage("noteTakerLocale") private var locale = "en-US"
+    @AppStorage(NoteLanguage.key) private var language = NoteLanguage.automatic
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
     @AppStorage("noteTakerImprove") private var improve = true
     @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
-    @AppStorage(NoteContext.textKey) private var context = ""
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -998,8 +998,8 @@ private struct NotesPane: View {
         ScrollViewReader { proxy in
             Form {
                 if supported {
-                    NoteTakerSettings(locale: $locale, model: $model, keepAudio: $keepAudio, improve: $improve,
-                                      retention: $retention, context: $context, locales: locales)
+                    NoteTakerSettings(locale: $locale, language: $language, model: $model, keepAudio: $keepAudio, improve: $improve,
+                                      retention: $retention, locales: locales)
                 } else {
                     Section { Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary) }
                 }
@@ -1081,18 +1081,34 @@ private struct NotesPane: View {
 /// The Note Taker options at the top of Settings › Notes, as grouped sections like the other tabs.
 private struct NoteTakerSettings: View {
     @Binding var locale: String
+    @Binding var language: String
     @Binding var model: NoteModel
     @Binding var keepAudio: Bool
     @Binding var improve: Bool
     @Binding var retention: NoteRetention
-    @Binding var context: String
     let locales: [String]
 
     var body: some View {
+        if SpeechModel.isAvailable { SpeechModelSection() }
+
         Section {
-            Picker("Language of calls", selection: $locale) {
-                ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
-                    Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
+            if SpeechModel.isAvailable {
+                Picker("Language of calls", selection: $language) {
+                    Text(NoteLanguage.title(NoteLanguage.automatic)).tag(NoteLanguage.automatic)
+                    Divider()
+                    ForEach(NoteLanguage.parakeetByName, id: \.self) { Text(NoteLanguage.title($0)).tag($0) }
+                    let others = NoteLanguage.appleOnly(locales)
+                    if !others.isEmpty {
+                        Section("With Apple's recogniser") {
+                            ForEach(others, id: \.self) { Text(NoteLanguage.title($0)).tag($0) }
+                        }
+                    }
+                }
+            } else {
+                Picker("Language of calls", selection: $locale) {
+                    ForEach(locales.isEmpty ? [locale] : locales, id: \.self) { code in
+                        Text(Locale.current.localizedString(forIdentifier: code) ?? code).tag(code)
+                    }
                 }
             }
             Toggle("Keep the call audio", isOn: $keepAudio)
@@ -1103,9 +1119,10 @@ private struct NoteTakerSettings: View {
             SectionTitle("Recording")
         } footer: {
             Text("""
-                Start Note Taker from the menu bar icon. It transcribes on your Mac with Apple's speech recogniser: \
-                your microphone as “Me”, the call as “Them”. With the audio kept you can play the call back in the \
-                note (about 30 MB an hour).
+                Start Note Taker from the menu bar icon. It transcribes on your Mac: your microphone as “Me”, the \
+                call as “Them”. Automatic recognises the language as you speak; choosing one keeps the transcript \
+                to its alphabet, which works better (you can switch it on a note while it records). With the audio \
+                kept you can play the call back in the note (about 30 MB an hour).
                 """)
             .foregroundStyle(.secondary)
         }
@@ -1126,30 +1143,60 @@ private struct NoteTakerSettings: View {
                 """)
             .foregroundStyle(.secondary)
         }
-
-        Section {
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $context)
-                    .font(.body)
-                    .frame(height: 64)
-                    .scrollContentBackground(.hidden)
-                if context.isEmpty {
-                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend). Project docs: ~/Documents/xyz")
-                        .foregroundStyle(.tertiary)
-                        .padding(.leading, 5)
-                        .allowsHitTesting(false)
-                }
-            }
-        } header: {
-            SectionTitle("Context for Claude")
-        } footer: {
-            Text("Sent with every summary and question. Write a folder's path here (in quotes if it has spaces) and Claude can read files in it, read-only and nowhere else, to look up the project, people and terms.")
-                .foregroundStyle(.secondary)
-        }
     }
 }
 
 /// One note in Settings › Notes › history: open it to read, listen or copy.
+/// Settings › Notes, until the speech model is downloaded: Note Taker can't record without it.
+private struct SpeechModelSection: View {
+    @ObservedObject private var model = SpeechModel.shared
+
+    var body: some View {
+        if !model.isReady {
+            Section {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Parakeet speech model")
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(isFailed ? .red : .secondary)
+                    }
+                    Spacer()
+                    if case .downloading(let fraction) = model.state {
+                        ProgressView(value: min(max(fraction, 0), 1))
+                            .frame(width: 120)
+                    } else {
+                        Button(isFailed ? "Try Again" : "Download Model") { model.download() }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+            } header: {
+                SectionTitle("Speech Model")
+            } footer: {
+                Text("""
+                    Note Taker needs it to transcribe calls in any of 25 European languages. Free \
+                    (NVIDIA's Parakeet, CC BY 4.0), downloaded once from Hugging Face; the call's audio never \
+                    leaves the Mac.
+                    """)
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var isFailed: Bool {
+        if case .failed = model.state { return true } else { return false }
+    }
+
+    private var detail: String {
+        switch model.state {
+        case .downloading(let fraction):
+            return fraction < 0.99 ? "Downloading… \(Int(fraction * 100))%" : "Preparing the model…"
+        case .failed(let reason): return "The download failed: \(reason)"
+        default: return "Not downloaded · \(SpeechModel.size)"
+        }
+    }
+}
+
 private struct NoteHistoryRow: View {
     let note: Note
     let subtitle: String

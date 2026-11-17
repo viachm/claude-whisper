@@ -214,6 +214,9 @@ final class ClaudeSession {
 
     /// Releases the voice key and waits for Claude to finish transcribing, then takes the
     /// prompt text out of Claude. Calls back on the main queue with the text ("" if none).
+    /// What Claude shows while it turns the recording into text.
+    static let busy = ["processing", "Transcribing"]
+
     func finish(completion: @escaping (String) -> Void) {
         stopRepeats()
         let mark = screen.count
@@ -228,12 +231,18 @@ final class ClaudeSession {
                 Log.write("no speech detected; screen: \(tail(400))")
                 return completion("")
             }
-            if since.contains("processing") { sawProcessing = true }
-            let stillProcessing = lastChunk.contains("processing")
+            // "processing" until Claude Code 2.1.325, "Transcribing…" from 2.1.326 on.
+            if Self.busy.contains(where: since.contains) { sawProcessing = true }
+            let stillProcessing = Self.busy.contains(where: lastChunk.contains)
             let done = (sawProcessing && !stillProcessing && quiet > 0.15)
                 || (!sawProcessing && elapsed > 2.5 && quiet > 0.6)
                 || elapsed > 20
-            if done { return captureRetryingOnce(retry: sawProcessing, completion: completion) }
+            if done {
+                // Without a status the wait falls back to 2.5 s: log what Claude showed instead, so
+                // a changed status line can be matched.
+                if !sawProcessing { Log.write("transcribed without a known status; screen since release: \(since.suffix(600).debugDescription)") }
+                return captureRetryingOnce(retry: sawProcessing, completion: completion)
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: poll)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: poll)

@@ -3,8 +3,9 @@ import AVFoundation
 import SwiftUI
 
 /// Note Taker: transcribes a call as a dialog, your microphone as "Me" and everything the Mac
-/// plays as "Them", on-device with Apple's speech recogniser (not Claude: Claude Code's voice
-/// mode only listens while a key is held, and only to the microphone). Claude, through the
+/// plays as "Them", on-device with the Parakeet model or, for other languages, Apple's speech
+/// recogniser (not Claude: Claude Code's voice mode only listens while a key is held, and only to
+/// the microphone). Claude, through the
 /// user's Claude Code login, titles and summarizes a note when it stops and answers questions
 /// about it. Each recording is saved as it goes; the window shows the live one or a saved one.
 @available(macOS 26.0, *)
@@ -41,15 +42,27 @@ final class NoteTaker: ObservableObject {
     static let keepAudioKey = "noteTakerKeepAudio"
     /// Whether notes keep their audio, so it can be listened to; on unless turned off in Settings.
     static var keepsAudio: Bool { UserDefaults.standard.object(forKey: keepAudioKey) as? Bool ?? true }
-    private var streams: [Speaker: SpeechStream] = [:]
+    private var streams: [Speaker: any NoteTranscriber] = [:]
+    /// A note waiting for the speech model to download before it records.
+    @Published private(set) var awaitingModel: Note?
     /// Per source, from which transcriber time (seconds of audio it was given) which offset
     /// applies: the transcriber's times count audio only, so the offset is the time from the
     /// note's start to the first buffer, and grows by each pause.
     private var offsets: [Speaker: [(from: Double, offset: Double)]] = [:]
+    /// Settles the language of a note recorded in Automatic from its first lines.
+    private var detector: LanguageDetector?
     private var run = 0
 
+    /// Apple's recogniser's language, chosen in Settings on Macs without Parakeet (Intel).
     static let localeKey = "noteTakerLocale"
-    static var locale: String { UserDefaults.standard.string(forKey: localeKey) ?? "en-US" }
+    /// The language a new note is transcribed in (see NoteLanguage).
+    static var language: String {
+        SpeechModel.isAvailable ? NoteLanguage.current : UserDefaults.standard.string(forKey: localeKey) ?? "en-US"
+    }
+
+    private static func needsParakeet(_ language: String) -> Bool {
+        SpeechModel.isAvailable && NoteLanguage.usesParakeet(language)
+    }
 
     init(store: NoteStore, workspace: URL) {
         self.store = store
@@ -82,7 +95,7 @@ final class NoteTaker: ObservableObject {
     /// Starts a new note.
     func start() {
         guard !isRecording else { return }
-        record(Note(started: Date(), locale: Self.locale))
+        record(Note(started: Date(), locale: Self.language))
     }
 
     /// Records more into the note shown (a new one if there is none); the time since it stopped
@@ -93,16 +106,40 @@ final class NoteTaker: ObservableObject {
         note.pauses = (note.pauses ?? []) + [NotePause(start: ended.timeIntervalSince(note.started),
                                                        duration: Date().timeIntervalSince(ended))]
         note.ended = nil
+        note.locale = Self.continuing(note)
         record(note)
     }
 
+    /// The language more recording of a note is transcribed in: a note recorded with Apple's
+    /// recogniser in a language Parakeet has (all notes before Parakeet) moves to the language
+    /// chosen now, so it doesn't go back to the recogniser that didn't know that language.
+    private static func continuing(_ note: Note) -> String {
+        guard SpeechModel.isAvailable, !NoteLanguage.usesParakeet(note.locale),
+              NoteLanguage.appleOnly([note.locale]).isEmpty else { return note.locale }
+        return language
+    }
+
+    /// Whether Start (or Continue) has to download the speech model first.
+    var needsModel: Bool {
+        guard SpeechModel.isAvailable, !SpeechModel.shared.isReady else { return false }
+        let language = note.map { $0.ended == nil ? $0.locale : Self.continuing($0) } ?? Self.language
+        return NoteLanguage.usesParakeet(language)
+    }
+
     private func record(_ note: Note) {
+        // The first time, the speech model has to be downloaded: the window asks.
+        if Self.needsParakeet(note.locale), !SpeechModel.shared.isReady {
+            awaitingModel = note
+            return
+        }
+        awaitingModel = nil
         run += 1
         let run = run
         let locale = note.locale
         self.note = note
         pending = [:]
         offsets = [:]
+        detector = locale == NoteLanguage.automatic && Self.needsParakeet(locale) ? LanguageDetector() : nil
         status = nil
         isRecording = true
         isPaused = false
@@ -110,7 +147,7 @@ final class NoteTaker: ObservableObject {
         Log.write("note taker: \(note.segments.isEmpty ? "started" : "continued") (\(locale))")
         Task {
             do {
-                try await begin(run: run, locale: Locale(identifier: locale))
+                try await begin(run: run, language: locale)
             } catch {
                 Log.write("note taker: could not start: \(error)")
                 status = "Could not start: \(error.localizedDescription)"
@@ -119,12 +156,31 @@ final class NoteTaker: ObservableObject {
         }
     }
 
-    private func begin(run: Int, locale: Locale) async throws {
+    /// Downloads the speech model, then records the note that was waiting for it.
+    func downloadModel() {
+        SpeechModel.shared.download { [weak self] in
+            guard let self, let note = awaitingModel else { return }
+            record(note)
+        }
+    }
+
+    /// "Not Now" on the download prompt.
+    func cancelAwaitingModel() { awaitingModel = nil }
+
+    private func begin(run: Int, language: String) async throws {
         for speaker in [Speaker.me, .them] {
-            let stream = SpeechStream(locale: locale) { [weak self] text, start, end, final in
+            let handler: (String, Double, Double, Bool) -> Void = { [weak self] text, start, end, final in
                 Task { @MainActor in self?.received(speaker, run: run, text: text, start: start, end: end, final: final) }
             }
-            try await stream.prepare { status = "Downloading the speech model for \(locale.identifier(.bcp47))…" }
+            let stream: any NoteTranscriber
+            if Self.needsParakeet(language) {
+                let manager = try await SpeechModel.shared.loaded()
+                stream = ParakeetStream(manager: manager, language: NoteLanguage.hint(language), onResult: handler)
+            } else {
+                let apple = SpeechStream(locale: Locale(identifier: language), onResult: handler)
+                try await apple.prepare { status = "Downloading the speech model for \(language)…" }
+                stream = apple
+            }
             try await stream.start()
             streams[speaker] = stream
         }
@@ -236,8 +292,8 @@ final class NoteTaker: ObservableObject {
     private func received(_ speaker: Speaker, run: Int, text: String, start: Double, end: Double, final: Bool) {
         guard run == self.run, note != nil else { return }
         var text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        // A lone "." or "," from a cough or a click is not a line.
-        if text.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)).isEmpty { text = "" }
+        // A lone "." or "9" from a cough or a click is not a line.
+        if text.unicodeScalars.filter(CharacterSet.letters.contains).count < 2 { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
@@ -246,6 +302,11 @@ final class NoteTaker: ObservableObject {
             guard !text.isEmpty else { return }
             note?.segments.append(segment)
             save()
+            if let code = detector?.add(text) {
+                detector = nil
+                Log.write("note taker: the call is in \(code)")
+                switchLanguage(code)
+            }
         } else {
             pending[speaker] = segment
         }
@@ -306,11 +367,31 @@ final class NoteTaker: ObservableObject {
     }
 
     /// Finishes every stream at once; each gives up after a few seconds (see SpeechStream.finish).
-    private static func finish(_ streams: some Collection<SpeechStream>) async {
+    private static func finish(_ streams: some Collection<any NoteTranscriber>) async {
         await withTaskGroup(of: Void.self) { group in
-            for stream in streams { group.addTask { await stream.finish() } }
+            for stream in streams { group.addTask { await stream.finish(limit: 3) } }
         }
     }
+
+    /// Switches the language: for new notes, and for the one recording if Parakeet hears it.
+    func setLanguage(_ code: String) {
+        UserDefaults.standard.set(code, forKey: NoteLanguage.key)
+        // Chosen by hand: Automatic guesses again, a language is kept.
+        detector = code == NoteLanguage.automatic ? LanguageDetector() : nil
+        switchLanguage(code)
+        Log.write("note taker: language \(code)")
+    }
+
+    /// Keeps the note recording to a language from now on (Settings stay as they are).
+    private func switchLanguage(_ code: String) {
+        guard isRecording, let note, Self.needsParakeet(note.locale), Self.needsParakeet(code) else { return }
+        self.note?.locale = code
+        for stream in streams.values { (stream as? ParakeetStream)?.setLanguage(NoteLanguage.hint(code)) }
+        save()
+    }
+
+    /// Whether the language of the note recording can be switched (between Parakeet's languages).
+    var canSwitchLanguage: Bool { isRecording && note.map { Self.needsParakeet($0.locale) } == true }
 
     /// Words still shown as a guess when the transcriber stopped answering are kept as they are.
     private func keepPending() {
@@ -322,6 +403,8 @@ final class NoteTaker: ObservableObject {
     /// Shows a saved note (stopping a recording first).
     func open(_ saved: Note) {
         stop()
+        // Opening another note drops a download prompt left from an earlier Start.
+        awaitingModel = nil
         run += 1
         pausedAt = nil
         note = saved
@@ -359,21 +442,37 @@ final class NoteTaker: ObservableObject {
 
     /// Asks Claude to clean up the transcript of the note shown and tell the other people apart,
     /// then (after a call) to summarize the cleaned-up version.
-    func improve(thenSummarize: Bool = false) {
+    /// After a call, only the records not yet improved go to Claude (with the improved ones
+    /// before them for context); `again` improves the whole transcript anew.
+    func improve(thenSummarize: Bool = false, again: Bool = false) {
         guard let note, !note.segments.isEmpty, !improving.contains(note.id) else { return }
         let id = note.id
-        let records = note.records
+        let records = again ? note.records : note.unimproved
+        guard !records.isEmpty else {
+            if thenSummarize { summarize() }
+            return
+        }
+        let earlier = again ? [] : note.lines(before: records[0].id)
         improving.insert(id)
         let started = Date()
         NoteClaude.run(arguments: NoteImproveProtocol.arguments(model: .current),
-                       input: NoteImproveProtocol.input(records), directory: workspace, timeout: 600) { [weak self] output in
+                       input: NoteImproveProtocol.input(records, earlier: earlier), directory: workspace, timeout: 600) { [weak self] output in
             guard let self else { return }
             improving.remove(id)
             switch output.map(NoteImproveProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
             case .success(let parsed):
                 let improved = NoteImproveProtocol.improved(parsed, records: records)
                 Log.write("note taker: improved \(improved.count) of \(records.count) records in \(Int(Date().timeIntervalSince(started))) s")
-                update(id) { $0.improved = improved }
+                update(id) { note in
+                    var all = again ? [:] : note.improved ?? [:]
+                    var lengths = again ? [:] : note.improvedLengths ?? [:]
+                    for record in records where improved[record.id.uuidString] != nil {
+                        all[record.id.uuidString] = improved[record.id.uuidString]
+                        lengths[record.id.uuidString] = record.text.count
+                    }
+                    note.improved = all
+                    note.improvedLengths = lengths
+                }
             case .failure(let error):
                 Log.write("note taker: improving failed: \(error.reason)")
                 if self.note?.id == id { status = "Couldn't improve the transcript: \(error.reason)" }
@@ -389,7 +488,7 @@ final class NoteTaker: ObservableObject {
         summarizing.insert(id)
         let started = Date()
         NoteClaude.run(arguments: NoteSummaryProtocol.arguments(model: .current),
-                       input: NoteSummaryProtocol.input(transcript: note.transcript), directory: workspace) { [weak self] output in
+                       input: NoteSummaryProtocol.input(transcript: note.transcript, language: note.locale), directory: workspace) { [weak self] output in
             guard let self else { return }
             summarizing.remove(id)
             switch output.map(NoteSummaryProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
@@ -421,7 +520,7 @@ final class NoteTaker: ObservableObject {
         askingQuestion = question
         NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
                        input: NoteAskProtocol.input(transcript: transcript, question: question),
-                       directory: workspace, timeout: NoteContext.current.folders.isEmpty ? 90 : 180) { [weak self] output in
+                       directory: workspace, timeout: 90) { [weak self] output in
             guard let self else { return }
             asking = false
             askingQuestion = nil
@@ -458,8 +557,9 @@ final class NoteTaker: ObservableObject {
     }
 }
 
-/// The Note Taker window: a third of the screen on its right edge, top to bottom, above other
-/// windows so it stays visible next to the call. Closing it stops the recording.
+/// The Note Taker window: a third of the screen on its right edge, top to bottom, an ordinary
+/// window that goes behind others when you click them. Closing it only hides it: a recording goes
+/// on, with a red dot on the menu bar icon.
 @available(macOS 26.0, *)
 @MainActor
 final class NoteTakerWindow: NSObject, NSWindowDelegate {
@@ -497,10 +597,8 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isMovableByWindowBackground = true
-        panel.level = .floating
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.minSize = NSSize(width: 360, height: 420)
         panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
@@ -509,8 +607,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        taker.stop()
-        // Closing the panel stops the call playing.
+        // The recording goes on (Open Note Taker in the menu brings it back); a call playing stops.
         player.pause()
     }
 
@@ -530,6 +627,8 @@ private enum NoteTab: String, CaseIterable {
 struct NoteTakerView: View {
     @ObservedObject var taker: NoteTaker
     @ObservedObject var player: NotePlayer
+    /// Watched so Start replaces Download Model once the model is ready.
+    @ObservedObject private var speechModel = SpeechModel.shared
     let close: () -> Void
     @State private var showOriginal = false
     @State private var tab = NoteTab.transcript
@@ -542,7 +641,7 @@ struct NoteTakerView: View {
     @State private var confirmDelete = false
     @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
-    @FocusState private var titleFocused: Bool
+    @State private var titleEditing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -564,6 +663,11 @@ struct NoteTakerView: View {
         }
         .font(.system(size: 14))
         .frame(minWidth: 360, minHeight: 420)
+        .overlay {
+            if taker.awaitingModel != nil {
+                ModelDownloadCard(download: taker.downloadModel, cancel: taker.cancelAwaitingModel)
+            }
+        }
         .onAppear {
             loadDrafts()
             loadAudio()
@@ -573,8 +677,8 @@ struct NoteTakerView: View {
             loadAudio()
         }
         .onChange(of: taker.isRecording) { loadAudio() }
-        .onChange(of: taker.note?.displayTitle) { if !titleFocused { titleDraft = taker.note?.displayTitle ?? "" } }
-        .onChange(of: titleFocused) { if !titleFocused { taker.rename(titleDraft) } }
+        .onChange(of: taker.note?.displayTitle) { if !titleEditing { titleDraft = taker.note?.displayTitle ?? "" } }
+        .onChange(of: titleEditing) { if !titleEditing { taker.rename(titleDraft) } }
         .onChange(of: taker.asking) { if taker.asking { showAnswers = true } }
         .confirmationDialog("Delete this note?", isPresented: $confirmDelete) {
             Button("Delete Note", role: .destructive) {
@@ -610,7 +714,7 @@ struct NoteTakerView: View {
                 Button(taker.note?.summary == nil ? "Write Summary" : "Rewrite Summary") { taker.summarize() }
                     .disabled(taker.isRecording || taker.isSummarizing || taker.note?.segments.isEmpty != false)
                 Divider()
-                Button(taker.note?.improved == nil ? "Improve Transcript" : "Improve Transcript Again") { taker.improve() }
+                Button(taker.note?.improved == nil ? "Improve Transcript" : "Improve Transcript Again") { taker.improve(again: true) }
                     .disabled(taker.isRecording || taker.isImproving || taker.note?.segments.isEmpty != false)
                 Toggle("Show Original Transcript", isOn: $showOriginal)
                     .disabled(taker.note?.improved == nil)
@@ -634,18 +738,34 @@ struct NoteTakerView: View {
         .frame(height: 38)
     }
 
+    private static let titleFont: NSFont = {
+        let base = NSFont.systemFont(ofSize: 24)
+        return base.fontDescriptor.withDesign(.serif).flatMap { NSFont(descriptor: $0, size: 24) } ?? base
+    }()
+
     private var heading: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("New note", text: $titleDraft)
-                .textFieldStyle(.plain)
-                .font(.system(size: 24, weight: .regular, design: .serif))
-                .focused($titleFocused)
-                .onSubmit { titleFocused = false }
+            TitleField(text: $titleDraft, id: taker.note?.id, placeholder: "New note", font: Self.titleFont, editing: $titleEditing)
             HStack(spacing: 6) {
                 if let note = taker.note {
                     Chip(text: Self.day(note.started), icon: nil)
                     if let duration = note.duration { Chip(text: Self.elapsed(duration), icon: "clock") }
-                    Chip(text: Locale.current.localizedString(forIdentifier: note.locale) ?? note.locale, icon: "globe")
+                    if taker.canSwitchLanguage {
+                        Menu {
+                            ForEach([NoteLanguage.automatic] + NoteLanguage.parakeetByName, id: \.self) { code in
+                                Button(NoteLanguage.title(code)) { taker.setLanguage(code) }
+                            }
+                        } label: {
+                            Chip(text: NoteLanguage.title(note.locale), icon: "globe")
+                        }
+                        .menuStyle(.button)
+                        .buttonStyle(.plain)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .help("The language of the call")
+                    } else {
+                        Chip(text: NoteLanguage.title(note.locale), icon: "globe")
+                    }
                 }
             }
         }
@@ -699,6 +819,7 @@ struct NoteTakerView: View {
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 24)
                     .padding(.top, 10)
+                    .padding(.bottom, 6)
             }
             if taker.isImproving {
                 HStack(spacing: 8) {
@@ -709,6 +830,7 @@ struct NoteTakerView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 10)
+                .padding(.bottom, 6)
             }
             transcript
         }
@@ -787,7 +909,9 @@ struct NoteTakerView: View {
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 14) {
+                // Not a LazyVStack: when Claude's cleanup changes the lines' heights, a lazy stack
+                // scrolled to the bottom stops drawing the lines above (the top went blank).
+                VStack(alignment: .leading, spacing: 14) {
                     if taker.turns.isEmpty && !taker.isPaused {
                         Text(taker.isRecording ? "Listening…" : "Nothing was said.")
                             .italic()
@@ -899,6 +1023,10 @@ struct NoteTakerView: View {
                         if taker.isRecording {
                             RoundedRectangle(cornerRadius: 2).fill(Color.red).frame(width: 12, height: 12)
                             Text("Stop")
+                        } else if taker.needsModel {
+                            // Nothing records until the speech model is downloaded.
+                            Image(systemName: "arrow.down.circle")
+                            Text("Download Model")
                         } else {
                             Circle().fill(Color.red).frame(width: 11, height: 11)
                             Text(taker.note == nil ? "Start" : "Continue")
@@ -989,6 +1117,72 @@ struct NoteTakerView: View {
 }
 
 @available(macOS 26.0, *)
+/// Asks to download the speech model the first time Note Taker records, over the whole window.
+@available(macOS 26.0, *)
+private struct ModelDownloadCard: View {
+    @ObservedObject private var model = SpeechModel.shared
+    let download: () -> Void
+    let cancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.2)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+            VStack(spacing: 14) {
+                Image(systemName: "waveform.circle")
+                    .font(.system(size: 44, weight: .light))
+                    .foregroundStyle(.secondary)
+                Text("Download the Speech Model")
+                    .font(.system(size: 20, weight: .semibold))
+                Text("""
+                    Note Taker transcribes calls on this Mac with Parakeet, a free speech model for 25 European \
+                    languages. It is downloaded once (\(SpeechModel.size)); the call's audio never leaves the Mac.
+                    """)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                switch model.state {
+                case .downloading(let fraction):
+                    VStack(spacing: 6) {
+                        ProgressView(value: min(max(fraction, 0), 1))
+                        Text(fraction < 0.99 ? "Downloading… \(Int(fraction * 100))%" : "Preparing the model…")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 4)
+                    Button("Hide", action: cancel)
+                case .failed(let reason):
+                    Text("The download failed: \(reason)")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                    buttons(title: "Try Again")
+                default:
+                    buttons(title: "Download Model")
+                }
+            }
+            .padding(28)
+            .frame(maxWidth: 380)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
+            .padding(24)
+        }
+    }
+
+    private func buttons(title: String) -> some View {
+        HStack(spacing: 10) {
+            Button("Not Now", action: cancel)
+                .controlSize(.large)
+            Button(title, action: download)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
+        }
+        .padding(.top, 4)
+    }
+}
+
 private struct Chip: View {
     let text: String
     let icon: String?
@@ -1265,15 +1459,18 @@ final class NotePlayer: ObservableObject {
         guard let note, let recordings = note.recordings, !recordings.isEmpty else { return }
         loading = Task {
             let composition = AVMutableComposition()
+            var tracks: [(track: AVMutableCompositionTrack, url: URL, mine: Bool)] = []
             for recording in recordings {
                 let at = CMTime(seconds: note.audioTime(recording.start), preferredTimescale: 600)
                 for speaker in recording.speakers {
-                    let asset = AVURLAsset(url: store.audioFile(note.id, index: recording.index, speaker: speaker))
+                    let url = store.audioFile(note.id, index: recording.index, speaker: speaker)
+                    let asset = AVURLAsset(url: url)
                     guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
                           let length = try? await asset.load(.duration), length.seconds > 0,
                           let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
                     else { continue }
                     try? track.insertTimeRange(CMTimeRange(start: .zero, duration: length), of: source, at: at)
+                    tracks.append((track, url, speaker == .me))
                 }
             }
             guard !Task.isCancelled, loadedID == note.id else { return }
@@ -1284,6 +1481,7 @@ final class NotePlayer: ObservableObject {
             player.defaultRate = speed
             self.player = player
             duration = composition.duration.seconds.isFinite ? composition.duration.seconds : 0
+            balance(item, tracks: tracks)
             observer = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] time in
                 MainActor.assumeIsolated {
                     guard let self else { return }
@@ -1291,6 +1489,34 @@ final class NotePlayer: ObservableObject {
                     if self.isPlaying, time.seconds >= self.duration - 0.05 { self.pause() }
                 }
             }
+        }
+    }
+
+    /// Speech levels of the audio files played, measured once per file.
+    private static var levels: [URL: Float?] = [:]
+
+    /// Plays the microphone and the call about equally loud: the quieter one is raised to the
+    /// other, the microphone a little below the call.
+    /// Measuring a long call's files takes a moment, so it plays as recorded until then.
+    private func balance(_ item: AVPlayerItem, tracks: [(track: AVMutableCompositionTrack, url: URL, mine: Bool)]) {
+        let urls = tracks.map(\.url)
+        let known = Self.levels
+        Task {
+            let levels = await Task.detached(priority: .utility) {
+                urls.map { url in known[url] ?? AudioGain.speechLevel(of: url) }
+            }.value
+            for (url, level) in zip(urls, levels) { Self.levels[url] = level }
+            let gains = SpeechLevel.gains(levels, mine: tracks.map(\.mine))
+            guard gains.contains(where: { $0 != 1 }) else { return }
+            let mix = AVMutableAudioMix()
+            mix.inputParameters = zip(tracks, gains).compactMap { entry, gain in
+                guard gain != 1, let tap = AudioGain.tap(gain: gain) else { return nil }
+                let parameters = AVMutableAudioMixInputParameters(track: entry.track)
+                parameters.audioTapProcessor = tap
+                return parameters
+            }
+            item.audioMix = mix
+            Log.write("note taker: playback gains \(gains.map { String(format: "%.1f", $0) }.joined(separator: ", "))")
         }
     }
 

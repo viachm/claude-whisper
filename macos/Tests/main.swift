@@ -252,6 +252,21 @@ do {
     note.improved = partial
     check(note.lines.first?.text == "hi rikwan", "a record Claude left out keeps its text")
     check((try? NoteImproveProtocol.parse(#"{"result":"Sure, here it is"}"#).get()) == nil, "an answer without lines is not used")
+
+    // Continue adds records after a pause: only those (and any that grew) go to Claude again.
+    note.improved = NoteImproveProtocol.improved(parsed, records: records)
+    note.improvedLengths = Dictionary(uniqueKeysWithValues: records.map { ($0.id.uuidString, $0.text.count) })
+    check(note.unimproved.isEmpty, "an improved transcript has nothing left to improve")
+    note.pauses = [NotePause(start: 10, duration: 60)]
+    note.segments.append(NoteSegment(speaker: .them, start: 75, end: 78, text: "so what about the release"))
+    check(note.unimproved.map(\.text) == ["so what about the release"], "only the continued part is new")
+    check(NoteImproveProtocol.input(note.unimproved, earlier: note.lines(before: note.unimproved[0].id)) ==
+          "<earlier>\nMe: Hi Rick.\nSpeaker 1: Hi, can you hear me?\nSpeaker 2: Yes, I can.\n</earlier>\n<transcript>\n[1] Them: so what about the release\n</transcript>",
+          "the improved start goes along as context")
+    note.segments.append(NoteSegment(speaker: .them, start: 7, end: 8, text: "and more"))
+    check(note.unimproved.count == 2, "a record that grew is improved again")
+    note.improvedLengths = nil
+    check(note.unimproved.count == 1, "notes improved before lengths were kept count as improved")
 }
 
 // Note Taker: cleanup
@@ -296,22 +311,10 @@ do {
     note.pauses = [NotePause(start: 10, duration: 30)]
     check(note.duration == 70, "the length leaves pauses out")
     check(note.audioTime(5) == 5 && note.audioTime(25) == 10 && note.audioTime(60) == 30, "audio time leaves out the pauses before it")
-    let none = NoteContext(text: "")
-    check(NoteSummaryProtocol.arguments(model: .opus, context: none).contains("opus"), "the chosen model is used")
-    let plain = NoteAskProtocol.arguments(model: .sonnet, context: none)
-    check(plain.contains("--tools") && plain[plain.firstIndex(of: "--tools")! + 1] == "" && !plain.contains("--add-dir"), "without a folder Claude has no tools")
-    let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.resolvingSymlinksInPath().path
-    let spaced = tmp + "/cw test \(UUID().uuidString)"
-    try? FileManager.default.createDirectory(atPath: spaced, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(atPath: spaced) }
-    let withPaths = NoteContext(text: "I work on XYZ in \(tmp). Notes in \"\(spaced)\", and/or /no/such/folder; also ~ and /.")
-    check(withPaths.folders == [tmp, spaced], "folders named in the context are found, quoted ones with spaces too")
-    let reading = NoteAskProtocol.arguments(model: .sonnet, context: withPaths)
-    check(reading[reading.firstIndex(of: "--tools")! + 1] == "Read,Grep,Glob" && reading.filter { $0 == "--add-dir" }.count == 2 && reading.contains("dontAsk"), "with folders Claude can only read them")
-    let prompt = reading[reading.firstIndex(of: "--system-prompt")! + 1]
-    check(prompt.contains("<context>\nI work on XYZ") && prompt.contains("You can read files under \(tmp), \(spaced)"), "the context and the folders go into the prompt")
-    check(NoteContext(text: "~ / ~/ \(NSHomeDirectory()) /Users").folders.isEmpty, "the home folder, its parents and / never count")
-    check(!NoteImproveProtocol.arguments(model: .sonnet, context: withPaths).contains("--add-dir"), "the clean-up reads no files")
+    check(NoteSummaryProtocol.arguments(model: .opus).contains("opus"), "the chosen model is used")
+    for arguments in [NoteSummaryProtocol.arguments(model: .sonnet), NoteAskProtocol.arguments(model: .sonnet), NoteImproveProtocol.arguments(model: .sonnet)] {
+        check(arguments[arguments.firstIndex(of: "--tools")! + 1] == "" && !arguments.contains("--add-dir"), "Claude gets no tools and no folders")
+    }
 }
 
 // Note Taker: Claude's title, summary and answers
@@ -330,6 +333,10 @@ do {
         check(false, "a Claude error is reported")
     }
     check((try? NoteSummaryProtocol.parse(#"{"result":"no tags"}"#).get()) == nil, "an answer without tags is not used")
+    check(NoteSummaryProtocol.input(transcript: "Me: Привіт", language: "uk").hasPrefix("The call was in Ukrainian: write the title and the summary in Ukrainian.\n<transcript>"),
+          "the summary is asked for in the call's language")
+    check(NoteSummaryProtocol.input(transcript: "Me: Hi", language: "en-US").hasPrefix("The call was in English"), "an Apple locale names its language")
+    check(NoteSummaryProtocol.input(transcript: "Me: Hi", language: "auto").hasPrefix("<transcript>"), "an undetected language is left to Claude")
     check(NoteAskProtocol.parse(#"{"is_error":false,"result":"  You missed nothing. "}"#) == .success("You missed nothing."), "an answer is the trimmed result")
     check(NoteAskProtocol.input(transcript: "Me: hi", question: "Q") == "<transcript>\nMe: hi\n</transcript>\n<question>Q</question>", "a question carries the transcript")
     var note = Note(started: Date(), locale: "en-US")
@@ -342,6 +349,98 @@ do {
     let old = #"{"id":"6F1B1E2A-0000-4000-8000-000000000000","started":"2026-11-12T10:00:00Z","locale":"en-US","segments":[]}"#
     let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601
     check((try? d.decode(Note.self, from: Data(old.utf8)))?.summary == nil, "notes saved before titles and summaries still load")
+}
+
+// Note Taker's languages and how its audio is cut into utterances for Parakeet
+
+do {
+    check(NoteLanguage.usesParakeet("uk") && NoteLanguage.usesParakeet("auto") && NoteLanguage.usesParakeet("en"),
+          "Ukrainian, English and automatic use Parakeet")
+    check(!NoteLanguage.usesParakeet("en-US") && !NoteLanguage.usesParakeet("ja-JP"),
+          "Apple locales (and notes saved before Parakeet) use Apple's recogniser")
+    check(NoteLanguage.hint("auto") == nil && NoteLanguage.hint("uk") == "uk", "automatic gives Parakeet no hint")
+    check(NoteLanguage.appleOnly(["en-US", "ja-JP", "uk-UA", "de-DE"]) == ["ja-JP"],
+          "only languages Parakeet lacks are offered with Apple's recogniser")
+    check(NoteLanguage.title("auto") == "Automatic", "automatic has a name")
+
+    let rate = UtteranceSegmenter.rate
+    func quiet(_ seconds: Double, level: Float = 0) -> [Float] { [Float](repeating: level, count: Int(seconds * Double(rate))) }
+    /// Speech-like: 200 ms syllables with short quiet gaps between them.
+    func speech(_ seconds: Double) -> [Float] {
+        (0..<Int(seconds * Double(rate))).map { i in
+            i % 4000 < 3200 ? Float(sin(Double(i) * 0.3)) * 0.15 : 0.004
+        }
+    }
+
+    var s = UtteranceSegmenter()
+    check(s.append(quiet(5)).isEmpty && s.current == nil && s.flush() == nil, "silence makes no utterance")
+
+    s = UtteranceSegmenter()
+    var done = s.append(quiet(2) + speech(2) + quiet(2))
+    check(done.count == 1, "speech between pauses is one utterance")
+    if let u = done.first {
+        check(abs(Double(u.start) / Double(rate) - 1.75) < 0.1, "the utterance starts a moment before the speech")
+        check(abs(Double(u.end) / Double(rate) - 4.2) < 0.15, "and ends a moment after it")
+    }
+    check(s.current == nil, "nothing is in progress after the pause")
+
+    s = UtteranceSegmenter()
+    done = s.append(speech(2) + quiet(0.8) + speech(2) + quiet(2))
+    check(done.count == 1, "a short phrase runs on across a short pause, for context")
+    s = UtteranceSegmenter()
+    done = s.append(speech(7) + quiet(0.8) + speech(2) + quiet(2))
+    check(done.count == 2, "a long enough utterance ends at a short pause")
+
+    s = UtteranceSegmenter()
+    done = s.append(quiet(1) + quiet(0.1).map { _ in 0.3 } + quiet(2))
+    check(done.isEmpty, "a click is not an utterance")
+
+    s = UtteranceSegmenter()
+    done = s.append(speech(20))
+    check(done.count == 1 && done[0].samples.count <= Int(14.6 * Double(rate)) && done[0].samples.count >= 11 * rate,
+          "a long utterance is cut before 15 seconds")
+    let rest = s.flush()
+    check(rest != nil && rest!.start == done[0].end, "the rest follows on from the cut")
+    check(s.current == nil, "flushing ends the utterance in progress")
+
+    s = UtteranceSegmenter()
+    _ = s.append(quiet(1, level: 0.01) + speech(1.5))
+    check(s.current != nil && s.current!.samples.count >= rate, "speech over a hiss is heard and shown while it lasts")
+    done = s.append(quiet(2, level: 0.01))
+    check(done.count == 1, "the hiss counts as a pause")
+}
+
+// The language of a call in Automatic, from its first lines
+
+do {
+    var d = LanguageDetector()
+    check(d.add("Привіт, як справи?") == nil, "one short line is not enough to tell the language")
+    _ = d.add("So do you die? No, okay.")
+    _ = d.add("А ти там вказав, як під'єднати МСП, що кудись стукатися?")
+    let found = d.add("Я логаю в Харвест, а потім з Харвесту заходжу на апку, я собі просто синхронізую все")
+        ?? d.add("Ти клікаєш одну кнопочку справа зверху, і все синхронізується повторно, дублікатів немає.")
+    check(found == "uk", "a Ukrainian call with an English phrase is Ukrainian")
+    var e = LanguageDetector()
+    let english = e.add("Okay, so let's go through the release plan for this week and see what's left.")
+        ?? e.add("I think the backend part is done, but we still need to test the login on staging.")
+    check(english == "en", "an English call is English")
+}
+
+// The microphone and the call play equally loud
+
+do {
+    let quiet = Array(repeating: Float(0.0005), count: 60) + Array(repeating: Float(0.008), count: 20)
+    let loud = Array(repeating: Float(0.0002), count: 30) + Array(repeating: Float(0.09), count: 50)
+    let me = SpeechLevel.of(quiet), them = SpeechLevel.of(loud)
+    check(me == 0.008 && them == 0.09, "speech is told from background noise")
+    check(SpeechLevel.of(Array(repeating: 0.0004, count: 50)) == nil, "silence has no speech level")
+    let gains = SpeechLevel.gains([me, them, nil], mine: [true, false, false])
+    check(abs(gains[0] - 11.25 * SpeechLevel.ownShare) < 0.01 && gains[1] == 1 && gains[2] == 1,
+          "the quiet microphone is raised to a little below the call")
+    check(SpeechLevel.gains([0.001, 0.5]) == [12, 1], "the boost has a limit")
+    let loudMic = SpeechLevel.gains([0.1, 0.05], mine: [true, false])
+    check(abs(loudMic[0] - SpeechLevel.ownShare) < 0.001 && abs(loudMic[1] - 2) < 0.001,
+          "a loud microphone is turned down a little and the call raised to it")
 }
 
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")

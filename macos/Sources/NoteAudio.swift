@@ -342,11 +342,23 @@ final class AudioTrackWriter: @unchecked Sendable {
     }
 }
 
-/// Live, on-device transcription of one audio source with Apple's SpeechTranscriber. Buffers go
-/// in from an audio thread; text comes out through `onResult` (on no particular thread) as
-/// volatile guesses that are later replaced by a final result for the same stretch of audio.
+/// Live, on-device transcription of one audio source. Buffers go in from an audio thread; text
+/// comes out (on no particular thread) as guesses that are later replaced by a final result for
+/// the same stretch of audio. Times are seconds of the audio given so far.
+protocol NoteTranscriber: AnyObject, Sendable {
+    /// Seconds of audio handed over so far: the time the next result will start at.
+    var seconds: Double { get }
+    func start() async throws
+    func append(_ buffer: AVAudioPCMBuffer)
+    /// Turns what has been heard so far into final results, for a pause.
+    func finalizeSoFar() async
+    /// Ends the input and waits for the last final results, for at most `limit` seconds.
+    func finish(limit: Double) async
+}
+
+/// Transcription with Apple's SpeechTranscriber, for languages Parakeet doesn't have.
 @available(macOS 26.0, *)
-final class SpeechStream: @unchecked Sendable {
+final class SpeechStream: NoteTranscriber, @unchecked Sendable {
     /// Text, start and end in seconds of audio given, and whether it is final.
     typealias Handler = (String, Double, Double, Bool) -> Void
 
