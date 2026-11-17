@@ -259,7 +259,13 @@ do {
     let turn = split.records[0]
     let starts = split.starts(of: turn, [NoteUtterance(speaker: "Speaker 1", text: "Can you hear me?"),
                                          NoteUtterance(speaker: "Speaker 2", text: "Yes, I can hear you.")])
-    check(starts == [10, 14], "each person in a split record plays from the line where their words start")
+    check(starts.count == 2 && starts[0] == 10 && abs(starts[1] - 13.6) < 0.01, "each person in a split record plays from where their words start")
+    let oneLine = Note(started: Date(), locale: "en-US", segments: [
+        NoteSegment(speaker: .them, start: 20, end: 30, text: "yep so chris this isn't something that needs a release"),
+    ])
+    let shared = oneLine.starts(of: oneLine.records[0], [NoteUtterance(speaker: "Chris", text: "Yep."),
+                                                          NoteUtterance(speaker: "Holly", text: "So Chris, this isn't something that needs a release.")])
+    check(shared[0] == 20 && shared[1] > 20.5 && shared[1] < 21.5, "two people in one recognised line start at their own words")
     split.segments = []
     check(split.starts(of: turn, [NoteUtterance(speaker: "A", text: "x"), NoteUtterance(speaker: "B", text: "y")]) == [10, 10],
           "without lines everyone plays from the record's start")

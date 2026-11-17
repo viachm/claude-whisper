@@ -141,28 +141,53 @@ struct Note: Codable, Equatable, Identifiable {
 
     var displayTitle: String? { name ?? title }
 
-    /// Where each of Claude's utterances for a record starts, for "listen from here": Claude's
-    /// lines don't keep times, so each is placed by where its text falls in the record, at the
-    /// recognised line that begins nearest to it.
+    /// Where each of Claude's utterances for a record starts, for "listen from here". Claude's
+    /// lines keep no times, and one recognised line often holds several people, so each utterance
+    /// is found by its first words among the record's recognised words, each timed by where it
+    /// falls in its line; where the words can't be found, by where its text falls in the record.
     func starts(of turn: NoteTurn, _ utterances: [NoteUtterance]) -> [Double] {
         let lines = segments.filter { $0.speaker == turn.speaker && !$0.text.isEmpty && $0.start >= turn.start && $0.start <= turn.end }
             .sorted { $0.start < $1.start }
-        let original = lines.reduce(0) { $0 + $1.text.count }
-        let improved = utterances.reduce(0) { $0 + $1.text.count }
-        var before = 0
-        return utterances.map { utterance in
-            defer { before += utterance.text.count }
-            guard before > 0, original > 0, improved > 0 else { return turn.start }
-            // The recognised line whose beginning is nearest: Claude's cleanup changes lengths.
-            let target = Double(before) / Double(improved) * Double(original)
-            var offset = 0, best = (distance: Double.infinity, start: turn.start)
-            for line in lines {
-                let distance = abs(Double(offset) - target)
-                if distance < best.distance { best = (distance, line.start) }
-                offset += line.text.count
+        var heard: [(word: String, time: Double)] = []
+        for line in lines {
+            let words = Self.words(line.text)
+            let end = max(line.end ?? line.start, line.start)
+            for (index, word) in words.enumerated() {
+                heard.append((word, line.start + (end - line.start) * Double(index) / Double(words.count)))
             }
-            return best.start
         }
+        guard !heard.isEmpty else { return utterances.map { _ in turn.start } }
+        let total = utterances.reduce(0) { $0 + $1.text.count }
+        var before = 0, from = 0
+        var starts: [Double] = []
+        for utterance in utterances {
+            defer { before += utterance.text.count }
+            let guess = total > 0 ? min(heard.count - 1, before * heard.count / total) : 0
+            let key = Array(Self.words(utterance.text).prefix(4))
+            // The best place from here on: most of the first words nearby, then nearest the guess.
+            var best: (score: Int, distance: Int, index: Int)?
+            if !key.isEmpty {
+                for index in from..<min(heard.count, max(from, guess) + 60) {
+                    let near = Set(heard[index..<min(heard.count, index + key.count + 3)].map(\.word))
+                    let score = key.enumerated().reduce(0) { $0 + (near.contains($1.element) ? ($1.offset == 0 ? 2 : 1) : 0) }
+                    guard score >= min(3, key.count + 1), heard[index].word == key[0] || score >= 4 else { continue }
+                    let candidate = (score, abs(index - guess), index)
+                    if best == nil || candidate.0 > best!.score || (candidate.0 == best!.score && candidate.1 < best!.distance) {
+                        best = candidate
+                    }
+                }
+            }
+            let index = best?.index ?? max(from, guess)
+            if best != nil { from = index + 1 }
+            // A moment early, so the first word is heard whole.
+            starts.append(starts.isEmpty ? turn.start : max(turn.start, heard[min(index, heard.count - 1)].time - 0.4))
+        }
+        return starts
+    }
+
+    /// Lowercased words, letters and digits only.
+    static func words(_ text: String) -> [String] {
+        text.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
     }
 
     /// A line joins the speaker's previous record unless this many seconds of silence came

@@ -642,6 +642,8 @@ struct NoteTakerView: View {
     @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @State private var titleEditing = false
+    /// Where each cleaned-up line starts, worked out once per note and transcript.
+    @State private var startsCache = StartsCache()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -906,6 +908,35 @@ struct NoteTakerView: View {
         }
     }
 
+    /// A record's lines as shown: Claude's cleaned-up utterances (each with where it starts), or
+    /// the record as recognised.
+    private func lines(of turn: NoteTurn) -> [(speaker: String, start: Double, text: String)] {
+        guard !showOriginal, let note = taker.note, let utterances = note.improved?[turn.id.uuidString] else {
+            return [(turn.speaker.label, turn.start, turn.text)]
+        }
+        let key = "\(note.id) \(note.segments.count) \(note.improved?.count ?? 0)"
+        if startsCache.key != key {
+            startsCache.key = key
+            startsCache.starts = [:]
+        }
+        let starts = startsCache.starts[turn.id] ?? note.starts(of: turn, utterances)
+        startsCache.starts[turn.id] = starts
+        return zip(utterances, starts).map { ($0.speaker, $1, $0.text) }
+    }
+
+    /// The line the audio is playing now ("<record id>#<index>"), whose play button turns into pause.
+    private var playingLine: String? {
+        guard player.isPlaying, let note = taker.note else { return nil }
+        var playing: String?
+        for item in taker.items {
+            guard case .turn(let turn) = item else { continue }
+            for (index, line) in lines(of: turn).enumerated() where note.audioTime(line.start) <= player.current + 0.05 {
+                playing = "\(turn.id)#\(index)"
+            }
+        }
+        return playing
+    }
+
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -924,18 +955,14 @@ struct NoteTakerView: View {
                     ForEach(visibleItems) { item in
                         switch item {
                         case .turn(let turn):
-                            let play: (() -> Void)? = player.hasAudio && !taker.isRecording
-                                ? { player.play(fromNoteTime: turn.start) } : nil
-                            if !showOriginal, let note = taker.note, let utterances = note.improved?[turn.id.uuidString] {
-                                let starts = note.starts(of: turn, utterances)
-                                ForEach(Array(utterances.enumerated()), id: \.offset) { index, utterance in
-                                    let start = starts[index]
-                                    TurnView(speaker: utterance.speaker, start: start, text: utterance.text, pending: "",
-                                             play: play == nil ? nil : { player.play(fromNoteTime: start) })
-                                }
-                            } else {
-                                TurnView(speaker: turn.speaker.label, start: turn.start, text: turn.text,
-                                         pending: turn.pending, play: play)
+                            let playable = player.hasAudio && !taker.isRecording
+                            let lines = lines(of: turn)
+                            ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                                TurnView(speaker: line.speaker, start: line.start, text: line.text,
+                                         pending: index == 0 && lines.count == 1 ? turn.pending : "",
+                                         play: playable ? { player.play(fromNoteTime: line.start) } : nil,
+                                         playing: playingLine == "\(turn.id)#\(index)",
+                                         pause: { player.pause() })
                             }
                         case .pause(let pause): PauseView(pause: pause)
                         }
@@ -1202,6 +1229,13 @@ private struct Chip: View {
     }
 }
 
+/// Line starts for the transcript, kept between redraws (the player redraws it four times a
+/// second). A class, so filling it while drawing changes no view state.
+private final class StartsCache {
+    var key = ""
+    var starts: [UUID: [Double]] = [:]
+}
+
 @available(macOS 26.0, *)
 private struct TurnView: View {
     /// "Me", "Them", a name or "Speaker 1".
@@ -1212,6 +1246,9 @@ private struct TurnView: View {
     let pending: String
     /// Plays the audio from this record, when the note has audio.
     var play: (() -> Void)?
+    /// The audio is playing this line: its button pauses.
+    var playing = false
+    var pause: (() -> Void)?
 
     /// Me in the accent colour; everyone else gets a colour of their own, the same each time.
     static func color(_ speaker: String) -> Color {
@@ -1229,15 +1266,15 @@ private struct TurnView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Self.color(speaker))
                 if let start, let play {
-                    Button(action: play) {
-                        Label(NoteTakerView.elapsed(start), systemImage: "play.fill")
+                    Button(action: playing ? (pause ?? play) : play) {
+                        Label(NoteTakerView.elapsed(start), systemImage: playing ? "pause.fill" : "play.fill")
                             .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 11))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .help("Listen from here")
+                    .foregroundStyle(playing ? Color.accentColor : .secondary)
+                    .help(playing ? "Pause" : "Listen from here")
                 } else if let start {
                     Text(NoteTakerView.elapsed(start))
                         .font(.system(size: 11))
