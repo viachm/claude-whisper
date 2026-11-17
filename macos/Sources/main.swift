@@ -19,7 +19,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let notesMenu = NSMenu(title: "Notes")
     /// Start Note Taker, or Stop Note Taker while a note records: always first among the notes.
     private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
-    /// Whether a note's audio is playing: the icon shows a play symbol.
+    /// Whether a note's audio is playing: the icon shows a pause symbol.
     private var playing = false
     /// Shown while the Note Taker window is open or a note records (its window may be closed).
     private let openNoteTakerItem = NSMenuItem(title: "Open Note Taker", action: #selector(openNoteTaker), keyEquivalent: "")
@@ -329,8 +329,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func setIcon(active: Bool) {
         iconActive = active
         // While a note records and nothing is dictated, the bars give way to the red dot; while a
-        // note's audio plays, to a play symbol.
-        let showsPlay = !active && recordingDot == nil && playing
+        // note's audio plays, to a pause symbol.
+        let showsPause = !active && recordingDot == nil && playing
         let bars = active || (recordingDot == nil && !playing)
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
@@ -347,14 +347,13 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
                              xRadius: barWidth / 2, yRadius: barWidth / 2).fill()
                 x += barWidth + gap
             }
-            if showsPlay {
-                let play = NSBezierPath()
-                let side: CGFloat = 8, width = side * 0.87
-                play.move(to: NSPoint(x: tile.midX - width / 2 + 0.5, y: tile.midY + side / 2))
-                play.line(to: NSPoint(x: tile.midX + width / 2 + 0.5, y: tile.midY))
-                play.line(to: NSPoint(x: tile.midX - width / 2 + 0.5, y: tile.midY - side / 2))
-                play.close()
-                play.fill()
+            if showsPause {
+                // Two bars, like a pause button: the audio is playing.
+                let height: CGFloat = 8, width: CGFloat = 2.2, gap: CGFloat = 2.2
+                for x in [tile.midX - gap / 2 - width, tile.midX + gap / 2] {
+                    NSBezierPath(roundedRect: NSRect(x: x, y: tile.midY - height / 2, width: width, height: height),
+                                 xRadius: 0.6, yRadius: 0.6).fill()
+                }
             }
             return true
         }
