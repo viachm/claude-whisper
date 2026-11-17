@@ -17,13 +17,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let historyMenu = NSMenu(title: "History")
     private let notesMenu = NSMenu(title: "Notes")
+    /// Start Note Taker, or Stop Note Taker while a note records: always first among the notes.
     private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
     /// Shown only while a note's audio plays.
     private let pausePlaybackItem = NSMenuItem(title: "Pause Playback", action: #selector(pausePlayback), keyEquivalent: "")
     /// Whether a note's audio is playing: the icon shows a play symbol.
     private var playing = false
-    /// Shown only while a note records.
-    private let stopNoteTakerItem = NSMenuItem(title: "Stop Note Taker", action: #selector(stopNoteTaker), keyEquivalent: "")
+    /// Shown while the Note Taker window is open or a note records (its window may be closed).
+    private let openNoteTakerItem = NSMenuItem(title: "Open Note Taker", action: #selector(openNoteTaker), keyEquivalent: "")
     private let noteStore = NoteStore()
     /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
     private var noteWindowBox: AnyObject?
@@ -138,9 +139,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         noteTakerItem.target = self
         menu.addItem(noteTakerItem)
-        stopNoteTakerItem.target = self
-        stopNoteTakerItem.isHidden = true
-        menu.addItem(stopNoteTakerItem)
+        openNoteTakerItem.target = self
+        openNoteTakerItem.isHidden = true
+        menu.addItem(openNoteTakerItem)
         pausePlaybackItem.target = self
         pausePlaybackItem.isHidden = true
         menu.addItem(pausePlaybackItem)
@@ -151,7 +152,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
         // older ones have none, so neither do these there.
         if #available(macOS 26.0, *) {
-            let symbols = ["Start Note Taker": "record.circle", "Stop Note Taker": "stop.circle", "Pause Playback": "pause.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+            let symbols = ["Start Note Taker": "record.circle", "Open Note Taker": "macwindow", "Pause Playback": "pause.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
                            "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
             for item in menu.items {
                 if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
@@ -232,13 +233,11 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         let window = noteWindowBox as? NoteTakerWindow
-        // While a note records, the item brings its window back; otherwise it starts a new note.
-        noteTakerItem.title = window?.taker.isRecording == true ? "Open Note Taker" : "Start Note Taker"
-        stopNoteTakerItem.isHidden = window?.taker.isRecording != true
+        let recording = window?.taker.isRecording == true
+        noteTakerItem.title = recording ? "Stop Note Taker" : "Start Note Taker"
+        noteTakerItem.image = NSImage(systemSymbolName: recording ? "stop.circle" : "record.circle", accessibilityDescription: nil)
+        openNoteTakerItem.isHidden = !(recording || window?.isVisible == true)
         pausePlaybackItem.isHidden = window?.player.isPlaying != true
-        // Open brings the window back, so it gets a window, not Start's record symbol.
-        let symbol = noteTakerItem.title == "Open Note Taker" ? "macwindow" : "record.circle"
-        noteTakerItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
     }
 
     @MainActor @objc private func pausePlayback() {
@@ -246,16 +245,16 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         (noteWindowBox as? NoteTakerWindow)?.player.pause()
     }
 
-    /// Stops the note recording; the window isn't brought up for it.
-    @MainActor @objc private func stopNoteTaker() {
-        guard #available(macOS 26.0, *) else { return }
-        (noteWindowBox as? NoteTakerWindow)?.taker.stop()
-    }
-
-    /// Starts a new note, or brings the window back while one is recording.
+    /// Starts a new note in the window, or stops the one recording (without bringing the window up).
     @MainActor @objc private func noteTakerClicked() {
         guard #available(macOS 26.0, *) else { return }
-        if !noteWindow.taker.isRecording { noteWindow.taker.start() }
+        if noteWindow.taker.isRecording { return noteWindow.taker.stop() }
+        noteWindow.taker.start()
+        noteWindow.show()
+    }
+
+    @MainActor @objc private func openNoteTaker() {
+        guard #available(macOS 26.0, *) else { return }
         noteWindow.show()
     }
 
