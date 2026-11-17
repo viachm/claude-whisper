@@ -252,6 +252,17 @@ do {
     note.improved = partial
     check(note.lines.first?.text == "hi rikwan", "a record Claude left out keeps its text")
     check((try? NoteImproveProtocol.parse(#"{"result":"Sure, here it is"}"#).get()) == nil, "an answer without lines is not used")
+    var split = Note(started: Date(), locale: "en-US", segments: [
+        NoteSegment(speaker: .them, start: 10, end: 13, text: "can you hear me"),
+        NoteSegment(speaker: .them, start: 14, end: 16, text: "yes I can hear you"),
+    ])
+    let turn = split.records[0]
+    let starts = split.starts(of: turn, [NoteUtterance(speaker: "Speaker 1", text: "Can you hear me?"),
+                                         NoteUtterance(speaker: "Speaker 2", text: "Yes, I can hear you.")])
+    check(starts == [10, 14], "each person in a split record plays from the line where their words start")
+    split.segments = []
+    check(split.starts(of: turn, [NoteUtterance(speaker: "A", text: "x"), NoteUtterance(speaker: "B", text: "y")]) == [10, 10],
+          "without lines everyone plays from the record's start")
 
     // Continue adds records after a pause: only those (and any that grew) go to Claude again.
     note.improved = NoteImproveProtocol.improved(parsed, records: records)

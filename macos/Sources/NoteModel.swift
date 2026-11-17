@@ -141,6 +141,30 @@ struct Note: Codable, Equatable, Identifiable {
 
     var displayTitle: String? { name ?? title }
 
+    /// Where each of Claude's utterances for a record starts, for "listen from here": Claude's
+    /// lines don't keep times, so each is placed by where its text falls in the record, at the
+    /// recognised line that begins nearest to it.
+    func starts(of turn: NoteTurn, _ utterances: [NoteUtterance]) -> [Double] {
+        let lines = segments.filter { $0.speaker == turn.speaker && !$0.text.isEmpty && $0.start >= turn.start && $0.start <= turn.end }
+            .sorted { $0.start < $1.start }
+        let original = lines.reduce(0) { $0 + $1.text.count }
+        let improved = utterances.reduce(0) { $0 + $1.text.count }
+        var before = 0
+        return utterances.map { utterance in
+            defer { before += utterance.text.count }
+            guard before > 0, original > 0, improved > 0 else { return turn.start }
+            // The recognised line whose beginning is nearest: Claude's cleanup changes lengths.
+            let target = Double(before) / Double(improved) * Double(original)
+            var offset = 0, best = (distance: Double.infinity, start: turn.start)
+            for line in lines {
+                let distance = abs(Double(offset) - target)
+                if distance < best.distance { best = (distance, line.start) }
+                offset += line.text.count
+            }
+            return best.start
+        }
+    }
+
     /// A line joins the speaker's previous record unless this many seconds of silence came
     /// before it: a monologue stays one record, however long.
     static let joinGap: Double = 5

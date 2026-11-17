@@ -926,10 +926,12 @@ struct NoteTakerView: View {
                         case .turn(let turn):
                             let play: (() -> Void)? = player.hasAudio && !taker.isRecording
                                 ? { player.play(fromNoteTime: turn.start) } : nil
-                            if !showOriginal, let utterances = taker.note?.improved?[turn.id.uuidString] {
+                            if !showOriginal, let note = taker.note, let utterances = note.improved?[turn.id.uuidString] {
+                                let starts = note.starts(of: turn, utterances)
                                 ForEach(Array(utterances.enumerated()), id: \.offset) { index, utterance in
-                                    TurnView(speaker: utterance.speaker, start: index == 0 ? turn.start : nil,
-                                             text: utterance.text, pending: "", play: index == 0 ? play : nil)
+                                    let start = starts[index]
+                                    TurnView(speaker: utterance.speaker, start: start, text: utterance.text, pending: "",
+                                             play: play == nil ? nil : { player.play(fromNoteTime: start) })
                                 }
                             } else {
                                 TurnView(speaker: turn.speaker.label, start: turn.start, text: turn.text,
@@ -1204,7 +1206,7 @@ private struct Chip: View {
 private struct TurnView: View {
     /// "Me", "Them", a name or "Speaker 1".
     let speaker: String
-    /// Seconds from the note's start; nil for the second and later people in a split record.
+    /// Seconds from the note's start.
     let start: Double?
     let text: String
     let pending: String
