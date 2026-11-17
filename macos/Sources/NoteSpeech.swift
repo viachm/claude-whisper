@@ -195,13 +195,18 @@ enum SpeechLevel {
         return speech.isEmpty ? nil : speech[speech.count / 2]
     }
 
-    /// The gain for each recording that brings its speech up to the loudest one's, at most 12×
-    /// (a track with no speech, or the loudest, plays as it is).
-    static func gains(_ levels: [Float?]) -> [Float] {
+    /// How loud the user's own microphone plays next to the call: a little quieter, since your
+    /// own voice sounds louder to you than the same level of someone else's.
+    static let ownShare: Float = 0.9
+
+    /// The gain for each recording that brings its speech to the loudest one's (the microphone's,
+    /// `mine`, to `ownShare` of it), raising at most 12× (a track with no speech plays as it is).
+    static func gains(_ levels: [Float?], mine: [Bool] = []) -> [Float] {
         let loudest = levels.compactMap { $0 }.max() ?? 0
-        return levels.map { level in
+        return levels.enumerated().map { index, level in
             guard let level, level > 0 else { return 1 }
-            return min(12, max(1, loudest / level))
+            let target = loudest * (index < mine.count && mine[index] ? ownShare : 1)
+            return min(12, target / level)
         }
     }
 }

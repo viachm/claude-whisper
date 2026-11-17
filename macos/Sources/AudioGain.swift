@@ -47,7 +47,7 @@ enum AudioGain {
                     var count = Int32(buffer.mDataByteSize / 4)
                     vDSP_vsmul(data, 1, &gain, data, 1, vDSP_Length(count))
                     // tanh leaves speech as it is and rounds off what would clip.
-                    vvtanhf(data, data, &count)
+                    if gain > 1 { vvtanhf(data, data, &count) }
                 }
             })
         var tap: MTAudioProcessingTap?

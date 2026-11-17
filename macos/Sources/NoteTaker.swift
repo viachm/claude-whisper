@@ -488,7 +488,7 @@ final class NoteTaker: ObservableObject {
         summarizing.insert(id)
         let started = Date()
         NoteClaude.run(arguments: NoteSummaryProtocol.arguments(model: .current),
-                       input: NoteSummaryProtocol.input(transcript: note.transcript), directory: workspace) { [weak self] output in
+                       input: NoteSummaryProtocol.input(transcript: note.transcript, language: note.locale), directory: workspace) { [weak self] output in
             guard let self else { return }
             summarizing.remove(id)
             switch output.map(NoteSummaryProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {
@@ -1459,7 +1459,7 @@ final class NotePlayer: ObservableObject {
         guard let note, let recordings = note.recordings, !recordings.isEmpty else { return }
         loading = Task {
             let composition = AVMutableComposition()
-            var tracks: [(track: AVMutableCompositionTrack, url: URL)] = []
+            var tracks: [(track: AVMutableCompositionTrack, url: URL, mine: Bool)] = []
             for recording in recordings {
                 let at = CMTime(seconds: note.audioTime(recording.start), preferredTimescale: 600)
                 for speaker in recording.speakers {
@@ -1470,7 +1470,7 @@ final class NotePlayer: ObservableObject {
                           let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
                     else { continue }
                     try? track.insertTimeRange(CMTimeRange(start: .zero, duration: length), of: source, at: at)
-                    tracks.append((track, url))
+                    tracks.append((track, url, speaker == .me))
                 }
             }
             guard !Task.isCancelled, loadedID == note.id else { return }
@@ -1495,9 +1495,10 @@ final class NotePlayer: ObservableObject {
     /// Speech levels of the audio files played, measured once per file.
     private static var levels: [URL: Float?] = [:]
 
-    /// Plays the microphone and the call equally loud: the quieter one is raised to the other.
+    /// Plays the microphone and the call about equally loud: the quieter one is raised to the
+    /// other, the microphone a little below the call.
     /// Measuring a long call's files takes a moment, so it plays as recorded until then.
-    private func balance(_ item: AVPlayerItem, tracks: [(track: AVMutableCompositionTrack, url: URL)]) {
+    private func balance(_ item: AVPlayerItem, tracks: [(track: AVMutableCompositionTrack, url: URL, mine: Bool)]) {
         let urls = tracks.map(\.url)
         let known = Self.levels
         Task {
@@ -1505,11 +1506,11 @@ final class NotePlayer: ObservableObject {
                 urls.map { url in known[url] ?? AudioGain.speechLevel(of: url) }
             }.value
             for (url, level) in zip(urls, levels) { Self.levels[url] = level }
-            let gains = SpeechLevel.gains(levels)
-            guard gains.contains(where: { $0 > 1 }) else { return }
+            let gains = SpeechLevel.gains(levels, mine: tracks.map(\.mine))
+            guard gains.contains(where: { $0 != 1 }) else { return }
             let mix = AVMutableAudioMix()
             mix.inputParameters = zip(tracks, gains).compactMap { entry, gain in
-                guard gain > 1, let tap = AudioGain.tap(gain: gain) else { return nil }
+                guard gain != 1, let tap = AudioGain.tap(gain: gain) else { return nil }
                 let parameters = AVMutableAudioMixInputParameters(track: entry.track)
                 parameters.audioTapProcessor = tap
                 return parameters

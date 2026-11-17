@@ -345,6 +345,10 @@ do {
         check(false, "a Claude error is reported")
     }
     check((try? NoteSummaryProtocol.parse(#"{"result":"no tags"}"#).get()) == nil, "an answer without tags is not used")
+    check(NoteSummaryProtocol.input(transcript: "Me: Привіт", language: "uk").hasPrefix("The call was in Ukrainian: write the title and the summary in Ukrainian.\n<transcript>"),
+          "the summary is asked for in the call's language")
+    check(NoteSummaryProtocol.input(transcript: "Me: Hi", language: "en-US").hasPrefix("The call was in English"), "an Apple locale names its language")
+    check(NoteSummaryProtocol.input(transcript: "Me: Hi", language: "auto").hasPrefix("<transcript>"), "an undetected language is left to Claude")
     check(NoteAskProtocol.parse(#"{"is_error":false,"result":"  You missed nothing. "}"#) == .success("You missed nothing."), "an answer is the trimmed result")
     check(NoteAskProtocol.input(transcript: "Me: hi", question: "Q") == "<transcript>\nMe: hi\n</transcript>\n<question>Q</question>", "a question carries the transcript")
     var note = Note(started: Date(), locale: "en-US")
@@ -442,9 +446,13 @@ do {
     let me = SpeechLevel.of(quiet), them = SpeechLevel.of(loud)
     check(me == 0.008 && them == 0.09, "speech is told from background noise")
     check(SpeechLevel.of(Array(repeating: 0.0004, count: 50)) == nil, "silence has no speech level")
-    let gains = SpeechLevel.gains([me, them, nil])
-    check(abs(gains[0] - 11.25) < 0.01 && gains[1] == 1 && gains[2] == 1, "the quiet microphone is raised to the call")
+    let gains = SpeechLevel.gains([me, them, nil], mine: [true, false, false])
+    check(abs(gains[0] - 11.25 * SpeechLevel.ownShare) < 0.01 && gains[1] == 1 && gains[2] == 1,
+          "the quiet microphone is raised to a little below the call")
     check(SpeechLevel.gains([0.001, 0.5]) == [12, 1], "the boost has a limit")
+    let loudMic = SpeechLevel.gains([0.1, 0.05], mine: [true, false])
+    check(abs(loudMic[0] - SpeechLevel.ownShare) < 0.001 && abs(loudMic[1] - 2) < 0.001,
+          "a loud microphone is turned down a little and the call raised to it")
 }
 
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
