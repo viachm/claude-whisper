@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable, Identifiable {
-    case general, claude, permissions, history, notes, about
+    case general, history, notes, claude, permissions, about
 
     var id: Self { self }
 
