@@ -19,8 +19,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let notesMenu = NSMenu(title: "Notes")
     /// Start Note Taker, or Stop Note Taker while a note records: always first among the notes.
     private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
-    /// Shown only while a note's audio plays.
-    private let pausePlaybackItem = NSMenuItem(title: "Pause Playback", action: #selector(pausePlayback), keyEquivalent: "")
     /// Whether a note's audio is playing: the icon shows a play symbol.
     private var playing = false
     /// Shown while the Note Taker window is open or a note records (its window may be closed).
@@ -142,9 +140,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         openNoteTakerItem.target = self
         openNoteTakerItem.isHidden = true
         menu.addItem(openNoteTakerItem)
-        pausePlaybackItem.target = self
-        pausePlaybackItem.isHidden = true
-        menu.addItem(pausePlaybackItem)
         notesMenu.delegate = self
         menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
         menu.addItem(.separator())
@@ -152,7 +147,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
         // older ones have none, so neither do these there.
         if #available(macOS 26.0, *) {
-            let symbols = ["Start Note Taker": "record.circle", "Open Note Taker": "macwindow", "Pause Playback": "pause.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+            let symbols = ["Start Note Taker": "record.circle", "Open Note Taker": "macwindow", "Notes": "note.text", "History": "clock.arrow.circlepath",
                            "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
             for item in menu.items {
                 if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
@@ -237,12 +232,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         noteTakerItem.title = recording ? "Stop Note Taker" : "Start Note Taker"
         noteTakerItem.image = NSImage(systemSymbolName: recording ? "stop.circle" : "record.circle", accessibilityDescription: nil)
         openNoteTakerItem.isHidden = !(recording || window?.isVisible == true)
-        pausePlaybackItem.isHidden = window?.player.isPlaying != true
-    }
-
-    @MainActor @objc private func pausePlayback() {
-        guard #available(macOS 26.0, *) else { return }
-        (noteWindowBox as? NoteTakerWindow)?.player.pause()
     }
 
     /// Starts a new note in the window, or stops the one recording (without bringing the window up).
