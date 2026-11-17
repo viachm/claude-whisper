@@ -18,6 +18,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let historyMenu = NSMenu(title: "History")
     private let notesMenu = NSMenu(title: "Notes")
     private let noteTakerItem = NSMenuItem(title: "Start Note Taker", action: #selector(noteTakerClicked), keyEquivalent: "")
+    /// Shown only while a note's audio plays.
+    private let pausePlaybackItem = NSMenuItem(title: "Pause Playback", action: #selector(pausePlayback), keyEquivalent: "")
+    /// Whether a note's audio is playing: the icon shows a play symbol.
+    private var playing = false
     /// Shown only while a note records.
     private let stopNoteTakerItem = NSMenuItem(title: "Stop Note Taker", action: #selector(stopNoteTaker), keyEquivalent: "")
     private let noteStore = NoteStore()
@@ -137,6 +141,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         stopNoteTakerItem.target = self
         stopNoteTakerItem.isHidden = true
         menu.addItem(stopNoteTakerItem)
+        pausePlaybackItem.target = self
+        pausePlaybackItem.isHidden = true
+        menu.addItem(pausePlaybackItem)
         notesMenu.delegate = self
         menu.addItem(withTitle: "Notes", action: nil, keyEquivalent: "").submenu = notesMenu
         menu.addItem(.separator())
@@ -144,7 +151,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // macOS 26 menus show a symbol next to most items (it adds one to Settings by itself);
         // older ones have none, so neither do these there.
         if #available(macOS 26.0, *) {
-            let symbols = ["Start Note Taker": "record.circle", "Stop Note Taker": "stop.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
+            let symbols = ["Start Note Taker": "record.circle", "Stop Note Taker": "stop.circle", "Pause Playback": "pause.circle", "Notes": "note.text", "History": "clock.arrow.circlepath",
                            "Check for Updates…": "arrow.down.circle", "Quit Claude Whisper": "power"]
             for item in menu.items {
                 if let name = symbols[item.title] { item.image = NSImage(systemSymbolName: name, accessibilityDescription: nil) }
@@ -199,6 +206,12 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let taker = window.taker
         watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
         watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        let player = window.player
+        watch(player.$isPlaying) { [weak self] in
+            guard let self else { return }
+            playing = player.isPlaying
+            setIcon(active: iconActive)
+        }
         return window
     }
 
@@ -222,9 +235,15 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // While a note records, the item brings its window back; otherwise it starts a new note.
         noteTakerItem.title = window?.taker.isRecording == true ? "Open Note Taker" : "Start Note Taker"
         stopNoteTakerItem.isHidden = window?.taker.isRecording != true
+        pausePlaybackItem.isHidden = window?.player.isPlaying != true
         // Open brings the window back, so it gets a window, not Start's record symbol.
         let symbol = noteTakerItem.title == "Open Note Taker" ? "macwindow" : "record.circle"
         noteTakerItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+    }
+
+    @MainActor @objc private func pausePlayback() {
+        guard #available(macOS 26.0, *) else { return }
+        (noteWindowBox as? NoteTakerWindow)?.player.pause()
     }
 
     /// Stops the note recording; the window isn't brought up for it.
@@ -321,8 +340,10 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// filled while listening. Drawn as a template so it follows the menu bar's colours.
     private func setIcon(active: Bool) {
         iconActive = active
-        // While a note records and nothing is dictated, the bars give way to the red dot.
-        let bars = active || recordingDot == nil
+        // While a note records and nothing is dictated, the bars give way to the red dot; while a
+        // note's audio plays, to a play symbol.
+        let showsPlay = !active && recordingDot == nil && playing
+        let bars = active || (recordingDot == nil && !playing)
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
             let shape = NSBezierPath(roundedRect: tile, xRadius: 4.5, yRadius: 4.5)
@@ -337,6 +358,15 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 NSBezierPath(roundedRect: NSRect(x: x, y: tile.midY - h / 2, width: barWidth, height: h),
                              xRadius: barWidth / 2, yRadius: barWidth / 2).fill()
                 x += barWidth + gap
+            }
+            if showsPlay {
+                let play = NSBezierPath()
+                let side: CGFloat = 8, width = side * 0.87
+                play.move(to: NSPoint(x: tile.midX - width / 2 + 0.5, y: tile.midY + side / 2))
+                play.line(to: NSPoint(x: tile.midX + width / 2 + 0.5, y: tile.midY))
+                play.line(to: NSPoint(x: tile.midX - width / 2 + 0.5, y: tile.midY - side / 2))
+                play.close()
+                play.fill()
             }
             return true
         }
