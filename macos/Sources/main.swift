@@ -53,6 +53,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var releasedAt = Date()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Note Taker no longer sends a "Context for Claude": drop what an earlier version kept.
+        UserDefaults.standard.removeObject(forKey: "noteTakerContext")
         Log.write("Claude Whisper launched")
         // Read before setUpMenu stores its first key: someone updating from a version without
         // "launchedBefore" has started the app before.

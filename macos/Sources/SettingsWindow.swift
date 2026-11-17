@@ -976,7 +976,6 @@ private struct NotesPane: View {
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
     @AppStorage("noteTakerImprove") private var improve = true
     @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
-    @AppStorage(NoteContext.textKey) private var context = ""
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?
@@ -1000,7 +999,7 @@ private struct NotesPane: View {
             Form {
                 if supported {
                     NoteTakerSettings(locale: $locale, language: $language, model: $model, keepAudio: $keepAudio, improve: $improve,
-                                      retention: $retention, context: $context, locales: locales)
+                                      retention: $retention, locales: locales)
                 } else {
                     Section { Text("Note Taker needs macOS 26 or later.").foregroundStyle(.secondary) }
                 }
@@ -1087,7 +1086,6 @@ private struct NoteTakerSettings: View {
     @Binding var keepAudio: Bool
     @Binding var improve: Bool
     @Binding var retention: NoteRetention
-    @Binding var context: String
     let locales: [String]
 
     var body: some View {
@@ -1144,26 +1142,6 @@ private struct NoteTakerSettings: View {
                 Transcript.
                 """)
             .foregroundStyle(.secondary)
-        }
-
-        Section {
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $context)
-                    .font(.body)
-                    .frame(height: 64)
-                    .scrollContentBackground(.hidden)
-                if context.isEmpty {
-                    Text("e.g. I'm a developer on project XYZ at Acme. People on my calls: Anna (PM), Oleg (backend). Project docs: ~/Documents/xyz")
-                        .foregroundStyle(.tertiary)
-                        .padding(.leading, 5)
-                        .allowsHitTesting(false)
-                }
-            }
-        } header: {
-            SectionTitle("Context for Claude")
-        } footer: {
-            Text("Sent with every summary and question. Write a folder's path here (in quotes if it has spaces) and Claude can read files in it, read-only and nowhere else, to look up the project, people and terms.")
-                .foregroundStyle(.secondary)
         }
     }
 }

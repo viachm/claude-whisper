@@ -233,7 +233,12 @@ final class ClaudeSession {
             let done = (sawProcessing && !stillProcessing && quiet > 0.15)
                 || (!sawProcessing && elapsed > 2.5 && quiet > 0.6)
                 || elapsed > 20
-            if done { return captureRetryingOnce(retry: sawProcessing, completion: completion) }
+            if done {
+                // Claude normally shows "processing" while it transcribes; without it, the wait
+                // falls back to 2.5 s. Log what it showed so a changed status line can be matched.
+                if !sawProcessing { Log.write("transcribed without a \"processing\" status; screen since release: \(since.suffix(600).debugDescription)") }
+                return captureRetryingOnce(retry: sawProcessing, completion: completion)
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: poll)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: poll)

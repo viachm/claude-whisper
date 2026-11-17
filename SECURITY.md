@@ -21,7 +21,7 @@ Claude Whisper needs broad permissions to do its job, so it is worth knowing wha
   saved with the note (to listen to later) unless you turn that off in Settings › Notes, and deleting
   the note deletes it.
 - **Network**: your speech goes to Anthropic through Claude Code's dictation, and with Improve on
-  the transcribed text goes to Claude through `claude -p`, both under your own Claude account. Note Taker sends a note's transcript to Claude the same way when it stops, to title and summarize it, and when you ask a question about the call, together with the context you wrote in Settings › Notes. If that context names folders by path, Claude may read files in those folders (read-only: Read, Grep and Glob, nothing else and nowhere else; your home folder as a whole and `/` are never allowed) while it writes the summary or answers. The
+  the transcribed text goes to Claude through `claude -p`, both under your own Claude account. Note Taker sends a note's transcript to Claude the same way when it stops, to title and summarize it, and when you ask a question about the call, with no tools: Claude reads no files. The
   app's own connections are to GitHub, to look for a newer release and download it:
   only when you click **Check for Updates…** in the menu; it never checks by itself. And, when you
   click **Download Model** for Note Taker, to Hugging Face, to download the Parakeet speech model once

@@ -520,7 +520,7 @@ final class NoteTaker: ObservableObject {
         askingQuestion = question
         NoteClaude.run(arguments: NoteAskProtocol.arguments(model: .current),
                        input: NoteAskProtocol.input(transcript: transcript, question: question),
-                       directory: workspace, timeout: NoteContext.current.folders.isEmpty ? 90 : 180) { [weak self] output in
+                       directory: workspace, timeout: 90) { [weak self] output in
             guard let self else { return }
             asking = false
             askingQuestion = nil
