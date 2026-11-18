@@ -813,8 +813,13 @@ struct NoteTakerView: View {
                         HStack(spacing: 5) {
                             switch item {
                             case .transcript:
-                                Image(systemName: "waveform")
-                                    .foregroundStyle(taker.isRecording && !taker.isPaused ? Color.green : Color.secondary)
+                                if taker.isRecording && !taker.isPaused {
+                                    // AppKit's own spinner: it turns on its own layer, without
+                                    // redrawing the transcript the way an animated symbol did.
+                                    ProgressView().controlSize(.mini).help("Listening")
+                                } else {
+                                    Image(systemName: "waveform").foregroundStyle(Color.secondary)
+                                }
                             case .summary:
                                 Image(systemName: "sparkle")
                                     .symbolEffect(.pulse, isActive: taker.isSummarizing)
