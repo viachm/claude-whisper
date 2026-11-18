@@ -975,7 +975,7 @@ private struct NotesPane: View {
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @AppStorage("noteTakerKeepAudio") private var keepAudio = true
     @AppStorage("noteTakerImprove") private var improve = true
-    @AppStorage(NoteRetention.key) private var retention = NoteRetention.threeMonths
+    @AppStorage(NoteRetention.key) private var retention = NoteRetention.never
     @State private var locales: [String] = []
     @State private var search = ""
     @State private var deleting: Note?

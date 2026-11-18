@@ -285,7 +285,7 @@ enum NoteRetention: String, CaseIterable, Identifiable {
     case week, month, threeMonths, year, never
 
     static let key = "noteTakerRetention"
-    static var current: NoteRetention { UserDefaults.standard.string(forKey: key).flatMap(NoteRetention.init) ?? .threeMonths }
+    static var current: NoteRetention { UserDefaults.standard.string(forKey: key).flatMap(NoteRetention.init) ?? .never }
 
     var id: String { rawValue }
 

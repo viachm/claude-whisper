@@ -304,7 +304,7 @@ do {
     check(store.prune(.threeMonths, now: now) == 1 && store.notes.map(\.id) == [recent.id], "3 months deletes older notes")
     check(!FileManager.default.fileExists(atPath: store.audioDirectory(old.id).path), "a deleted note's audio goes too")
     check(store.prune(.week, now: now, keeping: recent.id) == 0, "the note being recorded is kept")
-    check(NoteRetention.current == .threeMonths || UserDefaults.standard.string(forKey: NoteRetention.key) != nil, "3 months is the default")
+    check(NoteRetention.current == .never || UserDefaults.standard.string(forKey: NoteRetention.key) != nil, "never is the default")
     try? FileManager.default.removeItem(at: directory)
 }
 

@@ -220,7 +220,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return window
     }
 
-    /// Deletes notes older than Settings › Notes › "Delete notes older than" (3 months by default).
+    /// Deletes notes older than Settings › Notes › "Delete notes older than" (never by default).
     @MainActor private func pruneNotes() {
         var recording: UUID?
         if #available(macOS 26.0, *), let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording {
