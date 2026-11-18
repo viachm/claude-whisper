@@ -584,6 +584,9 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
             let width = min(area.width, max(420, saved > 0 ? saved : (area.width * 0.4).rounded()))
             panel.setFrame(NSRect(x: area.maxX - width, y: area.minY, width: width, height: area.height), display: true)
         }
+        // While the window is open the app is in the Dock and in Command-Tab, like any app with a
+        // window; closing it puts the app back in the menu bar only.
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
@@ -609,6 +612,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         // The recording goes on (Open Note Taker in the menu brings it back); a call playing stops.
         player.pause()
+        NSApp.setActivationPolicy(.accessory)
     }
 
     func windowDidEndLiveResize(_ notification: Notification) {

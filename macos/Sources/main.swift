@@ -93,6 +93,13 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Quitting (the menu, logging out, an update, or a plain `kill`) while a note records: the
     /// note is finished and saved first, for up to 5 seconds.
+    /// A click on the Dock icon (there only while the Note Taker is open) brings the window back,
+    /// also when it was minimised.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if #available(macOS 26.0, *) { MainActor.assumeIsolated { (noteWindowBox as? NoteTakerWindow)?.show() } }
+        return false
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard #available(macOS 26.0, *) else { return .terminateNow }
         return MainActor.assumeIsolated {
