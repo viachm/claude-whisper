@@ -952,6 +952,9 @@ struct NoteTakerView: View {
                     } else if !search.isEmpty && visibleItems.isEmpty {
                         Text("No matches").foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.top, 30)
                     }
+                    // Found once per redraw: asked per line, it rebuilt every record for every line
+                    // four times a second while playing (100% CPU on a long note).
+                    let playing = playingLine
                     ForEach(visibleItems) { item in
                         switch item {
                         case .turn(let turn):
@@ -961,7 +964,7 @@ struct NoteTakerView: View {
                                 TurnView(speaker: line.speaker, start: line.start, text: line.text,
                                          pending: index == 0 && lines.count == 1 ? turn.pending : "",
                                          play: playable ? { player.play(fromNoteTime: line.start) } : nil,
-                                         playing: playingLine == "\(turn.id)#\(index)",
+                                         playing: playing == "\(turn.id)#\(index)",
                                          pause: { player.pause() })
                             }
                         case .pause(let pause): PauseView(pause: pause)
