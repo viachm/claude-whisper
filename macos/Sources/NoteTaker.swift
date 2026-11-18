@@ -13,6 +13,10 @@ import SwiftUI
 final class NoteTaker: ObservableObject {
     @Published private(set) var note: Note?
     @Published private(set) var pending: [Speaker: NoteSegment] = [:]
+    /// The latest words still being recognised; `pending` shows them at most once a second, since
+    /// every change redraws the whole transcript.
+    private var heard: [Speaker: NoteSegment] = [:]
+    private var showHeard: Task<Void, Never>?
     @Published private(set) var isRecording = false
     /// Recording, but with the microphone and the call audio off until `resume()`.
     @Published private(set) var isPaused = false
@@ -137,7 +141,7 @@ final class NoteTaker: ObservableObject {
         let run = run
         let locale = note.locale
         self.note = note
-        pending = [:]
+        clearPending()
         offsets = [:]
         detector = locale == NoteLanguage.automatic && Self.needsParakeet(locale) ? LanguageDetector() : nil
         status = nil
@@ -298,6 +302,7 @@ final class NoteTaker: ObservableObject {
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
         if final {
+            heard[speaker] = nil
             pending[speaker] = nil
             guard !text.isEmpty else { return }
             note?.segments.append(segment)
@@ -308,8 +313,22 @@ final class NoteTaker: ObservableObject {
                 switchLanguage(code)
             }
         } else {
-            pending[speaker] = segment
+            heard[speaker] = segment
+            guard showHeard == nil else { return }
+            showHeard = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                guard let self, !Task.isCancelled else { return }
+                self.showHeard = nil
+                self.pending = self.heard
+            }
         }
+    }
+
+    private func clearPending() {
+        showHeard?.cancel()
+        showHeard = nil
+        heard = [:]
+        pending = [:]
     }
 
     /// Stops listening; the last words still being recognised are added when they are final,
@@ -395,9 +414,9 @@ final class NoteTaker: ObservableObject {
 
     /// Words still shown as a guess when the transcriber stopped answering are kept as they are.
     private func keepPending() {
-        let guesses = pending.values.filter { !$0.text.isEmpty }
+        let guesses = heard.values.filter { !$0.text.isEmpty }
         if !guesses.isEmpty { note?.segments += guesses }
-        pending = [:]
+        clearPending()
     }
 
     /// Shows a saved note (stopping a recording first).
@@ -408,7 +427,7 @@ final class NoteTaker: ObservableObject {
         run += 1
         pausedAt = nil
         note = saved
-        pending = [:]
+        clearPending()
         status = nil
         if saved.summaryPending == true {
             note?.summaryPending = nil
@@ -435,7 +454,7 @@ final class NoteTaker: ObservableObject {
         run += 1
         store.delete(id)
         note = nil
-        pending = [:]
+        clearPending()
     }
 
     // MARK: Claude
@@ -796,7 +815,6 @@ struct NoteTakerView: View {
                             case .transcript:
                                 Image(systemName: "waveform")
                                     .foregroundStyle(taker.isRecording && !taker.isPaused ? Color.green : Color.secondary)
-                                    .symbolEffect(.variableColor.iterative, isActive: taker.isRecording && !taker.isPaused)
                             case .summary:
                                 Image(systemName: "sparkle")
                                     .symbolEffect(.pulse, isActive: taker.isSummarizing)
@@ -988,7 +1006,8 @@ struct NoteTakerView: View {
             }
             .onChange(of: taker.items) {
                 guard search.isEmpty else { return }
-                withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("end", anchor: .bottom) }
+                // No animation: its frames redraw the whole transcript on every new line.
+                proxy.scrollTo("end", anchor: .bottom)
             }
         }
     }
