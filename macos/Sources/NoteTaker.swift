@@ -577,6 +577,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     func show() {
         let panel = self.panel ?? makePanel()
         self.panel = panel
+        if !(panel.contentView is NSHostingView<NoteTakerView>) { attachView(to: panel) }
         if !panel.isVisible, let screen = NSScreen.main {
             let area = screen.visibleFrame
             // 40% of the screen at first; a width the user dragged to is kept.
@@ -603,16 +604,22 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.minSize = NSSize(width: 360, height: 420)
-        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
-        HandCursor.install(on: panel)
         return panel
+    }
+
+    private func attachView(to panel: NSPanel) {
+        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
+        HandCursor.install(on: panel)
     }
 
     func windowWillClose(_ notification: Notification) {
         // The recording goes on (Open Note Taker in the menu brings it back); a call playing stops.
         player.pause()
         NSApp.setActivationPolicy(.accessory)
+        // A closed window's view went on redrawing every new line and its animations (a quarter
+        // of a core during a call); it is made again when the window opens.
+        panel?.contentView = NSView()
     }
 
     func windowDidEndLiveResize(_ notification: Notification) {
