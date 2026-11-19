@@ -1,6 +1,7 @@
 import AppKit
 import AVFoundation
 import Combine
+import UserNotifications
 
 /// Claude Whisper: hold Right Command (or the key chosen in Settings) anywhere, speak, release, and the
 /// text is typed where your cursor is. Transcription is done by Claude Code's own voice mode, in
@@ -53,6 +54,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var releasedAt = Date()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        UNUserNotificationCenter.current().delegate = self
+        CallEndNotice.register()
         // Note Taker no longer sends a "Context for Claude": drop what an earlier version kept.
         UserDefaults.standard.removeObject(forKey: "noteTakerContext")
         Log.write("Claude Whisper launched")
@@ -93,6 +96,13 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Quitting (the menu, logging out, an update, or a plain `kill`) while a note records: the
     /// note is finished and saved first, for up to 5 seconds.
+    /// A click on the Dock icon (there only while the Note Taker is open) brings the window back,
+    /// also when it was minimised.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if #available(macOS 26.0, *) { MainActor.assumeIsolated { (noteWindowBox as? NoteTakerWindow)?.show() } }
+        return false
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard #available(macOS 26.0, *) else { return .terminateNow }
         return MainActor.assumeIsolated {
@@ -204,6 +214,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let taker = window.taker
         watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
         watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        watch(taker.$callSeemsOver) {
+            if taker.callSeemsOver { CallEndNotice.show(reason: taker.callEndReason) } else { CallEndNotice.hide() }
+        }
         let player = window.player
         watch(player.$isPlaying) { [weak self] in
             guard let self else { return }
@@ -213,7 +226,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return window
     }
 
-    /// Deletes notes older than Settings › Notes › "Delete notes older than" (3 months by default).
+    /// Deletes notes older than Settings › Notes › "Delete notes older than" (never by default).
     @MainActor private func pruneNotes() {
         var recording: UUID?
         if #available(macOS 26.0, *), let taker = (noteWindowBox as? NoteTakerWindow)?.taker, taker.isRecording {
@@ -330,15 +343,20 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// filled while listening. Drawn as a template so it follows the menu bar's colours.
     private func setIcon(active: Bool) {
         iconActive = active
-        // While a note records and nothing is dictated, the bars give way to the red dot; while a
-        // note's audio plays, to a pause symbol.
-        let showsPause = !active && recordingDot == nil && playing
-        let bars = active || (recordingDot == nil && !playing)
+        // While a note records, the bars give way to the red dot, and dictating then only thickens
+        // the outline; while a note's audio plays, the bars give way to a pause symbol.
+        let recording = recordingDot != nil
+        let showsPause = !active && !recording && playing
+        let bars = !recording && (active || !playing)
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
             let shape = NSBezierPath(roundedRect: tile, xRadius: 4.5, yRadius: 4.5)
             NSColor.black.set()
-            if active { shape.fill() } else { shape.lineWidth = 1; shape.stroke() }
+            if active && recording {
+                let thick = NSBezierPath(roundedRect: tile.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+                thick.lineWidth = 2
+                thick.stroke()
+            } else if active { shape.fill() } else { shape.lineWidth = 1; shape.stroke() }
             let heights: [CGFloat] = [4, 7, 10, 7, 4]
             let barWidth: CGFloat = 1.6, gap: CGFloat = 1.5
             var x = tile.midX - (CGFloat(heights.count) * barWidth + CGFloat(heights.count - 1) * gap) / 2
@@ -674,3 +692,36 @@ let delegate = App()
 app.delegate = delegate
 app.setActivationPolicy(.accessory)
 app.run()
+
+// MARK: Notifications
+
+extension App: UNUserNotificationCenterDelegate {
+    /// Shown also while Claude Whisper is the app in front.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                withCompletionHandler done: @escaping (UNNotificationPresentationOptions) -> Void) {
+        done([.banner, .list, .sound])
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                withCompletionHandler done: @escaping () -> Void) {
+        let action = response.actionIdentifier
+        let callEnd = response.notification.request.content.categoryIdentifier == CallEndNotice.category
+        DispatchQueue.main.async { [weak self] in
+            defer { done() }
+            guard callEnd, let self, #available(macOS 26.0, *) else { return }
+            MainActor.assumeIsolated {
+                guard let window = self.noteWindowBox as? NoteTakerWindow, window.taker.isRecording else { return }
+                switch action {
+                // Stops and opens the note, where the clean-up and summary come in.
+                case CallEndNotice.stopAction:
+                    window.taker.stop()
+                    window.show()
+                // The close button: the call goes on.
+                case UNNotificationDismissActionIdentifier: window.taker.keepRecording()
+                // A click on the notification itself opens the note.
+                default: window.show()
+                }
+            }
+        }
+    }
+}

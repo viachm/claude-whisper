@@ -252,6 +252,23 @@ do {
     note.improved = partial
     check(note.lines.first?.text == "hi rikwan", "a record Claude left out keeps its text")
     check((try? NoteImproveProtocol.parse(#"{"result":"Sure, here it is"}"#).get()) == nil, "an answer without lines is not used")
+    var split = Note(started: Date(), locale: "en-US", segments: [
+        NoteSegment(speaker: .them, start: 10, end: 13, text: "can you hear me"),
+        NoteSegment(speaker: .them, start: 14, end: 16, text: "yes I can hear you"),
+    ])
+    let turn = split.records[0]
+    let starts = split.starts(of: turn, [NoteUtterance(speaker: "Speaker 1", text: "Can you hear me?"),
+                                         NoteUtterance(speaker: "Speaker 2", text: "Yes, I can hear you.")])
+    check(starts.count == 2 && starts[0] == 10 && abs(starts[1] - 13.6) < 0.01, "each person in a split record plays from where their words start")
+    let oneLine = Note(started: Date(), locale: "en-US", segments: [
+        NoteSegment(speaker: .them, start: 20, end: 30, text: "yep so chris this isn't something that needs a release"),
+    ])
+    let shared = oneLine.starts(of: oneLine.records[0], [NoteUtterance(speaker: "Chris", text: "Yep."),
+                                                          NoteUtterance(speaker: "Holly", text: "So Chris, this isn't something that needs a release.")])
+    check(shared[0] == 20 && shared[1] > 20.5 && shared[1] < 21.5, "two people in one recognised line start at their own words")
+    split.segments = []
+    check(split.starts(of: turn, [NoteUtterance(speaker: "A", text: "x"), NoteUtterance(speaker: "B", text: "y")]) == [10, 10],
+          "without lines everyone plays from the record's start")
 
     // Continue adds records after a pause: only those (and any that grew) go to Claude again.
     note.improved = NoteImproveProtocol.improved(parsed, records: records)
@@ -287,7 +304,7 @@ do {
     check(store.prune(.threeMonths, now: now) == 1 && store.notes.map(\.id) == [recent.id], "3 months deletes older notes")
     check(!FileManager.default.fileExists(atPath: store.audioDirectory(old.id).path), "a deleted note's audio goes too")
     check(store.prune(.week, now: now, keeping: recent.id) == 0, "the note being recorded is kept")
-    check(NoteRetention.current == .threeMonths || UserDefaults.standard.string(forKey: NoteRetention.key) != nil, "3 months is the default")
+    check(NoteRetention.current == .never || UserDefaults.standard.string(forKey: NoteRetention.key) != nil, "never is the default")
     try? FileManager.default.removeItem(at: directory)
 }
 
@@ -441,6 +458,30 @@ do {
     let loudMic = SpeechLevel.gains([0.1, 0.05], mine: [true, false])
     check(abs(loudMic[0] - SpeechLevel.ownShare) < 0.001 && abs(loudMic[1] - 2) < 0.001,
           "a loud microphone is turned down a little and the call raised to it")
+}
+
+// The call seems over
+
+do {
+    let start = Date(timeIntervalSince1970: 1_000_000)
+    var detector = CallEndDetector(now: start)
+    check(detector.check(callAppRecording: false, now: start + 300) == nil, "a call nobody has spoken in yet is not over")
+    detector.heard(at: start + 310)
+    check(detector.check(callAppRecording: nil, now: start + 360) == nil, "50 s of silence is not the end")
+    check(detector.check(callAppRecording: nil, now: start + 371) != nil, "a minute of silence after speech is")
+    check(detector.check(callAppRecording: nil, now: start + 500) == nil, "it asks only once")
+    detector.keep(now: start + 500)
+    check(detector.check(callAppRecording: nil, now: start + 700) == nil, "after Keep Recording, silence alone does not ask again")
+
+    var call = CallEndDetector(now: start)
+    call.heard(at: start + 1)
+    check(call.check(callAppRecording: true, now: start + 5) == nil, "the call app on the microphone")
+    call.heard(at: start + 20)
+    check(call.check(callAppRecording: false, now: start + 25) == nil, "the call app just let go")
+    check(call.check(callAppRecording: true, now: start + 30) == nil, "and took it back (a device switch)")
+    check(call.check(callAppRecording: false, now: start + 35) == nil, "let go again")
+    check(call.check(callAppRecording: false, now: start + 46) == "the call app let go of the microphone",
+          "10 s after the call app let go of the microphone, the call is over")
 }
 
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")

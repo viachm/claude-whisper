@@ -13,9 +13,21 @@ import SwiftUI
 final class NoteTaker: ObservableObject {
     @Published private(set) var note: Note?
     @Published private(set) var pending: [Speaker: NoteSegment] = [:]
+    /// The latest words still being recognised; `pending` shows them at most once a second, since
+    /// every change redraws the whole transcript.
+    private var heard: [Speaker: NoteSegment] = [:]
+    private var showHeard: Task<Void, Never>?
     @Published private(set) var isRecording = false
     /// Recording, but with the microphone and the call audio off until `resume()`.
     @Published private(set) var isPaused = false
+    /// The call seems to be over (see CallEndDetector): the menu bar app asks whether to stop.
+    @Published private(set) var callSeemsOver = false
+    private var callEnd = CallEndDetector(now: Date())
+    private var callEndWatch: Task<Void, Never>?
+    /// Why the call seems over, for the notification.
+    private(set) var callEndReason = ""
+    /// The other apps last seen recording from the microphone (logged when it changes).
+    private var micApps: Set<String> = []
     private var pausedAt: Date?
     /// A problem or a slow step to show in the window, such as a model download.
     @Published private(set) var status: String?
@@ -137,7 +149,7 @@ final class NoteTaker: ObservableObject {
         let run = run
         let locale = note.locale
         self.note = note
-        pending = [:]
+        clearPending()
         offsets = [:]
         detector = locale == NoteLanguage.automatic && Self.needsParakeet(locale) ? LanguageDetector() : nil
         status = nil
@@ -145,6 +157,7 @@ final class NoteTaker: ObservableObject {
         isPaused = false
         pausedAt = nil
         Log.write("note taker: \(note.segments.isEmpty ? "started" : "continued") (\(locale))")
+        watchCallEnd()
         Task {
             do {
                 try await begin(run: run, language: locale)
@@ -270,6 +283,7 @@ final class NoteTaker: ObservableObject {
         guard isRecording, isPaused else { return }
         closePause()
         isPaused = false
+        callEnd.resumed(now: Date())
         Log.write("note taker: resumed")
         do {
             try startCapture()
@@ -295,9 +309,16 @@ final class NoteTaker: ObservableObject {
         // A lone "." or "9" from a cough or a click is not a line.
         if text.unicodeScalars.filter(CharacterSet.letters.contains).count < 2 { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
+        // Speech, not a lone "Uh" or "Mm" the recogniser makes of noise in the call audio.
+        if text.unicodeScalars.filter(CharacterSet.letters.contains).count >= 6 {
+            callEnd.heard(at: Date())
+            // People talk again: the call was not over after all.
+            if callSeemsOver { keepRecording() }
+        }
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
         if final {
+            heard[speaker] = nil
             pending[speaker] = nil
             guard !text.isEmpty else { return }
             note?.segments.append(segment)
@@ -308,8 +329,61 @@ final class NoteTaker: ObservableObject {
                 switchLanguage(code)
             }
         } else {
-            pending[speaker] = segment
+            heard[speaker] = segment
+            guard showHeard == nil else { return }
+            showHeard = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                guard let self, !Task.isCancelled else { return }
+                self.showHeard = nil
+                self.pending = self.heard
+            }
         }
+    }
+
+    /// Every 5 seconds while recording, whether the call seems over.
+    private func watchCallEnd() {
+        callEnd = CallEndDetector(now: Date())
+        callSeemsOver = false
+        micApps = []
+        // Asked on the first recording, so the question doesn't come up as a call ends.
+        CallEndNotice.requestPermission()
+        callEndWatch?.cancel()
+        callEndWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard let self, self.isRecording, !Task.isCancelled else { return }
+                guard !self.isPaused else { continue }
+                let apps = Microphone.otherAppsRecording()
+                if let apps, apps != self.micApps {
+                    Log.write("note taker: recording from the microphone: \(apps.isEmpty ? "no other app" : apps.sorted().joined(separator: ", "))")
+                    self.micApps = apps
+                }
+                if let reason = self.callEnd.check(callAppRecording: apps.map { !$0.isEmpty }, now: Date()) {
+                    Log.write("note taker: the call seems over (\(reason))")
+                    self.callEndReason = reason
+                    self.callSeemsOver = true
+                }
+            }
+        }
+    }
+
+    private func endCallWatch() {
+        callEndWatch?.cancel()
+        callEndWatch = nil
+        callSeemsOver = false
+    }
+
+    /// "Keep Recording" on the call-over prompt.
+    func keepRecording() {
+        callSeemsOver = false
+        callEnd.keep(now: Date())
+    }
+
+    private func clearPending() {
+        showHeard?.cancel()
+        showHeard = nil
+        heard = [:]
+        pending = [:]
     }
 
     /// Stops listening; the last words still being recognised are added when they are final,
@@ -317,6 +391,7 @@ final class NoteTaker: ObservableObject {
     func stop() {
         guard isRecording else { return }
         Log.write("note taker: stopping")
+        endCallWatch()
         closePause()
         isRecording = false
         isPaused = false
@@ -345,6 +420,7 @@ final class NoteTaker: ObservableObject {
     func stopForQuit(_ done: @escaping () -> Void) {
         guard isRecording else { return done() }
         Log.write("note taker: stopping for quit")
+        endCallWatch()
         closePause()
         isRecording = false
         isPaused = false
@@ -395,9 +471,9 @@ final class NoteTaker: ObservableObject {
 
     /// Words still shown as a guess when the transcriber stopped answering are kept as they are.
     private func keepPending() {
-        let guesses = pending.values.filter { !$0.text.isEmpty }
+        let guesses = heard.values.filter { !$0.text.isEmpty }
         if !guesses.isEmpty { note?.segments += guesses }
-        pending = [:]
+        clearPending()
     }
 
     /// Shows a saved note (stopping a recording first).
@@ -408,7 +484,7 @@ final class NoteTaker: ObservableObject {
         run += 1
         pausedAt = nil
         note = saved
-        pending = [:]
+        clearPending()
         status = nil
         if saved.summaryPending == true {
             note?.summaryPending = nil
@@ -435,7 +511,7 @@ final class NoteTaker: ObservableObject {
         run += 1
         store.delete(id)
         note = nil
-        pending = [:]
+        clearPending()
     }
 
     // MARK: Claude
@@ -577,6 +653,7 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
     func show() {
         let panel = self.panel ?? makePanel()
         self.panel = panel
+        if !(panel.contentView is NSHostingView<NoteTakerView>) { attachView(to: panel) }
         if !panel.isVisible, let screen = NSScreen.main {
             let area = screen.visibleFrame
             // 40% of the screen at first; a width the user dragged to is kept.
@@ -584,6 +661,9 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
             let width = min(area.width, max(420, saved > 0 ? saved : (area.width * 0.4).rounded()))
             panel.setFrame(NSRect(x: area.maxX - width, y: area.minY, width: width, height: area.height), display: true)
         }
+        // While the window is open the app is in the Dock and in Command-Tab, like any app with a
+        // window; closing it puts the app back in the menu bar only.
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
@@ -600,15 +680,22 @@ final class NoteTakerWindow: NSObject, NSWindowDelegate {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.minSize = NSSize(width: 360, height: 420)
-        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
         panel.delegate = self
-        HandCursor.install(on: panel)
         return panel
+    }
+
+    private func attachView(to panel: NSPanel) {
+        panel.contentView = NSHostingView(rootView: NoteTakerView(taker: taker, player: player, close: { [weak panel] in panel?.close() }))
+        HandCursor.install(on: panel)
     }
 
     func windowWillClose(_ notification: Notification) {
         // The recording goes on (Open Note Taker in the menu brings it back); a call playing stops.
         player.pause()
+        NSApp.setActivationPolicy(.accessory)
+        // A closed window's view went on redrawing every new line and its animations (a quarter
+        // of a core during a call); it is made again when the window opens.
+        panel?.contentView = NSView()
     }
 
     func windowDidEndLiveResize(_ notification: Notification) {
@@ -636,12 +723,17 @@ struct NoteTakerView: View {
     @State private var question = ""
     @State private var searching = false
     @State private var search = ""
+    /// The transcript is scrolled to its end: only then does a new line scroll it, so reading
+    /// earlier lines during a call is not pulled back down.
+    @State private var atEnd = true
     @State private var showAnswers = false
     @State private var copied = false
     @State private var confirmDelete = false
     @AppStorage("noteTakerHintDismissed") private var hintDismissed = false
     @AppStorage(NoteModel.key) private var model = NoteModel.sonnet
     @State private var titleEditing = false
+    /// Where each cleaned-up line starts, worked out once per note and transcript.
+    @State private var startsCache = StartsCache()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -781,9 +873,13 @@ struct NoteTakerView: View {
                         HStack(spacing: 5) {
                             switch item {
                             case .transcript:
-                                Image(systemName: "waveform")
-                                    .foregroundStyle(taker.isRecording && !taker.isPaused ? Color.green : Color.secondary)
-                                    .symbolEffect(.variableColor.iterative, isActive: taker.isRecording && !taker.isPaused)
+                                if taker.isRecording && !taker.isPaused {
+                                    // AppKit's own spinner: it turns on its own layer, without
+                                    // redrawing the transcript the way an animated symbol did.
+                                    ProgressView().controlSize(.mini).help("Listening")
+                                } else {
+                                    Image(systemName: "waveform").foregroundStyle(Color.secondary)
+                                }
                             case .summary:
                                 Image(systemName: "sparkle")
                                     .symbolEffect(.pulse, isActive: taker.isSummarizing)
@@ -906,6 +1002,35 @@ struct NoteTakerView: View {
         }
     }
 
+    /// A record's lines as shown: Claude's cleaned-up utterances (each with where it starts), or
+    /// the record as recognised.
+    private func lines(of turn: NoteTurn) -> [(speaker: String, start: Double, text: String)] {
+        guard !showOriginal, let note = taker.note, let utterances = note.improved?[turn.id.uuidString] else {
+            return [(turn.speaker.label, turn.start, turn.text)]
+        }
+        let key = "\(note.id) \(note.segments.count) \(note.improved?.count ?? 0)"
+        if startsCache.key != key {
+            startsCache.key = key
+            startsCache.starts = [:]
+        }
+        let starts = startsCache.starts[turn.id] ?? note.starts(of: turn, utterances)
+        startsCache.starts[turn.id] = starts
+        return zip(utterances, starts).map { ($0.speaker, $1, $0.text) }
+    }
+
+    /// The line the audio is playing now ("<record id>#<index>"), whose play button turns into pause.
+    private var playingLine: String? {
+        guard player.isPlaying, let note = taker.note else { return nil }
+        var playing: String?
+        for item in taker.items {
+            guard case .turn(let turn) = item else { continue }
+            for (index, line) in lines(of: turn).enumerated() where note.audioTime(line.start) <= player.current + 0.05 {
+                playing = "\(turn.id)#\(index)"
+            }
+        }
+        return playing
+    }
+
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -921,19 +1046,20 @@ struct NoteTakerView: View {
                     } else if !search.isEmpty && visibleItems.isEmpty {
                         Text("No matches").foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.top, 30)
                     }
+                    // Found once per redraw: asked per line, it rebuilt every record for every line
+                    // four times a second while playing (100% CPU on a long note).
+                    let playing = playingLine
                     ForEach(visibleItems) { item in
                         switch item {
                         case .turn(let turn):
-                            let play: (() -> Void)? = player.hasAudio && !taker.isRecording
-                                ? { player.play(fromNoteTime: turn.start) } : nil
-                            if !showOriginal, let utterances = taker.note?.improved?[turn.id.uuidString] {
-                                ForEach(Array(utterances.enumerated()), id: \.offset) { index, utterance in
-                                    TurnView(speaker: utterance.speaker, start: index == 0 ? turn.start : nil,
-                                             text: utterance.text, pending: "", play: index == 0 ? play : nil)
-                                }
-                            } else {
-                                TurnView(speaker: turn.speaker.label, start: turn.start, text: turn.text,
-                                         pending: turn.pending, play: play)
+                            let playable = player.hasAudio && !taker.isRecording
+                            let lines = lines(of: turn)
+                            ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                                TurnView(speaker: line.speaker, start: line.start, text: line.text,
+                                         pending: index == 0 && lines.count == 1 ? turn.pending : "",
+                                         play: playable ? { player.play(fromNoteTime: line.start) } : nil,
+                                         playing: playing == "\(turn.id)#\(index)",
+                                         pause: { player.pause() })
                             }
                         case .pause(let pause): PauseView(pause: pause)
                         }
@@ -943,9 +1069,15 @@ struct NoteTakerView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
             }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.containerSize.height >= geometry.contentSize.height - 60
+            } action: { _, isAtEnd in
+                atEnd = isAtEnd
+            }
             .onChange(of: taker.items) {
-                guard search.isEmpty else { return }
-                withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("end", anchor: .bottom) }
+                guard search.isEmpty, atEnd else { return }
+                // No animation: its frames redraw the whole transcript on every new line.
+                proxy.scrollTo("end", anchor: .bottom)
             }
         }
     }
@@ -1200,16 +1332,26 @@ private struct Chip: View {
     }
 }
 
+/// Line starts for the transcript, kept between redraws (the player redraws it four times a
+/// second). A class, so filling it while drawing changes no view state.
+private final class StartsCache {
+    var key = ""
+    var starts: [UUID: [Double]] = [:]
+}
+
 @available(macOS 26.0, *)
 private struct TurnView: View {
     /// "Me", "Them", a name or "Speaker 1".
     let speaker: String
-    /// Seconds from the note's start; nil for the second and later people in a split record.
+    /// Seconds from the note's start.
     let start: Double?
     let text: String
     let pending: String
     /// Plays the audio from this record, when the note has audio.
     var play: (() -> Void)?
+    /// The audio is playing this line: its button pauses.
+    var playing = false
+    var pause: (() -> Void)?
 
     /// Me in the accent colour; everyone else gets a colour of their own, the same each time.
     static func color(_ speaker: String) -> Color {
@@ -1227,15 +1369,15 @@ private struct TurnView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Self.color(speaker))
                 if let start, let play {
-                    Button(action: play) {
-                        Label(NoteTakerView.elapsed(start), systemImage: "play.fill")
+                    Button(action: playing ? (pause ?? play) : play) {
+                        Label(NoteTakerView.elapsed(start), systemImage: playing ? "pause.fill" : "play.fill")
                             .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 11))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .help("Listen from here")
+                    .foregroundStyle(playing ? Color.accentColor : .secondary)
+                    .help(playing ? "Pause" : "Listen from here")
                 } else if let start {
                     Text(NoteTakerView.elapsed(start))
                         .font(.system(size: 11))

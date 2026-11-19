@@ -10,8 +10,10 @@ final class HandCursor: NSResponder {
 
     static func install(on window: NSWindow) {
         let key = ObjectIdentifier(window)
-        guard installed[key] == nil, let view = window.contentView else { return }
-        let helper = HandCursor()
+        guard let view = window.contentView else { return }
+        let helper = installed[key] ?? HandCursor()
+        // Called again when a window gets a new content view (the Note Taker makes one each time it opens).
+        guard !view.trackingAreas.contains(where: { $0.owner === helper }) else { return }
         helper.window = window
         // activeAlways: the hand shows over the Note Taker window even when it is not the key window.
         view.addTrackingArea(NSTrackingArea(rect: .zero,

@@ -210,3 +210,64 @@ enum SpeechLevel {
         }
     }
 }
+
+/// Tells when the call being recorded seems to be over: someone spoke and then nobody has for a
+/// minute, or the call app (Zoom, Teams, a browser with Meet) took the microphone and let it go.
+/// It asks once; after the question is closed (or people talk again) only a new sign asks again.
+struct CallEndDetector {
+    static let silence: TimeInterval = 60
+    /// How long the call app must have let go of the microphone (not a brief device switch).
+    static let release: TimeInterval = 10
+
+    private var lastSpeech: Date
+    private var spoke = false
+    private var callAppSeen = false
+    private var micFreeSince: Date?
+    private(set) var asked = false
+
+    init(now: Date) { lastSpeech = now }
+
+    mutating func heard(at now: Date) {
+        lastSpeech = now
+        spoke = true
+    }
+
+    /// `callAppRecording`: whether another app records from the microphone (nil when unknown).
+    /// Returns why the call seems over, the first time it does.
+    mutating func check(callAppRecording: Bool?, now: Date) -> String? {
+        if let recording = callAppRecording {
+            if recording {
+                callAppSeen = true
+                micFreeSince = nil
+            } else if callAppSeen, micFreeSince == nil {
+                micFreeSince = now
+            }
+        }
+        guard !asked else { return nil }
+        if spoke, now.timeIntervalSince(lastSpeech) >= Self.silence {
+            asked = true
+            return "nobody has spoken for a minute"
+        }
+        if let free = micFreeSince, now.timeIntervalSince(free) >= Self.release {
+            asked = true
+            return "the call app let go of the microphone"
+        }
+        return nil
+    }
+
+    /// The notification closed, or people talking again: asks again only once someone speaks and then
+    /// falls silent, or the call app takes the microphone and lets it go again.
+    mutating func keep(now: Date) {
+        asked = false
+        spoke = false
+        callAppSeen = false
+        micFreeSince = nil
+        lastSpeech = now
+    }
+
+    /// After a pause, the silence counts from the resume.
+    mutating func resumed(now: Date) {
+        lastSpeech = now
+        micFreeSince = nil
+    }
+}
