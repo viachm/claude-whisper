@@ -712,7 +712,10 @@ extension App: UNUserNotificationCenterDelegate {
             MainActor.assumeIsolated {
                 guard let window = self.noteWindowBox as? NoteTakerWindow, window.taker.isRecording else { return }
                 switch action {
-                case CallEndNotice.stopAction: window.taker.stop()
+                // Stops and opens the note, where the clean-up and summary come in.
+                case CallEndNotice.stopAction:
+                    window.taker.stop()
+                    window.show()
                 // The close button: the call goes on.
                 case UNNotificationDismissActionIdentifier: window.taker.keepRecording()
                 // A click on the notification itself opens the note.

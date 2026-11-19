@@ -309,7 +309,8 @@ final class NoteTaker: ObservableObject {
         // A lone "." or "9" from a cough or a click is not a line.
         if text.unicodeScalars.filter(CharacterSet.letters.contains).count < 2 { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
-        if !text.isEmpty {
+        // Speech, not a lone "Uh" or "Mm" the recogniser makes of noise in the call audio.
+        if text.unicodeScalars.filter(CharacterSet.letters.contains).count >= 6 {
             callEnd.heard(at: Date())
             // People talk again: the call was not over after all.
             if callSeemsOver { keepRecording() }
