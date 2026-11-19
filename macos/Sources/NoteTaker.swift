@@ -666,6 +666,9 @@ struct NoteTakerView: View {
     @State private var question = ""
     @State private var searching = false
     @State private var search = ""
+    /// The transcript is scrolled to its end: only then does a new line scroll it, so reading
+    /// earlier lines during a call is not pulled back down.
+    @State private var atEnd = true
     @State private var showAnswers = false
     @State private var copied = false
     @State private var confirmDelete = false
@@ -1009,8 +1012,13 @@ struct NoteTakerView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
             }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.containerSize.height >= geometry.contentSize.height - 60
+            } action: { _, isAtEnd in
+                atEnd = isAtEnd
+            }
             .onChange(of: taker.items) {
-                guard search.isEmpty else { return }
+                guard search.isEmpty, atEnd else { return }
                 // No animation: its frames redraw the whole transcript on every new line.
                 proxy.scrollTo("end", anchor: .bottom)
             }
