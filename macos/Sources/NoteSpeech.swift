@@ -213,7 +213,7 @@ enum SpeechLevel {
 
 /// Tells when the call being recorded seems to be over: someone spoke and then nobody has for a
 /// minute, or the call app (Zoom, Teams, a browser with Meet) took the microphone and let it go.
-/// It asks once; after "Keep Recording" only a new sign asks again.
+/// It asks once; after the question is closed (or people talk again) only a new sign asks again.
 struct CallEndDetector {
     static let silence: TimeInterval = 60
     /// How long the call app must have let go of the microphone (not a brief device switch).
@@ -255,7 +255,7 @@ struct CallEndDetector {
         return nil
     }
 
-    /// "Keep Recording", or people talking again: asks again only once someone speaks and then
+    /// The notification closed, or people talking again: asks again only once someone speaks and then
     /// falls silent, or the call app takes the microphone and lets it go again.
     mutating func keep(now: Date) {
         asked = false
