@@ -26,6 +26,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let noteStore = NoteStore()
     /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
     private var noteWindowBox: AnyObject?
+    private let callEndPrompt = CallEndPrompt()
     /// The red dot on the menu bar icon while Note Taker records.
     private var recordingDot: NSView?
     private var iconActive = false
@@ -211,6 +212,14 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let taker = window.taker
         watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
         watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
+        watch(taker.$callSeemsOver) { [weak self] in
+            guard let self else { return }
+            if taker.callSeemsOver {
+                callEndPrompt.show(stop: { taker.stop() }, keep: { taker.keepRecording() })
+            } else {
+                callEndPrompt.hide()
+            }
+        }
         let player = window.player
         watch(player.$isPlaying) { [weak self] in
             guard let self else { return }

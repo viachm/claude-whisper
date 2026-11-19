@@ -460,5 +460,29 @@ do {
           "a loud microphone is turned down a little and the call raised to it")
 }
 
+// The call seems over
+
+do {
+    let start = Date(timeIntervalSince1970: 1_000_000)
+    var detector = CallEndDetector(now: start)
+    check(detector.check(callAppRecording: false, now: start + 300) == nil, "a call nobody has spoken in yet is not over")
+    detector.heard(at: start + 310)
+    check(detector.check(callAppRecording: nil, now: start + 360) == nil, "50 s of silence is not the end")
+    check(detector.check(callAppRecording: nil, now: start + 371) != nil, "a minute of silence after speech is")
+    check(detector.check(callAppRecording: nil, now: start + 500) == nil, "it asks only once")
+    detector.keep(now: start + 500)
+    check(detector.check(callAppRecording: nil, now: start + 700) == nil, "after Keep Recording, silence alone does not ask again")
+
+    var call = CallEndDetector(now: start)
+    call.heard(at: start + 1)
+    check(call.check(callAppRecording: true, now: start + 5) == nil, "the call app on the microphone")
+    call.heard(at: start + 20)
+    check(call.check(callAppRecording: false, now: start + 25) == nil, "the call app just let go")
+    check(call.check(callAppRecording: true, now: start + 30) == nil, "and took it back (a device switch)")
+    check(call.check(callAppRecording: false, now: start + 35) == nil, "let go again")
+    check(call.check(callAppRecording: false, now: start + 46) == "the call app let go of the microphone",
+          "10 s after the call app let go of the microphone, the call is over")
+}
+
 print(failures == 0 ? "\nAll tests passed" : "\n\(failures) test(s) failed")
 exit(failures == 0 ? 0 : 1)

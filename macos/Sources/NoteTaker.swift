@@ -20,6 +20,10 @@ final class NoteTaker: ObservableObject {
     @Published private(set) var isRecording = false
     /// Recording, but with the microphone and the call audio off until `resume()`.
     @Published private(set) var isPaused = false
+    /// The call seems to be over (see CallEndDetector): the menu bar app asks whether to stop.
+    @Published private(set) var callSeemsOver = false
+    private var callEnd = CallEndDetector(now: Date())
+    private var callEndWatch: Task<Void, Never>?
     private var pausedAt: Date?
     /// A problem or a slow step to show in the window, such as a model download.
     @Published private(set) var status: String?
@@ -149,6 +153,7 @@ final class NoteTaker: ObservableObject {
         isPaused = false
         pausedAt = nil
         Log.write("note taker: \(note.segments.isEmpty ? "started" : "continued") (\(locale))")
+        watchCallEnd()
         Task {
             do {
                 try await begin(run: run, language: locale)
@@ -274,6 +279,7 @@ final class NoteTaker: ObservableObject {
         guard isRecording, isPaused else { return }
         closePause()
         isPaused = false
+        callEnd.resumed(now: Date())
         Log.write("note taker: resumed")
         do {
             try startCapture()
@@ -299,6 +305,11 @@ final class NoteTaker: ObservableObject {
         // A lone "." or "9" from a cough or a click is not a line.
         if text.unicodeScalars.filter(CharacterSet.letters.contains).count < 2 { text = "" }
         let offset = offsets[speaker]?.last { $0.from <= start + 0.05 }?.offset ?? offsets[speaker]?.first?.offset ?? 0
+        if !text.isEmpty {
+            callEnd.heard(at: Date())
+            // People talk again: the call was not over after all.
+            if callSeemsOver { keepRecording() }
+        }
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
         if final {
@@ -324,6 +335,36 @@ final class NoteTaker: ObservableObject {
         }
     }
 
+    /// Every 5 seconds while recording, whether the call seems over.
+    private func watchCallEnd() {
+        callEnd = CallEndDetector(now: Date())
+        callSeemsOver = false
+        callEndWatch?.cancel()
+        callEndWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard let self, self.isRecording, !Task.isCancelled else { return }
+                guard !self.isPaused else { continue }
+                if let reason = self.callEnd.check(callAppRecording: Microphone.otherAppRecording(), now: Date()) {
+                    Log.write("note taker: the call seems over (\(reason))")
+                    self.callSeemsOver = true
+                }
+            }
+        }
+    }
+
+    private func endCallWatch() {
+        callEndWatch?.cancel()
+        callEndWatch = nil
+        callSeemsOver = false
+    }
+
+    /// "Keep Recording" on the call-over prompt.
+    func keepRecording() {
+        callSeemsOver = false
+        callEnd.keep(now: Date())
+    }
+
     private func clearPending() {
         showHeard?.cancel()
         showHeard = nil
@@ -336,6 +377,7 @@ final class NoteTaker: ObservableObject {
     func stop() {
         guard isRecording else { return }
         Log.write("note taker: stopping")
+        endCallWatch()
         closePause()
         isRecording = false
         isPaused = false
@@ -364,6 +406,7 @@ final class NoteTaker: ObservableObject {
     func stopForQuit(_ done: @escaping () -> Void) {
         guard isRecording else { return done() }
         Log.write("note taker: stopping for quit")
+        endCallWatch()
         closePause()
         isRecording = false
         isPaused = false
