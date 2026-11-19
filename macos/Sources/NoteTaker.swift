@@ -24,6 +24,10 @@ final class NoteTaker: ObservableObject {
     @Published private(set) var callSeemsOver = false
     private var callEnd = CallEndDetector(now: Date())
     private var callEndWatch: Task<Void, Never>?
+    /// Why the call seems over, for the notification.
+    private(set) var callEndReason = ""
+    /// The other apps last seen recording from the microphone (logged when it changes).
+    private var micApps: Set<String> = []
     private var pausedAt: Date?
     /// A problem or a slow step to show in the window, such as a model download.
     @Published private(set) var status: String?
@@ -339,14 +343,23 @@ final class NoteTaker: ObservableObject {
     private func watchCallEnd() {
         callEnd = CallEndDetector(now: Date())
         callSeemsOver = false
+        micApps = []
+        // Asked on the first recording, so the question doesn't come up as a call ends.
+        CallEndNotice.requestPermission()
         callEndWatch?.cancel()
         callEndWatch = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
                 guard let self, self.isRecording, !Task.isCancelled else { return }
                 guard !self.isPaused else { continue }
-                if let reason = self.callEnd.check(callAppRecording: Microphone.otherAppRecording(), now: Date()) {
+                let apps = Microphone.otherAppsRecording()
+                if let apps, apps != self.micApps {
+                    Log.write("note taker: recording from the microphone: \(apps.isEmpty ? "no other app" : apps.sorted().joined(separator: ", "))")
+                    self.micApps = apps
+                }
+                if let reason = self.callEnd.check(callAppRecording: apps.map { !$0.isEmpty }, now: Date()) {
                     Log.write("note taker: the call seems over (\(reason))")
+                    self.callEndReason = reason
                     self.callSeemsOver = true
                 }
             }

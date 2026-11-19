@@ -1,6 +1,7 @@
 import AppKit
 import AVFoundation
 import Combine
+import UserNotifications
 
 /// Claude Whisper: hold Right Command (or the key chosen in Settings) anywhere, speak, release, and the
 /// text is typed where your cursor is. Transcription is done by Claude Code's own voice mode, in
@@ -26,7 +27,6 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let noteStore = NoteStore()
     /// The NoteTakerWindow, which needs macOS 26 (typed loosely so the app still runs on 14).
     private var noteWindowBox: AnyObject?
-    private let callEndPrompt = CallEndPrompt()
     /// The red dot on the menu bar icon while Note Taker records.
     private var recordingDot: NSView?
     private var iconActive = false
@@ -54,6 +54,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var releasedAt = Date()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        UNUserNotificationCenter.current().delegate = self
+        CallEndNotice.register()
         // Note Taker no longer sends a "Context for Claude": drop what an earlier version kept.
         UserDefaults.standard.removeObject(forKey: "noteTakerContext")
         Log.write("Claude Whisper launched")
@@ -212,13 +214,8 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let taker = window.taker
         watch(taker.$isRecording) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
         watch(taker.$isPaused) { [weak self] in self?.showRecordingDot(taker.isRecording, paused: taker.isPaused) }
-        watch(taker.$callSeemsOver) { [weak self] in
-            guard let self else { return }
-            if taker.callSeemsOver {
-                callEndPrompt.show(stop: { taker.stop() }, keep: { taker.keepRecording() })
-            } else {
-                callEndPrompt.hide()
-            }
+        watch(taker.$callSeemsOver) {
+            if taker.callSeemsOver { CallEndNotice.show(reason: taker.callEndReason) } else { CallEndNotice.hide() }
         }
         let player = window.player
         watch(player.$isPlaying) { [weak self] in
@@ -695,3 +692,33 @@ let delegate = App()
 app.delegate = delegate
 app.setActivationPolicy(.accessory)
 app.run()
+
+// MARK: Notifications
+
+extension App: UNUserNotificationCenterDelegate {
+    /// Shown also while Claude Whisper is the app in front.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                withCompletionHandler done: @escaping (UNNotificationPresentationOptions) -> Void) {
+        done([.banner, .list, .sound])
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                withCompletionHandler done: @escaping () -> Void) {
+        let action = response.actionIdentifier
+        let callEnd = response.notification.request.content.categoryIdentifier == CallEndNotice.category
+        DispatchQueue.main.async { [weak self] in
+            defer { done() }
+            guard callEnd, let self, #available(macOS 26.0, *) else { return }
+            MainActor.assumeIsolated {
+                guard let window = self.noteWindowBox as? NoteTakerWindow, window.taker.isRecording else { return }
+                switch action {
+                case CallEndNotice.stopAction: window.taker.stop()
+                // The close button: the call goes on.
+                case UNNotificationDismissActionIdentifier: window.taker.keepRecording()
+                // A click on the notification itself opens the note.
+                default: window.show()
+                }
+            }
+        }
+    }
+}

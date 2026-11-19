@@ -74,10 +74,10 @@ enum Microphone {
         return running != 0
     }
 
-    /// Whether an app other than this one records from a microphone: a call app during a call.
-    /// Processes without a bundle (the Claude Code session, command line tools) and the system's
-    /// own listeners (Siri) don't count. Nil when macOS doesn't say.
-    static func otherAppRecording() -> Bool? {
+    /// The apps other than this one recording from a microphone (bundle ids): a call app during a
+    /// call. Processes without a bundle (the Claude Code session, command line tools) and the
+    /// system's own listeners (Siri) don't count. Nil when macOS doesn't say.
+    static func otherAppsRecording() -> Set<String>? {
         var address = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyProcessObjectList,
                                                  mScope: kAudioObjectPropertyScopeGlobal,
                                                  mElement: kAudioObjectPropertyElementMain)
@@ -87,16 +87,16 @@ enum Microphone {
         var processes = [AudioObjectID](repeating: 0, count: Int(size) / MemoryLayout<AudioObjectID>.size)
         guard AudioObjectGetPropertyData(system, &address, 0, nil, &size, &processes) == noErr else { return nil }
         let me = ProcessInfo.processInfo.processIdentifier
-        return processes.contains { process in
+        return Set(processes.compactMap { process -> String? in
             var input = UInt32(0), pid = pid_t(0)
             var bundle: Unmanaged<CFString>?
             guard read(process, kAudioProcessPropertyIsRunningInput, &input), input != 0,
                   read(process, kAudioProcessPropertyPID, &pid), pid != me,
                   read(process, kAudioProcessPropertyBundleID, &bundle),
                   let id = bundle?.takeRetainedValue() as String?, !id.isEmpty
-            else { return false }
-            return !["com.apple.corespeech", "com.apple.siri", "com.apple.assistant"].contains { id.hasPrefix($0) }
-        }
+            else { return nil }
+            return ["com.apple.corespeech", "com.apple.siri", "com.apple.assistant"].contains { id.hasPrefix($0) } ? nil : id
+        })
     }
 
     private static func read<T>(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector, _ value: inout T) -> Bool {
