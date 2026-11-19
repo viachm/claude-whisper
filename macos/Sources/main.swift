@@ -337,15 +337,20 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// filled while listening. Drawn as a template so it follows the menu bar's colours.
     private func setIcon(active: Bool) {
         iconActive = active
-        // While a note records and nothing is dictated, the bars give way to the red dot; while a
-        // note's audio plays, to a pause symbol.
-        let showsPause = !active && recordingDot == nil && playing
-        let bars = active || (recordingDot == nil && !playing)
+        // While a note records, the bars give way to the red dot, and dictating then only thickens
+        // the outline; while a note's audio plays, the bars give way to a pause symbol.
+        let recording = recordingDot != nil
+        let showsPause = !active && !recording && playing
+        let bars = !recording && (active || !playing)
         let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { bounds in
             let tile = bounds.insetBy(dx: 1.5, dy: 0.75)
             let shape = NSBezierPath(roundedRect: tile, xRadius: 4.5, yRadius: 4.5)
             NSColor.black.set()
-            if active { shape.fill() } else { shape.lineWidth = 1; shape.stroke() }
+            if active && recording {
+                let thick = NSBezierPath(roundedRect: tile.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+                thick.lineWidth = 2
+                thick.stroke()
+            } else if active { shape.fill() } else { shape.lineWidth = 1; shape.stroke() }
             let heights: [CGFloat] = [4, 7, 10, 7, 4]
             let barWidth: CGFloat = 1.6, gap: CGFloat = 1.5
             var x = tile.midX - (CGFloat(heights.count) * barWidth + CGFloat(heights.count - 1) * gap) / 2
