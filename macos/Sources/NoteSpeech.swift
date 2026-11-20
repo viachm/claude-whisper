@@ -211,11 +211,11 @@ enum SpeechLevel {
     }
 }
 
-/// Tells when the call being recorded seems to be over: someone spoke and then nobody has for a
-/// minute, or the call app (Zoom, Teams, a browser with Meet) took the microphone and let it go.
+/// Tells when the call being recorded seems to be over: someone spoke and then nobody has for
+/// three minutes, or the call app (Zoom, Teams, a browser with Meet) took the microphone and let it go.
 /// It asks once; after the question is closed (or people talk again) only a new sign asks again.
 struct CallEndDetector {
-    static let silence: TimeInterval = 60
+    static let silence: TimeInterval = 180
     /// How long the call app must have let go of the microphone (not a brief device switch).
     static let release: TimeInterval = 10
 
@@ -246,7 +246,7 @@ struct CallEndDetector {
         guard !asked else { return nil }
         if spoke, now.timeIntervalSince(lastSpeech) >= Self.silence {
             asked = true
-            return "nobody has spoken for a minute"
+            return "nobody has spoken for 3 minutes"
         }
         if let free = micFreeSince, now.timeIntervalSince(free) >= Self.release {
             asked = true
