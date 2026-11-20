@@ -218,6 +218,7 @@ struct CallEndDetector {
     static let silence: TimeInterval = 180
     /// How long the call app must have let go of the microphone (not a brief device switch).
     static let release: TimeInterval = 10
+    static let micReleased = "the call app let go of the microphone"
 
     private var lastSpeech: Date
     private var spoke = false
@@ -250,7 +251,7 @@ struct CallEndDetector {
         }
         if let free = micFreeSince, now.timeIntervalSince(free) >= Self.release {
             asked = true
-            return "the call app let go of the microphone"
+            return Self.micReleased
         }
         return nil
     }
