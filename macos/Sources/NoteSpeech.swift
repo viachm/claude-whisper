@@ -271,3 +271,46 @@ struct CallEndDetector {
         micFreeSince = nil
     }
 }
+
+/// Tells when a call seems to have started while Note Taker isn't recording: a call app (or a
+/// browser, for Meet) has kept the microphone for 10 seconds. It asks once each time an app takes
+/// the microphone, and not about a call that was being recorded.
+struct CallStartDetector {
+    /// The setting (on unless turned off).
+    static let key = "noteTakerSuggestStart"
+    static let hold: TimeInterval = 10
+    /// Bundle id prefixes of the apps calls happen in, with the names shown in the notification.
+    static let callApps: [(prefix: String, name: String)] = [
+        ("com.microsoft.teams", "Teams"), ("us.zoom", "Zoom"), ("com.tinyspeck.slackmacgap", "Slack"),
+        ("com.apple.FaceTime", "FaceTime"), ("com.cisco.webex", "Webex"), ("com.webex", "Webex"),
+        ("com.hnc.Discord", "Discord"), ("net.whatsapp.WhatsApp", "WhatsApp"), ("ru.keepcoder.Telegram", "Telegram"),
+        ("com.google.Chrome", "Chrome"), ("com.apple.Safari", "Safari"), ("company.thebrowser", "Arc"),
+        ("com.microsoft.edgemac", "Edge"), ("org.mozilla.firefox", "Firefox"), ("com.brave.Browser", "Brave"),
+    ]
+
+    private var since: [String: Date] = [:]
+    private var asked: Set<String> = []
+
+    static func name(of bundle: String) -> String? {
+        callApps.first { bundle.hasPrefix($0.prefix) }?.name
+    }
+
+    /// `apps`: the other apps recording from the microphone. Returns the call app to suggest
+    /// recording in, the first time it has held the microphone long enough.
+    mutating func check(apps: Set<String>, recording: Bool, now: Date) -> String? {
+        let calls = apps.filter { Self.name(of: $0) != nil }
+        since = since.filter { calls.contains($0.key) }
+        asked.formIntersection(calls)
+        for app in calls where since[app] == nil { since[app] = now }
+        // Stopping a recording mid-call doesn't bring the question up.
+        if recording { asked.formUnion(calls) }
+        guard let app = calls.sorted().first(where: { app in
+            !asked.contains(app) && now.timeIntervalSince(since[app] ?? now) >= Self.hold
+        }) else { return nil }
+        asked.insert(app)
+        return app
+    }
+
+    /// Whether an app it asked about still holds the microphone.
+    var askedAppHolds: Bool { !asked.isEmpty }
+}

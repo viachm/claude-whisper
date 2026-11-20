@@ -460,6 +460,30 @@ do {
           "a loud microphone is turned down a little and the call raised to it")
 }
 
+// A call has started
+
+do {
+    let start = Date(timeIntervalSince1970: 2_000_000)
+    let teams = "com.microsoft.teams2.modulehost"
+    var detector = CallStartDetector()
+    check(CallStartDetector.name(of: teams) == "Teams" && CallStartDetector.name(of: "com.example.Recorder") == nil,
+          "call apps are known by their bundle id")
+    check(detector.check(apps: [teams], recording: false, now: start) == nil, "a call app that just took the microphone is not a call yet")
+    check(detector.check(apps: [teams], recording: false, now: start + 11) == teams, "10 s on the microphone is a call")
+    check(detector.check(apps: [teams], recording: false, now: start + 20) == nil && detector.askedAppHolds, "it asks once a call")
+    check(detector.check(apps: [], recording: false, now: start + 30) == nil && !detector.askedAppHolds, "the call app let go")
+    _ = detector.check(apps: [teams], recording: false, now: start + 40)
+    check(detector.check(apps: [teams], recording: false, now: start + 51) == teams, "the next call asks again")
+
+    var other = CallStartDetector()
+    _ = other.check(apps: ["com.example.Recorder"], recording: false, now: start)
+    check(other.check(apps: ["com.example.Recorder"], recording: false, now: start + 30) == nil, "an app that isn't for calls is not a call")
+
+    var recorded = CallStartDetector()
+    _ = recorded.check(apps: [teams], recording: true, now: start)
+    check(recorded.check(apps: [teams], recording: false, now: start + 60) == nil, "stopping a recording mid-call does not ask")
+}
+
 // The call seems over
 
 do {

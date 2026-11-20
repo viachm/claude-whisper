@@ -1086,6 +1086,7 @@ private struct NoteTakerSettings: View {
     @Binding var keepAudio: Bool
     @Binding var improve: Bool
     @Binding var retention: NoteRetention
+    @AppStorage(CallStartDetector.key) private var suggestStart = true
     let locales: [String]
 
     var body: some View {
@@ -1111,6 +1112,7 @@ private struct NoteTakerSettings: View {
                     }
                 }
             }
+            Toggle("Suggest recording when a call starts", isOn: $suggestStart)
             Toggle("Keep the call audio", isOn: $keepAudio)
             Picker("Delete notes older than", selection: $retention) {
                 ForEach(NoteRetention.allCases) { Text($0.title).tag($0) }
@@ -1120,7 +1122,8 @@ private struct NoteTakerSettings: View {
         } footer: {
             Text("""
                 Start Note Taker from the menu bar icon. It transcribes on your Mac: your microphone as “Me”, the \
-                call as “Them”. Automatic recognises the language as you speak; choosing one keeps the transcript \
+                call as “Them”. When Teams, Zoom, Slack, FaceTime or a browser takes the microphone, it offers to \
+                start. Automatic recognises the language as you speak; choosing one keeps the transcript \
                 to its alphabet, which works better (you can switch it on a note while it records). With the audio \
                 kept you can play the call back in the note (about 30 MB an hour).
                 """)
