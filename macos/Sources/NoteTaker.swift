@@ -312,8 +312,9 @@ final class NoteTaker: ObservableObject {
         // Speech, not a lone "Uh" or "Mm" the recogniser makes of noise in the call audio.
         if text.unicodeScalars.filter(CharacterSet.letters.contains).count >= 6 {
             callEnd.heard(at: Date())
-            // People talk again: the call was not over after all.
-            if callSeemsOver { keepRecording() }
+            // The others talk again: the call was not over after all. Not your own voice, which goes
+            // on in the room after a call, and not once the call app has let go of the microphone.
+            if callSeemsOver, speaker == .them, final, callEndReason != CallEndDetector.micReleased { keepRecording() }
         }
         let segment = NoteSegment(speaker: speaker, start: start + offset,
                                   end: end.isFinite && end >= start ? end + offset : nil, text: text)
