@@ -36,6 +36,20 @@ struct NoteRecording: Codable, Equatable {
     var speakers: [Speaker]
 }
 
+/// A stretch of the call audio and whose voice it is, from telling the voices on the call apart on
+/// the Mac. Times are in the saved audio, which leaves the pauses out (see `Note.audioTime`).
+struct NoteVoice: Codable, Equatable {
+    var start: Double
+    var end: Double
+    /// 0 for the first voice heard, 1 for the next and so on.
+    var voice: Int
+
+    /// "A" for the first voice, "B" for the next.
+    static func letter(_ voice: Int) -> String {
+        voice < 26 ? String(UnicodeScalar(UInt8(65 + voice))) : "\(voice + 1)"
+    }
+}
+
 /// A line of the note window: a turn of the conversation, or a pause between two.
 enum NoteItem: Equatable, Identifiable {
     case turn(NoteTurn)
@@ -105,6 +119,10 @@ struct Note: Codable, Equatable, Identifiable {
     /// The app quit while recording, before Claude's clean-up and summary: they run when the note
     /// is next opened.
     var summaryPending: Bool?
+    /// The voices in the call audio ("Them"), told apart after the call; nil before.
+    var voices: [NoteVoice]?
+    /// How many of `recordings` `voices` covers: after Continue, the voices are told apart again.
+    var voicedRecordings: Int?
 
     /// The records of the conversation (pauses left out), as the window shows them.
     var records: [NoteTurn] {
@@ -129,6 +147,31 @@ struct Note: Codable, Equatable, Identifiable {
         records.prefix { $0.id != id }.flatMap { turn in
             improved?[turn.id.uuidString] ?? [NoteUtterance(speaker: turn.speaker.label, text: turn.text)]
         }
+    }
+
+    /// A record's text by voice, one part per run of its lines in the same voice; the voice is nil
+    /// where none was told apart. A line in two voices goes with the one heard longest in it.
+    func voiceParts(of record: NoteTurn) -> [(voice: Int?, text: String)] {
+        guard record.speaker == .them, let voices, !voices.isEmpty else { return [(nil, record.text)] }
+        let lines = segments
+            .filter { $0.speaker == record.speaker && !$0.text.isEmpty && $0.start >= record.start && $0.start <= record.end }
+            .sorted { $0.start < $1.start }
+        guard !lines.isEmpty else { return [(nil, record.text)] }
+        var parts: [(voice: Int?, text: String)] = []
+        for line in lines {
+            let from = audioTime(line.start), to = audioTime(line.end ?? line.start)
+            var heard: [Int: Double] = [:]
+            for span in voices where span.end > from && span.start < to {
+                heard[span.voice, default: 0] += min(span.end, to) - max(span.start, from)
+            }
+            let voice = heard.max { ($0.value, -$0.key) < ($1.value, -$1.key) }?.key
+            if let last = parts.last, last.voice == voice {
+                parts[parts.count - 1].text = Self.join(last.text, line.text)
+            } else {
+                parts.append((voice, line.text))
+            }
+        }
+        return parts
     }
 
     /// Where a moment of the note (seconds from its start) is in its saved audio, which leaves
@@ -403,10 +446,12 @@ enum NoteImproveProtocol {
     static let systemPrompt = """
         You clean up the automatic transcript of a call. The user message holds it in <transcript> tags, one record per line: "[number] Me: text" for the person who recorded the call, "[number] Them: text" for everyone else, mixed together. It comes from live on-device speech recognition, so expect misheard words, wrong names and missing punctuation.
 
+        "Them" lines may carry a voice, "[number] Them (voice A): text", from telling the voices in the call audio apart by sound; a record in several voices comes as several lines with the same number. The same letter is the same person through the whole call, a different letter a different person. Go by the voices rather than guessing from the words: give lines in the same voice the same label, and put a name on a voice once the call makes clear who it is. Telling voices apart can go wrong on a very short reply or when people talk over each other; only then go against it, when the words make it plain.
+
         Write every record back, in order, as "[number] Speaker: text", one per line, and nothing else:
         - Fix misheard words from the context (names, products, companies, technical terms), punctuation and capitalization. Drop filler words (uh, um, you know) and false starts. Keep the speaker's wording and everything they said; never summarize, shorten or add.
         - "Me" records stay "Me".
-        - Tell the people in "Them" records apart. Use a person's name only when the call makes it clear who is talking (they introduce themselves, someone addresses them by name and they answer, or the context says so); otherwise call them Speaker 1, Speaker 2 and so on, in the order they first speak, and keep each label for the same voice through the whole call. A call with one other person has just one label.
+        - Tell the people in "Them" records apart. Write the label only, never the voice letter. Use a person's name only when the call makes it clear who is talking (they introduce themselves, someone addresses them by name and they answer, or the context says so); otherwise call them Speaker 1, Speaker 2 and so on, in the order they first speak, and keep each label for the same voice through the whole call. A call with one other person has just one label.
         - When a "Them" record clearly holds two people talking (a question and its answer), split it into several lines with the same number, each with its speaker.
 
         When the user message also has <earlier> lines, they are the call's start, already cleaned up: don't write them back. Use them for context, and keep their labels for the same people.
@@ -418,9 +463,15 @@ enum NoteImproveProtocol {
         NoteClaudeCall.arguments(model: model, systemPrompt: systemPrompt)
     }
 
-    /// The records, numbered from 1.
-    static func input(_ records: [NoteTurn], earlier: [NoteUtterance] = []) -> String {
-        let lines = records.enumerated().map { "[\($0.offset + 1)] \($0.element.speaker.label): \($0.element.text)" }
+    /// The records, numbered from 1; `parts` splits a record by voice (see `Note.voiceParts`).
+    static func input(_ records: [NoteTurn], earlier: [NoteUtterance] = [],
+                      parts: (NoteTurn) -> [(voice: Int?, text: String)] = { [(nil, $0.text)] }) -> String {
+        let lines = records.enumerated().flatMap { index, record in
+            parts(record).map { part in
+                let voice = part.voice.map { " (voice \(NoteVoice.letter($0)))" } ?? ""
+                return "[\(index + 1)] \(record.speaker.label)\(voice): \(part.text)"
+            }
+        }
         let context = earlier.isEmpty ? ""
             : "<earlier>\n" + earlier.map { "\($0.speaker): \($0.text)" }.joined(separator: "\n") + "\n</earlier>\n"
         return context + "<transcript>\n" + lines.joined(separator: "\n") + "\n</transcript>"

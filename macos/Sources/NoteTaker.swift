@@ -35,6 +35,8 @@ final class NoteTaker: ObservableObject {
     @Published private(set) var summarizing: Set<UUID> = []
     /// Notes whose transcript Claude is cleaning up right now.
     @Published private(set) var improving: Set<UUID> = []
+    /// Notes whose voices couldn't be told apart (no model download, say): cleaned up without them.
+    private var voicesFailed: Set<UUID> = []
 
     static let improveKey = "noteTakerImprove"
     /// Whether Claude cleans up the transcript after a call; on unless turned off in Settings.
@@ -521,9 +523,34 @@ final class NoteTaker: ObservableObject {
     /// then (after a call) to summarize the cleaned-up version.
     /// After a call, only the records not yet improved go to Claude (with the improved ones
     /// before them for context); `again` improves the whole transcript anew.
-    func improve(thenSummarize: Bool = false, again: Bool = false) {
-        guard let note, !note.segments.isEmpty, !improving.contains(note.id) else { return }
+    /// `given`: the note to improve when it may no longer be the one shown.
+    func improve(_ given: Note? = nil, thenSummarize: Bool = false, again: Bool = false) {
+        guard let note = given ?? note, !note.segments.isEmpty, !improving.contains(note.id) else { return }
         let id = note.id
+        // First tell the voices in the call audio apart, so Claude labels people by voice.
+        if !voicesFailed.contains(id), VoiceSeparation.needed(for: note, store: store) {
+            improving.insert(id)
+            let store = store
+            let started = Date()
+            Task {
+                let result = await Task.detached { try await VoiceSeparation.voices(of: note, store: store) }.result
+                improving.remove(id)
+                switch result {
+                case .success(let voices):
+                    Log.write("note taker: told \(Set(voices.map(\.voice)).count) voices apart in \(Int(Date().timeIntervalSince(started))) s")
+                    update(id) {
+                        $0.voices = voices
+                        $0.voicedRecordings = $0.recordings?.count
+                    }
+                case .failure(let error):
+                    Log.write("note taker: could not tell the voices apart: \(error.localizedDescription)")
+                    voicesFailed.insert(id)
+                }
+                let latest = self.note?.id == id ? self.note : store.notes.first { $0.id == id }
+                if let latest { improve(latest, thenSummarize: thenSummarize, again: again) }
+            }
+            return
+        }
         let records = again ? note.records : note.unimproved
         guard !records.isEmpty else {
             if thenSummarize { summarize() }
@@ -533,7 +560,8 @@ final class NoteTaker: ObservableObject {
         improving.insert(id)
         let started = Date()
         NoteClaude.run(arguments: NoteImproveProtocol.arguments(model: .current),
-                       input: NoteImproveProtocol.input(records, earlier: earlier), directory: workspace, timeout: 600) { [weak self] output in
+                       input: NoteImproveProtocol.input(records, earlier: earlier, parts: note.voiceParts),
+                       directory: workspace, timeout: 600) { [weak self] output in
             guard let self else { return }
             improving.remove(id)
             switch output.map(NoteImproveProtocol.parse) ?? .failure(SummaryError(reason: "Claude didn't answer")) {

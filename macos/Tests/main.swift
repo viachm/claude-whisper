@@ -286,6 +286,45 @@ do {
     check(note.unimproved.count == 1, "notes improved before lengths were kept count as improved")
 }
 
+// Note Taker: voices told apart by sound
+
+do {
+    var note = Note(started: Date(), locale: "en-US")
+    note.segments = [
+        NoteSegment(speaker: .me, start: 0, end: 2, text: "Have you tested it?"),
+        NoteSegment(speaker: .them, start: 3, end: 8, text: "We haven't, I have not done any UAT testing yet."),
+        NoteSegment(speaker: .them, start: 8.5, end: 11, text: "Friday I had other items."),
+        NoteSegment(speaker: .them, start: 11.5, end: 14, text: "Okay. Is the plan to look today?"),
+    ]
+    let records = note.records
+    check(records.count == 2 && note.voiceParts(of: records[1]).count == 1, "without voices a record is one part")
+    // A pause of 10 s at 20 s doesn't move anything before it.
+    note.pauses = [NotePause(start: 20, duration: 10)]
+    note.voices = [NoteVoice(start: 3, end: 11.2, voice: 0), NoteVoice(start: 11.2, end: 14, voice: 1)]
+    let parts = note.voiceParts(of: records[1])
+    check(parts.count == 2 && parts[0].voice == 0 && parts[0].text == "We haven't, I have not done any UAT testing yet. Friday I had other items."
+          && parts[1].voice == 1 && parts[1].text == "Okay. Is the plan to look today?", "a record splits where the voice changes")
+    check(note.voiceParts(of: records[0]).map(\.voice) == [nil], "your own lines have no voice")
+    check(NoteImproveProtocol.input(records, parts: note.voiceParts) == """
+        <transcript>
+        [1] Me: Have you tested it?
+        [2] Them (voice A): We haven't, I have not done any UAT testing yet. Friday I had other items.
+        [2] Them (voice B): Okay. Is the plan to look today?
+        </transcript>
+        """, "voices go to Claude as letters, a record in two voices on two lines with its number")
+    note.voices = [NoteVoice(start: 3, end: 9, voice: 1), NoteVoice(start: 9, end: 14, voice: 0)]
+    check(note.voiceParts(of: records[1]).map(\.voice) == [1, 0], "a line in two voices goes with the one heard longest")
+    check(NoteVoice.letter(0) == "A" && NoteVoice.letter(25) == "Z" && NoteVoice.letter(26) == "27", "voice letters")
+
+    let alan: [Float] = [1, 0, 0.1], holly: [Float] = [0, 1, 0.1]
+    let first = VoiceNumbering.Recording(spans: [(0, 5, "S2"), (5, 9, "S1")], prints: ["S1": holly, "S2": alan])
+    let second = VoiceNumbering.Recording(spans: [(20, 25, "S1"), (25, 30, "S2")], prints: ["S1": holly, "S2": [0.9, 0.1, 0.1]])
+    let voices = VoiceNumbering.number([first, second])
+    check(voices.map(\.voice) == [0, 1, 1, 0], "voices are numbered in the order heard, and a voice heard before keeps its number after Continue")
+    let stranger = VoiceNumbering.Recording(spans: [(40, 45, "S1")], prints: ["S1": [0, 0, 1]])
+    check(VoiceNumbering.number([first, stranger]).last?.voice == 2, "a new voice gets a new number")
+}
+
 // Note Taker: cleanup
 
 do {
