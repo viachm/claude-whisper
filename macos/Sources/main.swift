@@ -38,6 +38,9 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         openLog: { [weak self] in self?.openLog() },
         checkForUpdates: { [weak self] in self?.checkForUpdates() }))
     private var subscriptions = Set<AnyCancellable>()
+    /// "Record this call?": when a call app took the microphone, and what takes the notice away.
+    private var callStart = CallStartDetector()
+    private var callStartHide: DispatchWorkItem?
 
     private enum Phase { case idle, waitingForMic, listening, transcribing }
     private var phase = Phase.idle
@@ -69,6 +72,7 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if firstLaunch && !VoiceKey.isFastStart { VoiceKey.setFastStart(true) }
         setUpMenu()
         requestPermissions()
+        if #available(macOS 26.0, *) { watchCallStart() }
         MainActor.assumeIsolated { pruneNotes() }
         // Once a day for a Mac that stays up for weeks.
         Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
@@ -255,6 +259,39 @@ final class App: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if noteWindow.taker.isRecording { return noteWindow.taker.stop() }
         noteWindow.taker.start()
         noteWindow.show()
+    }
+
+    /// Every 5 seconds, whether a call started that Note Taker could record.
+    @available(macOS 26.0, *)
+    private func watchCallStart() {
+        Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.checkCallStart() }
+        }
+    }
+
+    @available(macOS 26.0, *)
+    @MainActor private func checkCallStart() {
+        guard UserDefaults.standard.object(forKey: CallStartDetector.key) as? Bool ?? true,
+              let apps = Microphone.otherAppsRecording() else { return }
+        let recording = (noteWindowBox as? NoteTakerWindow)?.taker.isRecording == true
+        if let app = callStart.check(apps: apps, recording: recording, now: Date()),
+           let name = CallStartDetector.name(of: app) {
+            Log.write("note taker: a call seems to have started in \(name) (\(app))")
+            CallStartNotice.show(app: name)
+            callStartHide?.cancel()
+            let hide = DispatchWorkItem { [weak self] in self?.hideCallStart() }
+            callStartHide = hide
+            DispatchQueue.main.asyncAfter(deadline: .now() + CallStartNotice.shown, execute: hide)
+        } else if callStartHide != nil, recording || !callStart.askedAppHolds {
+            // Recording started some other way, or the call app let go of the microphone.
+            hideCallStart()
+        }
+    }
+
+    private func hideCallStart() {
+        callStartHide?.cancel()
+        callStartHide = nil
+        CallStartNotice.hide()
     }
 
     @MainActor @objc private func openNoteTaker() {
@@ -705,12 +742,19 @@ extension App: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                 withCompletionHandler done: @escaping () -> Void) {
         let action = response.actionIdentifier
-        let callEnd = response.notification.request.content.categoryIdentifier == CallEndNotice.category
+        let category = response.notification.request.content.categoryIdentifier
         DispatchQueue.main.async { [weak self] in
             defer { done() }
-            guard callEnd, let self, #available(macOS 26.0, *) else { return }
+            guard let self, #available(macOS 26.0, *) else { return }
             MainActor.assumeIsolated {
-                guard let window = self.noteWindowBox as? NoteTakerWindow, window.taker.isRecording else { return }
+                // "Record this call?": Start Recording starts a note; a click only opens Note Taker.
+                if category == CallStartNotice.category {
+                    self.hideCallStart()
+                    if action == CallStartNotice.startAction, !self.noteWindow.taker.isRecording { self.noteWindow.taker.start() }
+                    self.noteWindow.show()
+                    return
+                }
+                guard category == CallEndNotice.category, let window = self.noteWindowBox as? NoteTakerWindow, window.taker.isRecording else { return }
                 switch action {
                 // Stops and opens the note, where the clean-up and summary come in.
                 case CallEndNotice.stopAction:
