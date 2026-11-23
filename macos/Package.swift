@@ -6,9 +6,9 @@ let package = Package(
     name: "ClaudeWhisper",
     platforms: [.macOS(.v14)],
     dependencies: [
-        // Runs the Parakeet speech model for Note Taker. Pinned to one release; no traits, so only
-        // speech recognition is compiled in and no prebuilt binary is downloaded.
-        .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.3", traits: []),
+        // Runs the Parakeet speech model for Note Taker and tells the voices on a call apart. Pinned
+        // to one release; only the Diarizer trait (Swift source), so no prebuilt binary is downloaded.
+        .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.3", traits: ["Diarizer"]),
     ],
     targets: [
         .executableTarget(

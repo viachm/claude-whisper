@@ -315,3 +315,56 @@ struct CallStartDetector {
     /// Whether an app it asked about still holds the microphone.
     var askedAppHolds: Bool { !asked.isEmpty }
 }
+
+/// Gives the voices of a note's recordings one numbering. Each recording is told apart on its own,
+/// so a voice in a later recording (after Continue) that sounds like one heard before, by the
+/// cosine similarity of their voice prints, takes that one's number.
+enum VoiceNumbering {
+    static let sameVoice: Float = 0.55
+
+    struct Recording {
+        /// Start and end in the note's audio time, and the voice's id within this recording.
+        var spans: [(start: Double, end: Double, speaker: String)]
+        /// Each voice's print (an embedding), by its id within this recording.
+        var prints: [String: [Float]]
+    }
+
+    static func number(_ recordings: [Recording]) -> [NoteVoice] {
+        var known: [(print: [Float], voice: Int)] = []
+        var count = 0
+        var result: [NoteVoice] = []
+        for recording in recordings {
+            var numbers: [String: Int] = [:]
+            var taken: Set<Int> = []
+            for span in recording.spans.sorted(by: { $0.start < $1.start }) where numbers[span.speaker] == nil {
+                let print = recording.prints[span.speaker]
+                let match = print.flatMap { print in
+                    known.filter { !taken.contains($0.voice) }
+                        .map { ($0.voice, similarity(print, $0.print)) }
+                        .filter { $0.1 >= sameVoice }
+                        .max { $0.1 < $1.1 }?.0
+                }
+                let number = match ?? count
+                if match == nil {
+                    count += 1
+                    if let print { known.append((print, number)) }
+                }
+                numbers[span.speaker] = number
+                taken.insert(number)
+            }
+            result += recording.spans.map { NoteVoice(start: $0.start, end: $0.end, voice: numbers[$0.speaker] ?? 0) }
+        }
+        return result.sorted { $0.start < $1.start }
+    }
+
+    static func similarity(_ a: [Float], _ b: [Float]) -> Float {
+        guard a.count == b.count, !a.isEmpty else { return 0 }
+        var dot: Float = 0, aa: Float = 0, bb: Float = 0
+        for i in a.indices {
+            dot += a[i] * b[i]
+            aa += a[i] * a[i]
+            bb += b[i] * b[i]
+        }
+        return aa > 0 && bb > 0 ? dot / (aa.squareRoot() * bb.squareRoot()) : 0
+    }
+}
